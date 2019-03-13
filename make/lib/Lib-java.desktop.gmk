@@ -63,8 +63,13 @@ ifeq ($(call isTargetOs, aix), false)
     LIBJSOUND_CFLAGS += $(ICONV_CFLAGS)
   endif
 
+  ifeq ($(OPENJDK_TARGET_OS_ENV), bsd.openbsd)
+    LIBJSOUND_EXCLUDE_SRC_PATTERNS := bsd
+  endif
+
   $(eval $(call SetupJdkLibrary, BUILD_LIBJSOUND, \
       NAME := jsound, \
+      EXCLUDE_SRC_PATTERNS := $(LIBJSOUND_EXCLUDE_SRC_PATTERNS), \
       TOOLCHAIN := $(LIBJSOUND_TOOLCHAIN), \
       OPTIMIZATION := LOW, \
       CFLAGS := $(CFLAGS_JDKLIB) \
