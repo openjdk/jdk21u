@@ -138,4 +138,82 @@ ifeq ($(call check-jvm-feature, dtrace), true)
         endif
 
   endif
+
+  ifeq ($(OPENJDK_TARGET_OS), bsd)
+
+    ############################################################################
+    # Integrate with libjvm. Here we generate an object file which is
+    # linked with libjvm.so. This step is complicated from a dependency
+    # perspective. We add this file to the linking of libjvm using
+    # EXTRA_OBJECT_FILES, but it needs to be created outside the call to
+    # SetupNativeCompilation. Also, this files is dependent on compiled
+    # object files from the libjvm compilation, so this generation must happen
+    # as a part of the libjvm compilation.
+
+    DTRACE_OBJ := $(JVM_OUTPUTDIR)/objs/dtrace.o
+
+    DTRACE_EXTRA_OBJECT_FILES := $(DTRACE_OBJ)
+
+    ############################################################################
+    # Generate DTRACE_OBJ which is linked with libjvm.so. It depends on a set of
+    # object files from the compilation.
+
+    # Concatenate all *.d files into a single file
+    DTRACE_SOURCE_FILES := $(addprefix $(TOPDIR)/src/hotspot/os/posix/dtrace/, \
+        hotspot_jni.d \
+        hotspot.d \
+        hs_private.d \
+    )
+
+    $(JVM_OUTPUTDIR)/objs/dtrace.d: $(DTRACE_SOURCE_FILES)
+	$(call LogInfo, Generating $(@F))
+	$(call MakeDir, $(@D))
+	$(CAT) $^ > $@
+
+    DTRACE_INSTRUMENTED_OBJS := $(addprefix $(JVM_OUTPUTDIR)/objs/, \
+        ciEnv.o \
+        classLoadingService.o \
+        compileBroker.o \
+        hashtable.o \
+        instanceKlass.o \
+        java.o \
+        jni.o \
+        jvm.o \
+        memoryManager.o \
+        nmethod.o \
+        objectMonitor.o \
+        runtimeService.o \
+        sharedRuntime.o \
+        synchronizer.o \
+        thread.o \
+        unsafe.o \
+        vmThread.o \
+        vmGCOperations.o \
+    )
+
+    ifeq ($(call check-jvm-feature, cmsgc), true)
+      DTRACE_INSTRUMENTED_OBJS += $(addprefix $(JVM_OUTPUTDIR)/objs/, \
+          vmCMSOperations.o \
+      )
+    endif
+
+    ifeq ($(call check-jvm-feature, parallelgc), true)
+      DTRACE_INSTRUMENTED_OBJS += $(addprefix $(JVM_OUTPUTDIR)/objs/, \
+          vmPSOperations.o \
+      )
+    endif
+
+    DTRACE_FLAGS := -64 -G
+    DTRACE_CPP_FLAGS := -D_LP64 -x c
+
+    # Make sure we run our selected compiler for preprocessing instead of letting
+    # the dtrace tool pick it on it's own.
+    $(DTRACE_OBJ): $(JVM_OUTPUTDIR)/objs/dtrace.d $(DTRACE_INSTRUMENTED_OBJS)
+	$(call LogInfo, Generating $(@F) from $(<F) and object files)
+	$(call MakeDir, $(DTRACE_SUPPORT_DIR))
+	$(call ExecuteWithLog, $(DTRACE_SUPPORT_DIR)/$(@F).d, \
+	    ($(CPP) $(DTRACE_CPP_FLAGS) $< > $(DTRACE_SUPPORT_DIR)/$(@F).d))
+	$(call ExecuteWithLog, $@, $(DTRACE) $(DTRACE_FLAGS) -xlazyload -o $@ \
+	    -s $(DTRACE_SUPPORT_DIR)/$(@F).d $(sort $(DTRACE_INSTRUMENTED_OBJS)))
+  endif
 endif
