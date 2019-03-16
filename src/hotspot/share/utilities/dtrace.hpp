@@ -42,6 +42,8 @@
 #elif defined(__APPLE__)
 #define HS_DTRACE_WORKAROUND_TAIL_CALL_BUG()
 #include <sys/types.h>
+#elif defined(_ALLBSD_SOURCE)
+#define HS_DTRACE_WORKAROUND_TAIL_CALL_BUG()
 #else
 #error "dtrace enabled for unknown os"
 #endif /* defined(SOLARIS) */

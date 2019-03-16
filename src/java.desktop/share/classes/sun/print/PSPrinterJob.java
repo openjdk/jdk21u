@@ -1619,9 +1619,31 @@ public class PSPrinterJob extends RasterPrinterJob {
         }
 
         String osname = System.getProperty("os.name");
-        if (osname.equals("Linux") || osname.contains("OS X")) {
+        if (osname.equals("Linux") || osname.contains("OS X") || osname.endsWith("BSD")) {
+            String lprPath = "/usr/bin/lpr";
+            if (osname.equals("FreeBSD")) {
+                final PrintService pservice = getPrintService();
+                Boolean isIPPPrinter = java.security.AccessController.doPrivileged(
+                    new java.security.PrivilegedAction<Boolean>() {
+                        public Boolean run() {
+                           try {
+                               Class<?> psClass =
+                                   Class.forName("sun.print.IPPPrintService");
+                               if (psClass.isInstance(pservice)) {
+                                    return Boolean.TRUE;
+                               }
+                           } catch (Throwable t) {
+                           }
+                           return Boolean.FALSE;
+                        }
+                    }
+                );
+                if (isIPPPrinter) {
+                    lprPath = "/usr/local/bin/lpr";
+                }
+            }
             execCmd = new String[ncomps];
-            execCmd[n++] = "/usr/bin/lpr";
+            execCmd[n++] = lprPath;
             if ((pFlags & PRINTER) != 0) {
                 execCmd[n++] = "-P" + printer;
             }

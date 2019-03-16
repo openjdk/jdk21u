@@ -129,7 +129,26 @@ else ifeq ($(call isTargetOs, windows), true)
       '{ \
         if ($$7 ~ /??_7.*@@6B@/ && $$7 !~ /type_info/) print $$7; \
       }'
-
+else ifeq ($(OPENJDK_TARGET_OS), bsd)
+  ifneq ($(FILTER_SYMBOLS_PATTERN), )
+    FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)|
+  endif
+  FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)^_ZTV|^gHotSpotVM|^UseSharedSpaces$$
+  FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)|^_ZN9Arguments17SharedArchivePathE$$
+  ifeq ($(OPENJDK_TARGET_OS_ENV), bsd.openbsd)
+    DUMP_SYMBOLS_CMD := $(NM) *.o
+    FILTER_SYMBOLS_AWK_SCRIPT := \
+        '{ \
+          if ($$2 == "U") next; \
+          if ($$3 ~ /$(FILTER_SYMBOLS_PATTERN)/) print $$3; \
+        }'
+  else
+    DUMP_SYMBOLS_CMD := $(NM) --defined-only *.o
+    FILTER_SYMBOLS_AWK_SCRIPT := \
+        '{ \
+          if ($$3 ~ /$(FILTER_SYMBOLS_PATTERN)/) print $$3; \
+        }'
+  endif
 else
   $(error Unknown target OS $(OPENJDK_TARGET_OS) in JvmMapfile.gmk)
 endif

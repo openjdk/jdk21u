@@ -113,6 +113,29 @@ AC_DEFUN([FLAGS_SETUP_LDFLAGS_HELPER],
       OS_LDFLAGS_JVM_ONLY="-Wl,-rpath,@loader_path/. -Wl,-rpath,@loader_path/.."
       OS_LDFLAGS_JDK_ONLY="-mmacosx-version-min=$MACOSX_VERSION_MIN"
     fi
+    # On OpenBSD check to see if ld requires -z wxneeded
+    if test "x$OPENJDK_TARGET_OS_ENV" = xbsd.openbsd; then
+      AC_MSG_CHECKING([if ld requires -z wxneeded])
+      PUSHED_LDFLAGS="$LDFLAGS"
+      LDFLAGS="$LDFLAGS -Wl,-z,wxneeded"
+      AC_LINK_IFELSE([AC_LANG_SOURCE([[int main() { }]])],
+          [
+            if $READELF -l conftest$ac_exeext | $GREP WXNEED > /dev/null; then
+              AC_MSG_RESULT([yes])
+              OS_LDFLAGS_JDK_ONLY="-Wl,-z,wxneeded"
+            else
+              AC_MSG_RESULT([no])
+            fi
+          ],
+          [
+            AC_MSG_RESULT([no])
+          ],
+          [
+            AC_MSG_RESULT([no])
+          ]
+      )
+      LDFLAGS="$PUSHED_LDFLAGS"
+    fi
   fi
 
   # Setup debug level-dependent LDFLAGS

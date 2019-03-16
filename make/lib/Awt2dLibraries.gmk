@@ -140,7 +140,7 @@ ifeq ($(call isTargetOs, windows), true)
       #
 endif
 
-ifeq ($(call isTargetOs, solaris linux macosx aix), true)
+ifeq ($(call isTargetOs, solaris linux macosx aix bsd), true)
   LIBAWT_EXFILES += awt_Font.c CUPSfuncs.c fontpath.c X11Color.c
 endif
 
@@ -301,7 +301,7 @@ ifeq ($(call isTargetOs, windows macosx), false)
       LIBAWT_XAWT_CFLAGS += -DFUNCPROTO=15
     endif
 
-    ifeq ($(call isTargetOs, linux), true)
+    ifeq ($(call isTargetOs, linux bsd), true)
       ifeq ($(DISABLE_XRENDER), true)
         LIBAWT_XAWT_CFLAGS += -DDISABLE_XRENDER_BY_DEFAULT=true
       endif
@@ -311,6 +311,10 @@ ifeq ($(call isTargetOs, windows macosx), false)
 
     ifeq ($(call isTargetOs, linux), true)
       LIBAWT_XAWT_LIBS += -lpthread
+    endif
+
+    ifeq ($(OPENJDK_TARGET_OS), bsd)
+      LIBAWT_XAWT_LIBS += -pthread
     endif
 
     ifeq ($(TOOLCHAIN_TYPE), gcc)
@@ -478,6 +482,7 @@ ifeq ($(call isTargetOs, windows macosx), false)
       LIBS_unix := -lawt -ljvm -ljava, \
       LIBS_linux := $(LIBM) $(LIBDL), \
       LIBS_solaris := $(LIBM) $(LIBDL) $(LIBCXX), \
+      LIBS_bsd := $(LIBM), \
   ))
 
   $(BUILD_LIBAWT_HEADLESS): $(BUILD_LIBAWT)
@@ -535,7 +540,7 @@ ifeq ($(call isTargetOs, windows), false)
                       -DHAVE_SYSCONF -DHAVE_SYS_MMAN_H -DHAVE_UNISTD_H \
                       -DHB_NO_PRAGMA_GCC_DIAGNOSTIC
 endif
-ifeq ($(call isTargetOs, linux macosx), true)
+ifeq ($(call isTargetOs, linux macosx bsd), true)
   HARFBUZZ_CFLAGS += -DHAVE_INTEL_ATOMIC_PRIMITIVES
 endif
 ifeq ($(call isTargetOs, solaris), true)
@@ -707,7 +712,7 @@ else # not windows
       JAWT_LIBS += -lawt_xawt
     else
       JAWT_LIBS += -lawt_headless
-      ifeq ($(call isTargetOs, linux), true)
+      ifeq ($(call isTargetOs, linux bsd), true)
         JAWT_CFLAGS += -DHEADLESS
       endif
     endif
@@ -824,6 +829,9 @@ ifeq ($(ENABLE_HEADLESS_ONLY), false)
         -framework JavaNativeFoundation
   else ifeq ($(call isTargetOs, windows), true)
     LIBSPLASHSCREEN_LIBS += kernel32.lib user32.lib gdi32.lib delayimp.lib $(WIN_JAVA_LIB) jvm.lib
+  else ifeq ($(OPENJDK_TARGET_OS), bsd)
+    LIBSPLASHSCREEN_CFLAGS += $(ICONV_CFLAGS)
+    LIBSPLASHSCREEN_LIBS += $(X_LIBS) -lX11 -lXext $(LIBM) $(ICONV_LIBS) -pthread
   else
     LIBSPLASHSCREEN_LIBS += $(X_LIBS) -lX11 -lXext $(LIBM) -lpthread -ldl
   endif
@@ -855,6 +863,7 @@ ifeq ($(ENABLE_HEADLESS_ONLY), false)
           $(call SET_SHARED_LIBRARY_ORIGIN), \
       LDFLAGS_macosx := -L$(INSTALL_LIBRARIES_HERE), \
       LDFLAGS_windows := -delayload:user32.dll, \
+      LDFLAGS_bsd := $(ICONV_LDFLAGS), \
       LIBS := $(JDKLIB_LIBS) $(LIBSPLASHSCREEN_LIBS) $(LIBZ_LIBS) \
           $(GIFLIB_LIBS) $(LIBJPEG_LIBS) $(PNG_LIBS), \
       LIBS_aix := -liconv, \

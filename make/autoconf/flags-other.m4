@@ -57,6 +57,8 @@ AC_DEFUN([FLAGS_SETUP_STRIPFLAGS],
     STRIPFLAGS="-S"
   elif test "x$OPENJDK_TARGET_OS" = xaix; then
     STRIPFLAGS="-X32_64"
+  elif test "x$OPENJDK_TARGET_OS" = xbsd; then
+    STRIPFLAGS="-g"
   fi
 
   AC_SUBST(STRIPFLAGS)
@@ -106,6 +108,9 @@ AC_DEFUN([FLAGS_SETUP_RCFLAGS],
 AC_DEFUN([FLAGS_SETUP_ASFLAGS],
 [
   if test "x$OPENJDK_TARGET_OS" = xmacosx; then
+    JVM_BASIC_ASFLAGS="-x assembler-with-cpp -mno-omit-leaf-frame-pointer -mstack-alignment=16"
+  fi
+  if test "x$OPENJDK_TARGET_OS" = xbsd; then
     JVM_BASIC_ASFLAGS="-x assembler-with-cpp -mno-omit-leaf-frame-pointer -mstack-alignment=16"
   fi
 ])

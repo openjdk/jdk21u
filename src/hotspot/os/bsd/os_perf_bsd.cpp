@@ -30,15 +30,15 @@
 
 #ifdef __APPLE__
   #import <libproc.h>
-  #include <sys/time.h>
-  #include <sys/sysctl.h>
   #include <mach/mach.h>
   #include <mach/task_info.h>
-  #include <sys/socket.h>
-  #include <net/if.h>
-  #include <net/if_dl.h>
-  #include <net/route.h>
 #endif
+#include <sys/time.h>
+#include <sys/sysctl.h>
+#include <sys/socket.h>
+#include <net/if.h>
+#include <net/if_dl.h>
+#include <net/route.h>
 
 static const double NANOS_PER_SEC = 1000000000.0;
 
@@ -430,6 +430,7 @@ NetworkPerformanceInterface::NetworkPerformance::~NetworkPerformance() {
 }
 
 int NetworkPerformanceInterface::NetworkPerformance::network_utilization(NetworkInterface** network_interfaces) const {
+#ifdef __APPLE__
   size_t len;
   int mib[] = {CTL_NET, PF_ROUTE, /* protocol number */ 0, /* address family */ 0, NET_RT_IFLIST2, /* NET_RT_FLAGS mask*/ 0};
   if (sysctl(mib, sizeof(mib) / sizeof(mib[0]), NULL, &len, NULL, 0) != 0) {
@@ -469,6 +470,9 @@ int NetworkPerformanceInterface::NetworkPerformance::network_utilization(Network
   *network_interfaces = ret;
 
   return OS_OK;
+#else
+  return FUNCTIONALITY_NOT_IMPLEMENTED;
+#endif
 }
 
 NetworkPerformanceInterface::NetworkPerformanceInterface() {

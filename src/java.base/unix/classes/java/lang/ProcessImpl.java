@@ -139,6 +139,7 @@ final class ProcessImpl extends Process {
 
             if (osName.equals("Linux")) { return LINUX; }
             if (osName.contains("OS X")) { return BSD; }
+            if (osName.endsWith("BSD")) { return BSD; }
             if (osName.equals("SunOS")) { return SOLARIS; }
             if (osName.equals("AIX")) { return AIX; }
 

@@ -41,6 +41,7 @@ public class OSInfo {
         SOLARIS,
         MACOSX,
         AIX,
+        BSD,
         UNKNOWN
     }
 
@@ -110,6 +111,10 @@ public class OSInfo {
 
             if (osName.contains("AIX")) {
                 return AIX;
+            }
+
+            if (osName.endsWith("BSD")) {
+                return BSD;
             }
 
             // determine another OS here

@@ -31,11 +31,7 @@
 
 void OSThread::pd_initialize() {
   assert(this != NULL, "check");
-#ifdef __APPLE__
   _thread_id        = 0;
-#else
-  _thread_id        = NULL;
-#endif
   _pthread_id       = NULL;
   _siginfo = NULL;
   _ucontext = NULL;

@@ -86,6 +86,7 @@ $(eval $(call SetupJdkExecutable, BUILD_UNPACKEXE, \
     CFLAGS_linux := -fPIC, \
     CFLAGS_solaris := -KPIC, \
     CFLAGS_macosx := -fPIC, \
+    CFLAGS_bsd := -fPIC, \
     DISABLED_WARNINGS_clang := format-nonliteral, \
     LDFLAGS := $(LDFLAGS_JDKEXE) $(LDFLAGS_CXX_JDK) \
         $(call SET_SHARED_LIBRARY_ORIGIN), \

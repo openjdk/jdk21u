@@ -50,6 +50,8 @@ public final class FontUtilities {
 
     public static boolean isMacOSX;
 
+    public static boolean isBSD;
+
     public static boolean useJDKScaler;
 
     public static boolean isWindows;
@@ -69,6 +71,8 @@ public final class FontUtilities {
                 isSolaris = osName.startsWith("SunOS");
 
                 isLinux = osName.startsWith("Linux");
+
+                isBSD = osName.endsWith("BSD");
 
                 isMacOSX = osName.contains("OS X"); // TODO: MacOSX
 

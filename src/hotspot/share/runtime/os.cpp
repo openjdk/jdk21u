@@ -558,15 +558,6 @@ void* os::native_java_library() {
     if (_native_java_library == NULL) {
       vm_exit_during_initialization("Unable to load native library", ebuf);
     }
-
-#if defined(__OpenBSD__)
-    // Work-around OpenBSD's lack of $ORIGIN support by pre-loading libnet.so
-    // ignore errors
-    if (dll_locate_lib(buffer, sizeof(buffer), Arguments::get_dll_dir(),
-                       "net")) {
-      dll_load(buffer, ebuf, sizeof(ebuf));
-    }
-#endif
   }
   return _native_java_library;
 }

@@ -35,6 +35,9 @@ ifeq ($(call isTargetOs, linux), true)
 else ifeq ($(call isTargetOs, solaris), true)
   SA_LDFLAGS := -mt
 
+else ifeq ($(call isTargetOs, bsd), true)
+  SA_CFLAGS := -Wno-error=format-nonliteral -Wno-sign-compare -Wno-error=tautological-pointer-compare
+
 else ifeq ($(call isTargetOs, macosx), true)
   SA_CFLAGS := -Damd64 -D_GNU_SOURCE -mno-omit-leaf-frame-pointer \
       -mstack-alignment=16 -fPIC
@@ -67,6 +70,7 @@ $(eval $(call SetupJdkLibrary, BUILD_LIBSA, \
     EXTRA_SRC := $(LIBSA_EXTRA_SRC), \
     LDFLAGS := $(LDFLAGS_JDKLIB) $(SA_LDFLAGS), \
     LIBS_linux := $(LIBDL), \
+    LIBS_bsd := -lutil -lthread_db $(LIBDL), \
     LIBS_solaris := -ldl -ldemangle -lthread -lproc, \
     LIBS_macosx := -framework Foundation -framework JavaNativeFoundation \
         -framework JavaRuntimeSupport -framework Security -framework CoreFoundation, \

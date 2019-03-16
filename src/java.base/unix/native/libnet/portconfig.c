@@ -67,6 +67,24 @@ static int getPortRange(struct portrange *range)
         range->lower = net_getParam("/dev/tcp", "tcp_smallest_anon_port");
         return 0;
     }
+#elif defined(__OpenBSD__)
+    {
+        int mib[3];
+        mib[0] = CTL_NET;
+        mib[1] = PF_INET;
+
+        mib[2] = IPCTL_IPPORT_HIFIRSTAUTO;
+        size_t rlen = sizeof(range->lower);
+        if (sysctl(mib, 3, &range->lower, &rlen, NULL, 0) == -1)
+            return -1;
+
+        mib[2] = IPCTL_IPPORT_HILASTAUTO;
+        rlen = sizeof(range->higher);
+        if (sysctl(mib, 3, &range->higher, &rlen, NULL, 0) == -1)
+            return -1;
+
+        return 0;
+    }
 #elif defined(_ALLBSD_SOURCE)
     {
         int ret;

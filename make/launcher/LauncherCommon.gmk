@@ -147,6 +147,7 @@ define SetupBuildLauncherBody
       CFLAGS_linux := -fPIC, \
       CFLAGS_solaris := -KPIC -DHAVE_GETHRTIME, \
       CFLAGS_windows := $$($1_CFLAGS_windows), \
+      CFLAGS_bsd := -fPIC, \
       DISABLED_WARNINGS_gcc := unused-function, \
       LDFLAGS := $$(LDFLAGS_JDKEXE) \
           $$(call SET_EXECUTABLE_ORIGIN) \
@@ -157,12 +158,15 @@ define SetupBuildLauncherBody
           -L$(call FindLibDirForModule, java.base), \
       LDFLAGS_solaris := $$(call SET_EXECUTABLE_ORIGIN,/../lib) \
           -L$(call FindLibDirForModule, java.base), \
+      LDFLAGS_bsd := $$(call SET_EXECUTABLE_ORIGIN,/../lib) \
+          -L$(call FindLibDirForModule, java.base), \
       LDFLAGS_aix := -L$(SUPPORT_OUTPUTDIR)/native/java.base, \
       LIBS := $(JDKEXE_LIBS) $$($1_LIBS), \
       LIBS_linux := -ljli -lpthread $(LIBDL), \
       LIBS_macosx := -ljli -framework Cocoa -framework Security \
           -framework ApplicationServices, \
       LIBS_solaris := -ljli -lthread $(LIBDL), \
+      LIBS_bsd := -ljli -pthread $(LIBDL), \
       LIBS_aix := -ljli_static, \
       LIBS_windows := $$($1_WINDOWS_JLI_LIB) \
           $(SUPPORT_OUTPUTDIR)/native/java.base/libjava/java.lib, \

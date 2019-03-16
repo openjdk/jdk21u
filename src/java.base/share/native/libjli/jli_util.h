@@ -112,7 +112,7 @@ JLI_CmdToArgs(char *cmdline);
 #define _LARGFILE64_SOURCE
 #define JLI_Lseek                       lseek64
 #endif
-#ifdef MACOSX
+#ifdef _ALLBSD_SOURCE
 #define JLI_Lseek                       lseek
 #endif
 #ifdef _AIX

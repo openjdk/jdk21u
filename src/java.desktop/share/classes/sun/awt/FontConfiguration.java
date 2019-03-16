@@ -1144,7 +1144,7 @@ public abstract class FontConfiguration {
      */
     HashMap<String, Boolean> existsMap;
     public boolean needToSearchForFile(String fileName) {
-        if (!FontUtilities.isLinux) {
+        if (!FontUtilities.isLinux && !FontUtilities.isBSD) {
             return false;
         } else if (existsMap == null) {
            existsMap = new HashMap<String, Boolean>();

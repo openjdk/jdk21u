@@ -71,6 +71,12 @@ typedef Elf32_Sym       Elf_Sym;
 #include "memory/allocation.hpp"
 #include "utilities/decoder.hpp"
 
+#if defined(LINUX) || defined(_BSDONLY_SOURCE)
+#define NOT_NOEXECSTACK(code)
+#else
+#define NOT_NOEXECSTACK(code) code
+#endif
+
 class ElfStringTable;
 class ElfSymbolTable;
 class ElfFuncDescTable;
@@ -174,7 +180,7 @@ public:
   // Returns false if the elf file requires an executable stack, the stack flag
   // is not set at all, or if the file can not be read.
   // On systems other than linux it always returns false.
-  static bool specifies_noexecstack(const char* filepath) NOT_LINUX({ return false; });
+  static bool specifies_noexecstack(const char* filepath) NOT_NOEXECSTACK({ return false; });
 private:
   // sanity check, if the file is a real elf file
   static bool is_elf_file(Elf_Ehdr&);

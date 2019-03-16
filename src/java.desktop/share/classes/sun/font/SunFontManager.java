@@ -349,7 +349,7 @@ public abstract class SunFontManager implements FontSupport, FontManagerForSGE {
                          * registerFonts method as on-screen these JRE fonts
                          * always go through the JDK rasteriser.
                          */
-                        if (FontUtilities.isLinux) {
+                        if (FontUtilities.isLinux || FontUtilities.isBSD) {
                             /* Linux font configuration uses these fonts */
                             registerFontDir(jreFontDirName);
                         }

@@ -120,7 +120,7 @@ else ifeq ($(call And, $(call isTargetOs, linux) $(call isTargetCpu, aarch64)), 
   endif
 endif
 
-ifeq ($(call isTargetOs, linux macosx windows), true)
+ifeq ($(call isTargetOs, linux macosx windows bsd), true)
   JVM_PRECOMPILED_HEADER := $(TOPDIR)/src/hotspot/share/precompiled/precompiled.hpp
 endif
 

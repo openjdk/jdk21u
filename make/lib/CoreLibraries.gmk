@@ -68,7 +68,7 @@ $(eval $(call SetupNativeCompilation, BUILD_LIBFDLIBM, \
 ##########################################################################################
 
 LIBVERIFY_OPTIMIZATION := HIGH
-ifeq ($(call isTargetOs, solaris linux), true)
+ifeq ($(call isTargetOs, solaris linux bsd), true)
   ifeq ($(COMPILE_WITH_DEBUG_SYMBOLS), true)
     LIBVERIFY_OPTIMIZATION := LOW
   endif
@@ -120,6 +120,7 @@ $(eval $(call SetupJdkLibrary, BUILD_LIBJAVA, \
     LIBS_windows := jvm.lib $(WIN_VERIFY_LIB) \
         shell32.lib delayimp.lib \
         advapi32.lib version.lib, \
+    LIBS_bsd := $(BUILD_LIBFDLIBM), \
 ))
 
 TARGETS += $(BUILD_LIBJAVA)
@@ -168,7 +169,7 @@ $(eval $(call SetupJdkLibrary, BUILD_LIBJIMAGE, \
     CFLAGS_unix := -UDEBUG, \
     LDFLAGS := $(LDFLAGS_JDKLIB) $(LDFLAGS_CXX_JDK) \
         $(call SET_SHARED_LIBRARY_ORIGIN), \
-    LIBS_unix := -ljvm -ldl $(LIBCXX), \
+    LIBS_unix := -ljvm $(LIBDL) $(LIBCXX), \
     LIBS_macosx := -lc++, \
     LIBS_windows := jvm.lib, \
 ))
@@ -217,6 +218,7 @@ $(eval $(call SetupJdkLibrary, BUILD_LIBJLI, \
     DISABLED_WARNINGS_solstudio := \
         E_ASM_DISABLES_OPTIMIZATION \
         E_STATEMENT_NOT_REACHED, \
+    DISABLED_WARNINGS_clang := format-nonliteral, \
     LDFLAGS := $(LDFLAGS_JDKLIB) \
         $(call SET_SHARED_LIBRARY_ORIGIN), \
     LIBS_unix := $(LIBZ_LIBS), \
@@ -225,6 +227,7 @@ $(eval $(call SetupJdkLibrary, BUILD_LIBJLI, \
     LIBS_aix := $(LIBDL),\
     LIBS_macosx := -framework Cocoa -framework Security -framework ApplicationServices, \
     LIBS_windows := advapi32.lib comctl32.lib user32.lib, \
+    LIBS_bsd := -pthread,\
 ))
 
 TARGETS += $(BUILD_LIBJLI)
@@ -243,6 +246,7 @@ ifeq ($(call isTargetOs, aix), true)
       OPTIMIZATION := HIGH, \
       CFLAGS := $(STATIC_LIBRARY_FLAGS) $(CFLAGS_JDKLIB) $(LIBJLI_CFLAGS) \
           $(addprefix -I, $(LIBJLI_SRC_DIRS)), \
+      DISABLED_WARNINGS_clang := format-nonliteral, \
       ARFLAGS := $(ARFLAGS), \
       OBJECT_DIR := $(SUPPORT_OUTPUTDIR)/native/$(MODULE)/libjli_static))
 

@@ -229,7 +229,7 @@ inline int wcslen(const jchar* x) { return wcslen((const wchar_t*)x); }
 
 // Formatting.
 #ifdef _LP64
-# ifdef __APPLE__
+# if defined(__APPLE__) || defined(__OpenBSD__)
 # define FORMAT64_MODIFIER "ll"
 # else
 # define FORMAT64_MODIFIER "l"
@@ -249,10 +249,10 @@ inline int wcslen(const jchar* x) { return wcslen((const wchar_t*)x); }
 #endif
 #define offsetof(klass,field) offset_of(klass,field)
 
-#if defined(_LP64) && defined(__APPLE__)
+#if defined(_LP64) && defined(_ALLBSD_SOURCE)
 #define JLONG_FORMAT          "%ld"
 #define JLONG_FORMAT_W(width) "%" #width "ld"
-#endif // _LP64 && __APPLE__
+#endif // _LP64 && _ALLBSD_SOURCE
 
 #ifndef USE_LIBRARY_BASED_TLS_ONLY
 #define THREAD_LOCAL_DECL __thread

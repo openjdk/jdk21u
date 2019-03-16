@@ -267,6 +267,8 @@ Java_java_lang_ProcessHandleImpl_waitForProcessExit0(JNIEnv* env,
             return status;
         }
      } else {
+// This should be config check for waitid
+#ifndef __OpenBSD__
         /*
          * Wait for the child process to exit without reaping the exitValue.
          * waitid() is standard on all POSIX platforms.
@@ -298,6 +300,11 @@ Java_java_lang_ProcessHandleImpl_waitForProcessExit0(JNIEnv* env,
               */
              return siginfo.si_status;
         }
+#else
+        JNU_ThrowByName(env, "java/lang/UnsupportedOperationException",
+                "unsupported option");
+        return -1;
+#endif
     }
 }
 

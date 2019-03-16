@@ -165,6 +165,8 @@ else
     OPENJDK_TARGET_OS := macosx
   else ifeq ($(UNAME_OS), SunOS)
     OPENJDK_TARGET_OS := solaris
+  else ifneq ($(findstring BSD,$(UNAME_OS),))
+    OPENJDK_TARGET_OS := bsd
   else
     OPENJDK_TARGET_OS := $(UNAME_OS)
   endif
@@ -234,6 +236,9 @@ else ifeq ($(OPENJDK_TARGET_OS), solaris)
   MEMORY_SIZE := $(shell \
       /usr/sbin/prtconf 2> /dev/null | $(GREP) "^Memory [Ss]ize" | $(AWK) '{print $$3}' \
   )
+else ifeq ($(OPENJDK_TARGET_OS), bsd)
+  NUM_CORES := $(shell /sbin/sysctl -n hw.ncpu)
+  MEMORY_SIZE := $(shell $(EXPR) `/sbin/sysctl -n hw.physmem` / 1024 / 1024)
 else ifeq ($(OPENJDK_TARGET_OS), windows)
   NUM_CORES := $(NUMBER_OF_PROCESSORS)
   MEMORY_SIZE := $(shell \

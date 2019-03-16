@@ -57,9 +57,9 @@
 #endif
 
 /**
- * IPV6_ADD_MEMBERSHIP/IPV6_DROP_MEMBERSHIP may not be defined on OSX and AIX
+ * IPV6_ADD_MEMBERSHIP/IPV6_DROP_MEMBERSHIP may not be defined on OSX, BSD and AIX
  */
-#if defined(__APPLE__) || defined(_AIX)
+#if defined(_ALLBSD_SOURCE) || defined(_AIX)
   #ifndef IPV6_ADD_MEMBERSHIP
     #define IPV6_ADD_MEMBERSHIP     IPV6_JOIN_GROUP
     #define IPV6_DROP_MEMBERSHIP    IPV6_LEAVE_GROUP
@@ -93,6 +93,34 @@
     };
   #endif
 #endif /* _AIX */
+
+#if defined(_BSDONLY_SOURCE)
+  #ifndef IP_BLOCK_SOURCE
+    #define IP_ADD_SOURCE_MEMBERSHIP        70   /* join a source-specific group */
+    #define IP_DROP_SOURCE_MEMBERSHIP       71   /* drop a single source */
+    #define IP_BLOCK_SOURCE                 72   /* block a source */
+    #define IP_UNBLOCK_SOURCE               73   /* unblock a source */
+  #endif
+
+  #ifndef MCAST_BLOCK_SOURCE
+    #define MCAST_JOIN_SOURCE_GROUP         82   /* join a source-specific group */
+    #define MCAST_LEAVE_SOURCE_GROUP        83   /* leave a single source */
+    #define MCAST_BLOCK_SOURCE              84   /* block a source */
+    #define MCAST_UNBLOCK_SOURCE            85   /* unblock a source */
+
+    struct group_source_req {
+        uint32_t                gsr_interface;  /* interface index */
+        struct sockaddr_storage gsr_group;      /* group address */
+        struct sockaddr_storage gsr_source;     /* source address */
+    };
+    struct ip_mreq_source {
+        struct in_addr  imr_multiaddr;  /* IP multicast address of group */
+        struct in_addr  imr_interface;  /* local IP address of interface */
+        struct in_addr  imr_sourceaddr; /* IP address of source */
+    };
+  #endif
+
+#endif /* _BSDONLY_SOURCE */
 
 #define COPY_INET6_ADDRESS(env, source, target) \
     (*env)->GetByteArrayRegion(env, source, 0, 16, target)

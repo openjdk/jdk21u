@@ -48,7 +48,7 @@ ifeq ($(call isTargetOs, aix), false)
       -DUSE_DAUDIO=TRUE \
       #
 
-  ifeq ($(call isTargetOs, solaris), false)
+  ifeq ($(call isTargetOs, solaris bsd), false)
     LIBJSOUND_CFLAGS += \
         -DUSE_PLATFORM_MIDI_OUT=TRUE \
         -DUSE_PLATFORM_MIDI_IN=TRUE \
@@ -57,6 +57,10 @@ ifeq ($(call isTargetOs, aix), false)
 
   ifeq ($(call isTargetOs, macosx), true)
     LIBJSOUND_TOOLCHAIN := TOOLCHAIN_LINK_CXX
+  endif
+
+  ifeq ($(OPENJDK_TARGET_OS), bsd)
+    LIBJSOUND_CFLAGS += $(ICONV_CFLAGS)
   endif
 
   $(eval $(call SetupJdkLibrary, BUILD_LIBJSOUND, \
@@ -70,8 +74,10 @@ ifeq ($(call isTargetOs, aix), false)
       DISABLED_WARNINGS_clang := undef, \
       LDFLAGS := $(LDFLAGS_JDKLIB) \
           $(call SET_SHARED_LIBRARY_ORIGIN), \
+      LDFLAGS_bsd := $(ICONV_LDFLAGS), \
       LIBS_unix := -ljava -ljvm, \
       LIBS_linux := $(ALSA_LIBS), \
+      LIBS_bsd := $(ALSA_LIBS), \
       LIBS_macosx := -framework CoreAudio -framework CoreFoundation \
           -framework CoreServices -framework AudioUnit \
           -framework CoreMIDI -framework AudioToolbox $(LIBCXX), \

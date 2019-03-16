@@ -226,6 +226,12 @@ AC_DEFUN_ONCE([JDKOPT_SETUP_JDK_OPTIONS],
   if test "x$OPENJDK_TARGET_CPU" = xs390x ; then
     INCLUDE_SA=false
   fi
+  if test "x$OPENJDK_TARGET_OS_ENV" = xbsd.openbsd ; then
+    INCLUDE_SA=false
+  fi
+  if test "x$OPENJDK_TARGET_OS_ENV" = xbsd.netbsd ; then
+    INCLUDE_SA=false
+  fi
   AC_SUBST(INCLUDE_SA)
 
   # Compress jars
@@ -321,7 +327,7 @@ AC_DEFUN_ONCE([JDKOPT_SETUP_DEBUG_SYMBOLS],
 
   if test "x$NATIVE_DEBUG_SYMBOLS" = xzipped; then
 
-    if test "x$OPENJDK_TARGET_OS" = xsolaris || test "x$OPENJDK_TARGET_OS" = xlinux; then
+    if test "x$OPENJDK_TARGET_OS" = xsolaris || test "x$OPENJDK_TARGET_OS" = xlinux || test "x$OPENJDK_TARGET_OS" = xbsd; then
       if test "x$OBJCOPY" = x; then
         # enabling of enable-debug-symbols and can't find objcopy
         # this is an error
@@ -342,7 +348,7 @@ AC_DEFUN_ONCE([JDKOPT_SETUP_DEBUG_SYMBOLS],
     ZIP_EXTERNAL_DEBUG_SYMBOLS=false
   elif test "x$NATIVE_DEBUG_SYMBOLS" = xexternal; then
 
-    if test "x$OPENJDK_TARGET_OS" = xsolaris || test "x$OPENJDK_TARGET_OS" = xlinux; then
+    if test "x$OPENJDK_TARGET_OS" = xsolaris || test "x$OPENJDK_TARGET_OS" = xlinux || test "x$OPENJDK_TARGET_OS" = xbsd; then
       if test "x$OBJCOPY" = x; then
         # enabling of enable-debug-symbols and can't find objcopy
         # this is an error

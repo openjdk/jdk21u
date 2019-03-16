@@ -185,6 +185,26 @@ AC_DEFUN_ONCE([LIB_SETUP_MISC_LIBS],
   AC_SUBST(LIBDL)
   LIBS="$save_LIBS"
 
+  if test "x$OPENJDK_TARGET_OS" = "xbsd"; then
+    if test "x$OPENJDK_TARGET_OS_ENV" = "xbsd.openbsd"; then
+      ICONV_CFLAGS="-I$PACKAGE_PATH/include"
+      ICONV_LDFLAGS="-L$PACKAGE_PATH/lib"
+      ICONV_LIBS=-liconv
+    else
+      ICONV_CFLAGS=
+      ICONV_LDFLAGS=
+      ICONV_LIBS=
+    fi
+  else
+    ICONV_CFLAGS=
+    ICONV_LDFLAGS=
+    ICONV_LIBS=-liconv
+  fi
+
+  AC_SUBST(ICONV_CFLAGS)
+  AC_SUBST(ICONV_LDFLAGS)
+  AC_SUBST(ICONV_LIBS)
+
   # Control if libzip can use mmap. Available for purposes of overriding.
   LIBZIP_CAN_USE_MMAP=true
   AC_SUBST(LIBZIP_CAN_USE_MMAP)
