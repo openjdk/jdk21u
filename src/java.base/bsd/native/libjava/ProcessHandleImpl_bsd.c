@@ -206,9 +206,24 @@ pid_t os_getParentPidAndTimings(JNIEnv *env, pid_t jpid,
     // Read the process info for the specific pid
     int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, pid};
 
-    if (sysctl(mib, 4, &kp, &bufSize, NULL, 0) < 0) {
-        JNU_ThrowByNameWithLastError(env,
-            "java/lang/RuntimeException", "sysctl failed");
+    if (sysctl(mib, 4, &kp, &bufSize, NULL, 0) == -1) {
+        /*
+         * Check errno and throw an exception only if appropriate.
+         *
+         * ESRCH - No such process
+         *         This can happen if the process completes before the JVM
+         *         attempts to check if it is alive.  If so, no exception
+         *         should be thrown as this is normal behaviour.
+         *
+         * EPERM - Operation not permitted
+         *         This may happen if the user doesn't have permission to
+         *         check the given pid.  No exception should be thrown in
+         *         this case.
+         */
+        if (errno != ESRCH && errno != EPERM) {
+            JNU_ThrowByNameWithLastError(env,
+                "java/lang/RuntimeException", "sysctl failed");
+        }
         return -1;
     }
     if (bufSize > 0 && kp.KI_PID == pid) {
