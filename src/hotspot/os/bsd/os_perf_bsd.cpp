@@ -26,7 +26,8 @@
 #include "memory/resourceArea.hpp"
 #include "runtime/os.hpp"
 #include "runtime/os_perf.hpp"
-#include "vm_version_ext_x86.hpp"
+
+#include CPU_HEADER(vm_version_ext)
 
 #ifdef __APPLE__
   #import <libproc.h>
@@ -341,8 +342,9 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
   *system_processes = next;
 
   return OS_OK;
-#endif
+#else
   return FUNCTIONALITY_NOT_IMPLEMENTED;
+#endif
 }
 
 int SystemProcessInterface::system_processes(SystemProcess** system_procs, int* no_of_sys_processes) const {

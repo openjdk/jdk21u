@@ -203,7 +203,7 @@ address TemplateInterpreterGenerator::generate_return_entry_for(TosState state, 
   // Restore stack bottom in case i2c adjusted stack
   __ movptr(rsp, Address(rbp, frame::interpreter_frame_last_sp_offset * wordSize));
   // and NULL it as marker that esp is now tos until next java call
-  __ movptr(Address(rbp, frame::interpreter_frame_last_sp_offset * wordSize), (int32_t)NULL_WORD);
+  __ movptr(Address(rbp, frame::interpreter_frame_last_sp_offset * wordSize), LP64_ONLY((int32_t))NULL_WORD);
 
   __ restore_bcp();
   __ restore_locals();
@@ -251,7 +251,7 @@ address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state, i
 #endif // _LP64
 
   // NULL last_sp until next java call
-  __ movptr(Address(rbp, frame::interpreter_frame_last_sp_offset * wordSize), (int32_t)NULL_WORD);
+  __ movptr(Address(rbp, frame::interpreter_frame_last_sp_offset * wordSize), LP64_ONLY((int32_t))NULL_WORD);
   __ restore_bcp();
   __ restore_locals();
   const Register thread = NOT_LP64(rcx) LP64_ONLY(r15_thread);
@@ -1501,7 +1501,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
   Interpreter::_rethrow_exception_entry = __ pc();
   // Restore sp to interpreter_frame_last_sp even though we are going
   // to empty the expression stack for the exception processing.
-  __ movptr(Address(rbp, frame::interpreter_frame_last_sp_offset * wordSize), (int32_t)NULL_WORD);
+  __ movptr(Address(rbp, frame::interpreter_frame_last_sp_offset * wordSize), LP64_ONLY((int32_t))NULL_WORD);
   // rax: exception
   // rdx: return address/pc that threw exception
   __ restore_bcp();    // r13/rsi points to call/send
@@ -1647,7 +1647,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
 
   // Restore the last_sp and null it out
   __ movptr(rsp, Address(rbp, frame::interpreter_frame_last_sp_offset * wordSize));
-  __ movptr(Address(rbp, frame::interpreter_frame_last_sp_offset * wordSize), (int32_t)NULL_WORD);
+  __ movptr(Address(rbp, frame::interpreter_frame_last_sp_offset * wordSize), LP64_ONLY((int32_t))NULL_WORD);
 
   __ restore_bcp();
   __ restore_locals();

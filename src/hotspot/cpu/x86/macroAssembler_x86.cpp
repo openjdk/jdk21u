@@ -461,11 +461,11 @@ void MacroAssembler::print_state32(int rdi, int rsi, int rbp, int rsp, int rbx, 
   // Print some words near top of staack.
   int* dump_sp = (int*) rsp;
   for (int col1 = 0; col1 < 8; col1++) {
-    tty->print("(rsp+0x%03x) 0x%08x: ", (int)((intptr_t)dump_sp - (intptr_t)rsp), (intptr_t)dump_sp);
+    tty->print("(rsp+0x%03x) " INTPTR_FORMAT ": ", (int)((intptr_t)dump_sp - (intptr_t)rsp), (intptr_t)dump_sp);
     os::print_location(tty, *dump_sp++);
   }
   for (int row = 0; row < 16; row++) {
-    tty->print("(rsp+0x%03x) 0x%08x: ", (int)((intptr_t)dump_sp - (intptr_t)rsp), (intptr_t)dump_sp);
+    tty->print("(rsp+0x%03x) " INTPTR_FORMAT ": ", (int)((intptr_t)dump_sp - (intptr_t)rsp), (intptr_t)dump_sp);
     for (int col = 0; col < 8; col++) {
       tty->print(" 0x%08x", *dump_sp++);
     }

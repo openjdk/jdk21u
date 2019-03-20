@@ -1291,7 +1291,7 @@ void InterpreterMacroAssembler::unlock_object(Register lock_reg) {
     movptr(obj_reg, Address(lock_reg, BasicObjectLock::obj_offset_in_bytes()));
 
     // Free entry
-    movptr(Address(lock_reg, BasicObjectLock::obj_offset_in_bytes()), (int32_t)NULL_WORD);
+    movptr(Address(lock_reg, BasicObjectLock::obj_offset_in_bytes()), LP64_ONLY((int32_t))NULL_WORD);
 
     if (UseBiasedLocking) {
       biased_locking_exit(obj_reg, header_reg, done);

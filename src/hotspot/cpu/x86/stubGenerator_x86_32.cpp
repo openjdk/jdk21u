@@ -2821,7 +2821,7 @@ class StubGenerator: public StubCodeGenerator {
     __ jcc(Assembler::equal, L_key256_top);
 
     //key128 begins here
-    __ movptr(pos, 0); // init pos before L_multiBlock_loopTop
+    __ movptr(pos, NULL_WORD); // init pos before L_multiBlock_loopTop
 
 #define CTR_DoFour(opc, src_reg)               \
     __ opc(xmm_result0, src_reg);              \
@@ -2987,11 +2987,11 @@ class StubGenerator: public StubCodeGenerator {
     __ ret(0);
 
     __ BIND (L_key192_top);
-    __ movptr(pos, 0); // init pos before L_multiBlock_loopTop
+    __ movptr(pos, NULL_WORD); // init pos before L_multiBlock_loopTop
     __ jmp(L_multiBlock_loopTop[1]); //key192
 
     __ BIND (L_key256_top);
-    __ movptr(pos, 0); // init pos before L_multiBlock_loopTop
+    __ movptr(pos, NULL_WORD); // init pos before L_multiBlock_loopTop
     __ jmp(L_multiBlock_loopTop[2]); //key192
 
     return start;
