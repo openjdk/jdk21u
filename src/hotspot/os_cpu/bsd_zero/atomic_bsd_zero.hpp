@@ -109,9 +109,16 @@ static inline int m68k_lock_test_and_set(int newval, volatile int *ptr) {
  * optimization in the calling code.
  *
  */
-
+#if defined(__FreeBSD__)
+#include <machine/atomic.h>
+#define __kernel_cmpxchg(oldval, newval, ptr) (!atomic_cmpset_rel_32((volatile u_int32_t *)(ptr), (u_int32_t)(oldval), (u_int32_t)(newval)))
+#elif defined(__NetBSD__)
+#include <sys/atomic.h>
+#define __kernel_cmpxchg(oldval, newval, ptr) ((unsigned int)(oldval) != atomic_cas_uint((volatile unsigned int*)(ptr), (unsigned int)(oldval), (unsigned int)(newval)))
+#else
 typedef int (__kernel_cmpxchg_t)(int oldval, int newval, volatile int *ptr);
 #define __kernel_cmpxchg (*(__kernel_cmpxchg_t *) 0xffff0fc0)
+#endif
 
 
 
