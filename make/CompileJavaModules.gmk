@@ -378,7 +378,11 @@ ifeq ($(call isTargetOs, aix), true)
   jdk.sctp_EXCLUDE_FILES += $(SCTP_IMPL_CLASSES)
 endif
 
-ifeq ($(call isTargetOs, bsd), true)
+ifeq ($(OPENJDK_TARGET_OS_ENV), bsd.openbsd)
+  jdk.sctp_EXCLUDE_FILES += $(SCTP_IMPL_CLASSES)
+endif
+
+ifeq ($(OPENJDK_TARGET_OS_ENV), bsd.netbsd)
   jdk.sctp_EXCLUDE_FILES += $(SCTP_IMPL_CLASSES)
 endif
 

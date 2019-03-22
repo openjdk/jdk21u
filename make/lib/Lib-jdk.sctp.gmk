@@ -29,7 +29,16 @@ include LibCommon.gmk
 
 ifeq ($(call isTargetOsType, unix), true)
 
+  # This feels like it should be detected by autoconf
+  SCTP_SUPPORTED=
   ifeq ($(call isTargetOs, macosx aix bsd), false)
+    SCTP_SUPPORTED=true
+  endif
+  ifeq ($(OPENJDK_TARGET_OS_ENV), bsd.freebsd)
+    SCTP_SUPPORTED=true
+  endif
+
+  ifeq ($(SCTP_SUPPORTED), true)
     $(eval $(call SetupJdkLibrary, BUILD_LIBSCTP, \
         NAME := sctp, \
         OPTIMIZATION := LOW, \
@@ -44,6 +53,7 @@ ifeq ($(call isTargetOsType, unix), true)
             $(call SET_SHARED_LIBRARY_ORIGIN), \
         LIBS_unix := -lnio -lnet -ljava -ljvm, \
         LIBS_linux := -lpthread $(LIBDL), \
+        LIBS_bsd := -pthread $(LIBDL), \
         LIBS_solaris := -lsocket, \
     ))
 
