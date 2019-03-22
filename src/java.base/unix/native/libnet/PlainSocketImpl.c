@@ -181,6 +181,7 @@ Java_java_net_PlainSocketImpl_socketCreate(JNIEnv *env, jobject this,
         return;
     }
 
+#ifndef __OpenBSD__
     /*
      * If IPv4 is available, disable IPV6_V6ONLY to ensure dual-socket support.
      */
@@ -193,6 +194,7 @@ Java_java_net_PlainSocketImpl_socketCreate(JNIEnv *env, jobject this,
             return;
         }
     }
+#endif
 
     /*
      * If this is a server socket then enable SO_REUSEADDR

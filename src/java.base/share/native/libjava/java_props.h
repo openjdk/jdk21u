@@ -102,6 +102,10 @@ typedef struct {
     char *exceptionList;
 #endif
 
+#ifdef __OpenBSD__
+    char *java_net_preferIPv4Stack; /* Needed to default to true OpenBSD. */
+#endif
+
 } java_props_t;
 
 java_props_t *GetJavaProperties(JNIEnv *env);

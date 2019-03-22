@@ -191,6 +191,10 @@ Java_jdk_internal_util_SystemProps_00024Raw_platformProperties(JNIEnv *env, jcla
     }
 #endif
 
+#ifdef __OpenBSD__
+    PUTPROP(props, "java.net.preferIPv4Stack", sprops->java_net_preferIPv4Stack);
+#endif
+
     /* data model */
     if (sizeof(sprops) == 4) {
         sprops->data_model = "32";
