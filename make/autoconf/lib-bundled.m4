@@ -61,18 +61,26 @@ AC_DEFUN_ONCE([LIB_SETUP_LIBJPEG],
 
   if test "x${with_libjpeg}" = "xbundled"; then
     USE_EXTERNAL_LIBJPEG=false
+    JPEG_CFLAGS=""
+    JPEG_LIBS=""
   elif test "x${with_libjpeg}" = "xsystem"; then
-    AC_CHECK_HEADER(jpeglib.h, [],
-        [ AC_MSG_ERROR([--with-libjpeg=system specified, but jpeglib.h not found!])])
-    AC_CHECK_LIB(jpeg, jpeg_CreateDecompress, [],
-        [ AC_MSG_ERROR([--with-libjpeg=system specified, but no libjpeg found])])
-
+    PKG_CHECK_MODULES(JPEG, libjpeg, [LIBJPEG_FOUND=yes], [LIBJPEG_FOUND=no])
+    if test "x${LIBJPEG_FOUND}" = "xno"; then
+      AC_CHECK_HEADER(jpeglib.h, [],
+          [ AC_MSG_ERROR([--with-libjpeg=system specified, but jpeglib.h not found!])])
+      AC_CHECK_LIB(jpeg, jpeg_CreateDecompress, [],
+          [ AC_MSG_ERROR([--with-libjpeg=system specified, but no libjpeg found])])
+      JPEG_CFLAGS=""
+      JPEG_LIBS="-ljpeg"
+    fi
     USE_EXTERNAL_LIBJPEG=true
   else
     AC_MSG_ERROR([Invalid use of --with-libjpeg: ${with_libjpeg}, use 'system' or 'bundled'])
   fi
 
   AC_SUBST(USE_EXTERNAL_LIBJPEG)
+  AC_SUBST(JPEG_CFLAGS)
+  AC_SUBST(JPEG_LIBS)
 ])
 
 ################################################################################
