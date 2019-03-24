@@ -762,7 +762,6 @@ ifeq ($(ENABLE_HEADLESS_ONLY), false)
     LIBSPLASHSCREEN_HEADER_DIRS += libsplashscreen/giflib
   else
     LIBSPLASHSCREEN_EXCLUDES := giflib
-    GIFLIB_LIBS := -lgif
   endif
 
   ifeq ($(USE_EXTERNAL_LIBJPEG), false)
