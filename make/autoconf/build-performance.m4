@@ -86,6 +86,13 @@ AC_DEFUN([BPERF_CHECK_MEMORY_SIZE],
     MEMORY_SIZE=`/sbin/sysctl -n hw.physmem`
     MEMORY_SIZE=`expr $MEMORY_SIZE / 1024 / 1024`
     FOUND_MEM=yes
+    if test "x$OPENJDK_TARGET_OS_ENV" = xbsd.openbsd; then
+      RLIMIT_DATA=`ulimit -d`
+      RLIMIT_DATA=`expr $RLIMIT_DATA / 1024`
+      if test "$MEMORY_SIZE" -gt "$RLIMIT_DATA"; then
+        MEMORY_SIZE=$RLIMIT_DATA
+      fi
+    fi
   elif test -x /usr/sbin/sysctl; then
     # Looks like a MacOSX system
     MEMORY_SIZE=`/usr/sbin/sysctl -n hw.memsize`
