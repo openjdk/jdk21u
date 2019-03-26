@@ -1030,24 +1030,6 @@ AC_DEFUN_ONCE([TOOLCHAIN_SETUP_BUILD_COMPILERS],
 # Do some additional checks on the detected tools.
 AC_DEFUN_ONCE([TOOLCHAIN_MISC_CHECKS],
 [
-  AC_ARG_WITH(package-path, [AS_HELP_STRING([--with-package-path],
-      [package path to be used for location of third party packages])])
-  PACKAGE_PATH="$with_package_path"
-  if test "x$PACKAGE_PATH" = x; then
-    case $OPENJDK_TARGET_OS_ENV in
-      bsd.freebsd|bsd.openbsd)
-        PACKAGE_PATH=/usr/local
-        ;;
-      bsd.netbsd)
-        PACKAGE_PATH=/usr/pkg
-        ;;
-      *)
-        PACKAGE_PATH=/opt/local
-        ;;
-    esac
-  fi
-  AC_SUBST(PACKAGE_PATH)
-
   # Check for extra potential brokenness.
   if test  "x$TOOLCHAIN_TYPE" = xmicrosoft; then
     # On Windows, double-check that we got the right compiler.
