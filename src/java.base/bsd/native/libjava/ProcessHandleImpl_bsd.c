@@ -41,7 +41,8 @@
 #include <sys/sysctl.h>
 
 #ifdef __FreeBSD__
-#include <sys/user.h> // For kinfo_proc
+#include <sys/param.h> // For MAXPATHLEN
+#include <sys/user.h>  // For kinfo_proc
 #endif
 
 #if defined(__OpenBSD__)
@@ -381,14 +382,37 @@ void os_getCmdlineAndUserInfo(JNIEnv *env, jobject jinfo, pid_t pid) {
     free(args);
 #else
     int maxargs;
+    char cmd[MAXPATHLEN];
+    jstring cmdexe = NULL;
+
+    // Get the resolved name of the executable
+    size = sizeof(cmd);
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROC;
+    mib[2] = KERN_PROC_PATHNAME;
+    mib[3] = pid;
+    if (sysctl(mib, 4, cmd, &size, NULL, 0) == -1) {
+        if (errno != EINVAL && errno != ESRCH && errno != EPERM) {
+            JNU_ThrowByNameWithLastError(env,
+                "java/lang/RuntimeException", "sysctl failed");
+        }
+        return;
+    }
+    // Make sure it is null terminated
+    cmd[MAXPATHLEN - 1] = '\0';
+
+    // Store the command executable
+    if ((cmdexe = JNU_NewStringPlatform(env, cmd)) == NULL) {
+        return;
+    }
 
     // Get the maximum size of the arguments
     mib[0] = CTL_KERN;
     mib[1] = KERN_ARGMAX;
     size = sizeof(maxargs);
     if (sysctl(mib, 2, &maxargs, &size, NULL, 0) == -1) {
-            JNU_ThrowByNameWithLastError(env,
-                "java/lang/RuntimeException", "sysctl failed");
+        JNU_ThrowByNameWithLastError(env,
+            "java/lang/RuntimeException", "sysctl failed");
         return;
     }
 
@@ -399,42 +423,42 @@ void os_getCmdlineAndUserInfo(JNIEnv *env, jobject jinfo, pid_t pid) {
         return;
     }
 
-    do {            // a block to break out of on error
-        char *cp, *argsEnd;
-        jstring cmdexe = NULL;
+    // A block to break out of on error
+    do {
+        char *cp, *argsEnd = NULL;
 
         mib[0] = CTL_KERN;
         mib[1] = KERN_PROC;
         mib[2] = KERN_PROC_ARGS;
         mib[3] = pid;
-
         size = (size_t) maxargs;
         if (sysctl(mib, 4, args, &size, NULL, 0) == -1) {
-            if (errno != EINVAL) {
+            if (errno != EINVAL && errno != ESRCH && errno != EPERM) {
                 JNU_ThrowByNameWithLastError(env,
                     "java/lang/RuntimeException", "sysctl failed");
             }
             break;
         }
-        memcpy(&nargs, args, sizeof(nargs));
 
-        cp = &args[sizeof(nargs)];      // Strings start after nargs
+        // At this point args should hold a flattened argument string with
+        // arguments delimited by NUL and size should hold the overall length
+        // of the string
+
+        // Make sure the string is NUL terminated
+        args[size] = '\0';
+
+        // Count the number of arguments
+        nargs = 0;
         argsEnd = &args[size];
-
-        // Store the command executable path
-        if ((cmdexe = JNU_NewStringPlatform(env, cp)) == NULL) {
-            break;
+        for (cp = args; *cp != '\0' && (cp < argsEnd); nargs++) {
+            cp += strnlen(cp, (argsEnd - cp)) + 1;
         }
 
-        // Skip trailing nulls after the executable path
-        for (cp = cp + strnlen(cp, argsEnd - cp); cp < argsEnd; cp++) {
-            if (*cp != '\0') {
-                break;
-            }
-        }
-
-        unix_fillArgArray(env, jinfo, nargs, cp, argsEnd, cmdexe, NULL);
+        // Copy over all the args
+        cp = args;
+        unix_fillArgArray(env, jinfo, nargs, cp, argsEnd, cmdexe, args);
     } while (0);
+
     // Free the arg buffer
     free(args);
 #endif
