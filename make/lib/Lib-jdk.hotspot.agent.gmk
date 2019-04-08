@@ -36,7 +36,10 @@ else ifeq ($(call isTargetOs, solaris), true)
   SA_LDFLAGS := -mt
 
 else ifeq ($(call isTargetOs, bsd), true)
-  SA_CFLAGS := -Wno-error=format-nonliteral -Wno-sign-compare -Wno-error=tautological-pointer-compare
+  SA_CFLAGS := -Wno-error=format-nonliteral -Wno-sign-compare
+  ifeq ($(TOOLCHAIN_TYPE), clang)
+    SA_CFLAGS += -Wno-error=tautological-pointer-compare
+  endif
 
 else ifeq ($(call isTargetOs, macosx), true)
   SA_CFLAGS := -Damd64 -D_GNU_SOURCE -mno-omit-leaf-frame-pointer \
