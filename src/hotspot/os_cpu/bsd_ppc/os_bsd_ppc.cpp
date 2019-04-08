@@ -104,28 +104,28 @@ address os::Bsd::ucontext_get_pc(const ucontext_t * uc) {
   // This substructure may or may not be there depending where uc came from:
   // - if uc was handed over as the argument to a sigaction handler, a pointer to the
   //   substructure was provided by the kernel when calling the signal handler, and
-  //   regs->nip can be accessed.
+  //   mc_srr0 can be accessed.
   // - if uc was filled by getcontext(), it is undefined - getcontext() does not fill
   //   it because the volatile registers are not needed to make setcontext() work.
   //   Hopefully it was zero'd out beforehand.
-  guarantee(uc->uc_mcontext.regs != NULL, "only use ucontext_get_pc in sigaction context");
-  return (address)uc->uc_mcontext.regs->nip;
+  guarantee(uc->uc_mcontext.mc_gpr != NULL, "only use ucontext_get_pc in sigaction context");
+  return (address)uc->uc_mcontext.mc_srr0;
 }
 
 // modify PC in ucontext.
 // Note: Only use this for an ucontext handed down to a signal handler. See comment
 // in ucontext_get_pc.
 void os::Bsd::ucontext_set_pc(ucontext_t * uc, address pc) {
-  guarantee(uc->uc_mcontext.regs != NULL, "only use ucontext_set_pc in sigaction context");
-  uc->uc_mcontext.regs->nip = (unsigned long)pc;
+  guarantee(uc->uc_mcontext.mc_gpr != NULL, "only use ucontext_set_pc in sigaction context");
+  uc->uc_mcontext.mc_srr0 = (unsigned long)pc;
 }
 
 static address ucontext_get_lr(const ucontext_t * uc) {
-  return (address)uc->uc_mcontext.regs->link;
+  return (address)uc->uc_mcontext.mc_lr;
 }
 
 intptr_t* os::Bsd::ucontext_get_sp(const ucontext_t * uc) {
-  return (intptr_t*)uc->uc_mcontext.regs->gpr[1/*REG_SP*/];
+  return (intptr_t*)uc->uc_mcontext.mc_gpr[1/*REG_SP*/];
 }
 
 intptr_t* os::Bsd::ucontext_get_fp(const ucontext_t * uc) {
@@ -243,28 +243,6 @@ JVM_handle_bsd_signal(int sig,
     }
   }
 
-  // Make the signal handler transaction-aware by checking the existence of a
-  // second (transactional) context with MSR TS bits active. If the signal is
-  // caught during a transaction, then just return to the HTM abort handler.
-  // Please refer to Bsd kernel document powerpc/transactional_memory.txt,
-  // section "Signals".
-  if (uc && uc->uc_link) {
-    ucontext_t* second_uc = uc->uc_link;
-
-    // MSR TS bits are 29 and 30 (Power ISA, v2.07B, Book III-S, pp. 857-858,
-    // 3.2.1 "Machine State Register"), however note that ISA notation for bit
-    // numbering is MSB 0, so for normal bit numbering (LSB 0) they come to be
-    // bits 33 and 34. It's not related to endianness, just a notation matter.
-    if (second_uc->uc_mcontext.regs->msr & 0x600000000) {
-      if (TraceTraps) {
-        tty->print_cr("caught signal in transaction, "
-                        "ignoring to jump to abort handler");
-      }
-      // Return control to the HTM abort handler.
-      return true;
-    }
-  }
-
 #ifdef CAN_SHOW_REGISTERS_ON_ASSERT
   if ((sig == SIGSEGV || sig == SIGBUS) && info != NULL && info->si_addr == g_assert_poison) {
     handle_assert_poison_fault(ucVoid, info->si_addr);
@@ -349,21 +327,6 @@ JVM_handle_bsd_signal(int sig,
           // it as a hint.
           tty->print_raw_cr("Please check if any of your loaded .so files has "
                             "enabled executable stack (see man page execstack(8))");
-        } else {
-          // Accessing stack address below sp may cause SEGV if current
-          // thread has MAP_GROWSDOWN stack. This should only happen when
-          // current thread was created by user code with MAP_GROWSDOWN flag
-          // and then attached to VM. See notes in os_bsd.cpp.
-          if (thread->osthread()->expanding_stack() == 0) {
-             thread->osthread()->set_expanding_stack();
-             if (os::Bsd::manually_expand_stack(thread, addr)) {
-               thread->osthread()->clear_expanding_stack();
-               return 1;
-             }
-             thread->osthread()->clear_expanding_stack();
-          } else {
-             fatal("recursive segv. expanding stack.");
-          }
         }
       }
     }
@@ -532,17 +495,6 @@ void os::Bsd::init_thread_fpu_state(void) {
   __asm__ __volatile__ ("mtfsfi 6,0");
 }
 
-int os::Bsd::get_fpu_control_word(void) {
-  // x86 has problems with FPU precision after pthread_cond_timedwait().
-  // nothing to do on ppc64.
-  return 0;
-}
-
-void os::Bsd::set_fpu_control_word(int fpu_control) {
-  // x86 has problems with FPU precision after pthread_cond_timedwait().
-  // nothing to do on ppc64.
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // thread stack
 
@@ -568,12 +520,12 @@ void os::print_context(outputStream *st, const void *context) {
   const ucontext_t* uc = (const ucontext_t*)context;
 
   st->print_cr("Registers:");
-  st->print("pc =" INTPTR_FORMAT "  ", uc->uc_mcontext.regs->nip);
-  st->print("lr =" INTPTR_FORMAT "  ", uc->uc_mcontext.regs->link);
-  st->print("ctr=" INTPTR_FORMAT "  ", uc->uc_mcontext.regs->ctr);
+  st->print("pc =" INTPTR_FORMAT "  ", uc->uc_mcontext.mc_srr0);
+  st->print("lr =" INTPTR_FORMAT "  ", uc->uc_mcontext.mc_lr);
+  st->print("ctr=" INTPTR_FORMAT "  ", uc->uc_mcontext.mc_ctr);
   st->cr();
   for (int i = 0; i < 32; i++) {
-    st->print("r%-2d=" INTPTR_FORMAT "  ", i, uc->uc_mcontext.regs->gpr[i]);
+    st->print("r%-2d=" INTPTR_FORMAT "  ", i, uc->uc_mcontext.mc_gpr[i]);
     if (i % 3 == 2) st->cr();
   }
   st->cr();
@@ -601,12 +553,12 @@ void os::print_register_info(outputStream *st, const void *context) {
   st->print_cr("Register to memory mapping:");
   st->cr();
 
-  st->print("pc ="); print_location(st, (intptr_t)uc->uc_mcontext.regs->nip);
-  st->print("lr ="); print_location(st, (intptr_t)uc->uc_mcontext.regs->link);
-  st->print("ctr ="); print_location(st, (intptr_t)uc->uc_mcontext.regs->ctr);
+  st->print("pc ="); print_location(st, (intptr_t)uc->uc_mcontext.mc_srr0);
+  st->print("lr ="); print_location(st, (intptr_t)uc->uc_mcontext.mc_lr);
+  st->print("ctr ="); print_location(st, (intptr_t)uc->uc_mcontext.mc_ctr);
   for (int i = 0; i < 32; i++) {
     st->print("r%-2d=", i);
-    print_location(st, uc->uc_mcontext.regs->gpr[i]);
+    print_location(st, uc->uc_mcontext.mc_gpr[i]);
   }
   st->cr();
 }

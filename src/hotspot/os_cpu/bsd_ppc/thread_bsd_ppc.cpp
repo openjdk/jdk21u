@@ -56,8 +56,8 @@ bool JavaThread::pd_get_top_frame_for_profiling(frame* fr_addr, void* ucontext, 
   // if we were running Java code when SIGPROF came in.
   if (isInJava) {
     ucontext_t* uc = (ucontext_t*) ucontext;
-    frame ret_frame((intptr_t*)uc->uc_mcontext.regs->gpr[1/*REG_SP*/],
-                     (address)uc->uc_mcontext.regs->nip);
+    frame ret_frame((intptr_t*)uc->uc_mcontext.mc_gpr[1/*REG_SP*/],
+                     (address)uc->uc_mcontext.mc_srr0);
 
     if (ret_frame.pc() == NULL) {
       // ucontext wasn't useful
@@ -69,7 +69,7 @@ bool JavaThread::pd_get_top_frame_for_profiling(frame* fr_addr, void* ucontext, 
        if (!((Method*)(istate->method))->is_metaspace_object()) {
          return false;
        }
-       uint64_t reg_bcp = uc->uc_mcontext.regs->gpr[14/*R14_bcp*/];
+       uint64_t reg_bcp = uc->uc_mcontext.mc_gpr[14/*R14_bcp*/];
        uint64_t istate_bcp = istate->bcp;
        uint64_t code_start = (uint64_t)(((Method*)(istate->method))->code_base());
        uint64_t code_end = (uint64_t)(((Method*)istate->method)->code_base() + ((Method*)istate->method)->code_size());
