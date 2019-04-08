@@ -69,8 +69,10 @@ AC_DEFUN([FLAGS_SETUP_LDFLAGS_HELPER],
       LIBJSIG_HASHSTYLE_LDFLAGS="-Wl,--hash-style=both"
     fi
 
-    # Add -z defs, to forbid undefined symbols in object files.
-    BASIC_LDFLAGS="$BASIC_LDFLAGS -Wl,-z,defs"
+    if test "x$OPENJDK_TARGET_OS" != xbsd; then
+        # Add -z defs, to forbid undefined symbols in object files.
+        BASIC_LDFLAGS="$BASIC_LDFLAGS -Wl,-z,defs"
+    fi
 
     BASIC_LDFLAGS_JVM_ONLY="-Wl,-O1 -Wl,-z,relro"
 
