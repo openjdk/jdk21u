@@ -296,6 +296,8 @@ address TemplateInterpreterGenerator::generate_slow_signature_handler() {
   // Although AIX runs on big endian CPU, float is in most significant
   // word of an argument slot.
   __ stfs(floatSlot, 0, arg_c);
+#elif defined(_ALLBSD_SOURCE)
+  __ stfs(floatSlot, 4, arg_c);
 #else
 #error "unknown OS"
 #endif
