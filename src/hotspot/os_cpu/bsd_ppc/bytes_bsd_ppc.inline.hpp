@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_PPC_VM_BYTES_LINUX_PPC_INLINE_HPP
-#define OS_CPU_LINUX_PPC_VM_BYTES_LINUX_PPC_INLINE_HPP
+#ifndef OS_CPU_BSD_PPC_VM_BYTES_BSD_PPC_INLINE_HPP
+#define OS_CPU_BSD_PPC_VM_BYTES_BSD_PPC_INLINE_HPP
 
 #if defined(VM_LITTLE_ENDIAN)
 #include <byteswap.h>
@@ -36,4 +36,4 @@ inline u4 Bytes::swap_u4(u4 x) { return bswap_32(x); }
 inline u8 Bytes::swap_u8(u8 x) { return bswap_64(x); }
 #endif // VM_LITTLE_ENDIAN
 
-#endif // OS_CPU_LINUX_PPC_VM_BYTES_LINUX_PPC_INLINE_HPP
+#endif // OS_CPU_BSD_PPC_VM_BYTES_BSD_PPC_INLINE_HPP

@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_PPC_VM_GLOBALS_LINUX_PPC_HPP
-#define OS_CPU_LINUX_PPC_VM_GLOBALS_LINUX_PPC_HPP
+#ifndef OS_CPU_BSD_PPC_VM_GLOBALS_BSD_PPC_HPP
+#define OS_CPU_BSD_PPC_VM_GLOBALS_BSD_PPC_HPP
 
 // Sets the default values for platform dependent flags used by the runtime system.
 // (see globals.hpp)
@@ -41,4 +41,4 @@ define_pd_global(size_t, JVMInvokeMethodSlack,   8192);
 // Only used on 64 bit platforms
 define_pd_global(size_t, HeapBaseMinAddress,     2*G);
 
-#endif // OS_CPU_LINUX_PPC_VM_GLOBALS_LINUX_PPC_HPP
+#endif // OS_CPU_BSD_PPC_VM_GLOBALS_BSD_PPC_HPP

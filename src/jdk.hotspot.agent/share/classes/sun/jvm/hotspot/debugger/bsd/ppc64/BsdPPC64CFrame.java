@@ -22,18 +22,18 @@
  *
  */
 
-package sun.jvm.hotspot.debugger.linux.ppc64;
+package sun.jvm.hotspot.debugger.bsd.ppc64;
 
 import sun.jvm.hotspot.debugger.*;
 import sun.jvm.hotspot.debugger.ppc64.*;
-import sun.jvm.hotspot.debugger.linux.*;
+import sun.jvm.hotspot.debugger.bsd.*;
 import sun.jvm.hotspot.debugger.cdbg.*;
 import sun.jvm.hotspot.debugger.cdbg.basic.*;
 
-final public class LinuxPPC64CFrame extends BasicCFrame {
+final public class BsdPPC64CFrame extends BasicCFrame {
   // package/class internals only
 
-  public LinuxPPC64CFrame(LinuxDebugger dbg, Address sp, Address pc, int address_size) {
+  public BsdPPC64CFrame(BsdDebugger dbg, Address sp, Address pc, int address_size) {
     super(dbg.getCDebugger());
     this.sp = sp;
     this.pc = pc;
@@ -68,12 +68,12 @@ final public class LinuxPPC64CFrame extends BasicCFrame {
     if (nextPC == null) {
       return null;
     }
-    return new LinuxPPC64CFrame(dbg, nextSP, nextPC, address_size);
+    return new BsdPPC64CFrame(dbg, nextSP, nextPC, address_size);
   }
 
   public static int PPC64_STACK_BIAS = 0;
   private static int address_size;
   private Address pc;
   private Address sp;
-  private LinuxDebugger dbg;
+  private BsdDebugger dbg;
 }

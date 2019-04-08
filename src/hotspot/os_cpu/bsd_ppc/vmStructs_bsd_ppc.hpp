@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_PPC_VM_VMSTRUCTS_LINUX_PPC_HPP
-#define OS_CPU_LINUX_PPC_VM_VMSTRUCTS_LINUX_PPC_HPP
+#ifndef OS_CPU_BSD_PPC_VM_VMSTRUCTS_BSD_PPC_HPP
+#define OS_CPU_BSD_PPC_VM_VMSTRUCTS_BSD_PPC_HPP
 
 // These are the OS and CPU-specific fields, types and integer
 // constants required by the Serviceability Agent. This file is
@@ -52,4 +52,4 @@
 
 #define VM_LONG_CONSTANTS_OS_CPU(declare_constant, declare_preprocessor_constant, declare_c1_constant, declare_c2_constant, declare_c2_preprocessor_constant)
 
-#endif // OS_CPU_LINUX_PPC_VM_VMSTRUCTS_LINUX_PPC_HPP
+#endif // OS_CPU_BSD_PPC_VM_VMSTRUCTS_BSD_PPC_HPP

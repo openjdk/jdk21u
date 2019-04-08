@@ -92,7 +92,7 @@ bool JavaThread::pd_get_top_frame_for_profiling(frame* fr_addr, void* ucontext, 
   return false;
 }
 
-// Forte Analyzer AsyncGetCallTrace profiling support is not implemented on Linux/PPC.
+// Forte Analyzer AsyncGetCallTrace profiling support is not implemented on Bsd/PPC.
 bool JavaThread::pd_get_top_frame_for_signal_handler(frame* fr_addr, void* ucontext, bool isInJava) {
   assert(this->is_Java_thread(), "must be JavaThread");
   return pd_get_top_frame_for_profiling(fr_addr, ucontext, isInJava);

@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_PPC_VM_ATOMIC_LINUX_PPC_HPP
-#define OS_CPU_LINUX_PPC_VM_ATOMIC_LINUX_PPC_HPP
+#ifndef OS_CPU_BSD_PPC_VM_ATOMIC_BSD_PPC_HPP
+#define OS_CPU_BSD_PPC_VM_ATOMIC_BSD_PPC_HPP
 
 #ifndef PPC64
 #error "Atomic currently only implemented for PPC64"
@@ -415,4 +415,4 @@ inline T Atomic::PlatformCmpxchg<8>::operator()(T exchange_value,
 #undef strasm_nobarrier
 #undef strasm_nobarrier_clobber_memory
 
-#endif // OS_CPU_LINUX_PPC_VM_ATOMIC_LINUX_PPC_HPP
+#endif // OS_CPU_BSD_PPC_VM_ATOMIC_BSD_PPC_HPP

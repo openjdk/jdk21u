@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_PPC_VM_ORDERACCESS_LINUX_PPC_HPP
-#define OS_CPU_LINUX_PPC_VM_ORDERACCESS_LINUX_PPC_HPP
+#ifndef OS_CPU_BSD_PPC_VM_ORDERACCESS_BSD_PPC_HPP
+#define OS_CPU_BSD_PPC_VM_ORDERACCESS_BSD_PPC_HPP
 
 // Included in orderAccess.hpp header file.
 
@@ -94,4 +94,4 @@ struct OrderAccess::PlatformOrderedLoad<byte_size, X_ACQUIRE>
 #undef inlasm_isync
 #undef inlasm_acquire_reg
 
-#endif // OS_CPU_LINUX_PPC_VM_ORDERACCESS_LINUX_PPC_HPP
+#endif // OS_CPU_BSD_PPC_VM_ORDERACCESS_BSD_PPC_HPP

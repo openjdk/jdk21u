@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_PPC_VM_PREFETCH_LINUX_PPC_INLINE_HPP
-#define OS_CPU_LINUX_PPC_VM_PREFETCH_LINUX_PPC_INLINE_HPP
+#ifndef OS_CPU_BSD_PPC_VM_PREFETCH_BSD_PPC_INLINE_HPP
+#define OS_CPU_BSD_PPC_VM_PREFETCH_BSD_PPC_INLINE_HPP
 
 #include "runtime/prefetch.hpp"
 
@@ -47,4 +47,4 @@ inline void Prefetch::write(void *loc, intx interval) {
     );
 }
 
-#endif // OS_CPU_LINUX_PPC_VM_PREFETCH_LINUX_PPC_INLINE_HPP
+#endif // OS_CPU_BSD_PPC_VM_PREFETCH_BSD_PPC_INLINE_HPP

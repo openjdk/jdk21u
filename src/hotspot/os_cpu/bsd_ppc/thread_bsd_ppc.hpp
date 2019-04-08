@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_PPC_VM_THREAD_LINUX_PPC_HPP
-#define OS_CPU_LINUX_PPC_VM_THREAD_LINUX_PPC_HPP
+#ifndef OS_CPU_BSD_PPC_VM_THREAD_BSD_PPC_HPP
+#define OS_CPU_BSD_PPC_VM_THREAD_BSD_PPC_HPP
 
  private:
 
@@ -51,4 +51,4 @@
 
   bool pd_get_top_frame_for_profiling(frame* fr_addr, void* ucontext, bool isInJava);
 
-#endif // OS_CPU_LINUX_PPC_VM_THREAD_LINUX_PPC_HPP
+#endif // OS_CPU_BSD_PPC_VM_THREAD_BSD_PPC_HPP

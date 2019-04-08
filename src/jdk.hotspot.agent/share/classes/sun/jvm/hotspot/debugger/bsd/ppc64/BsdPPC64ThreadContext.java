@@ -22,16 +22,16 @@
  *
  */
 
-package sun.jvm.hotspot.debugger.linux.ppc64;
+package sun.jvm.hotspot.debugger.bsd.ppc64;
 
 import sun.jvm.hotspot.debugger.*;
 import sun.jvm.hotspot.debugger.ppc64.*;
-import sun.jvm.hotspot.debugger.linux.*;
+import sun.jvm.hotspot.debugger.bsd.*;
 
-public class LinuxPPC64ThreadContext extends PPC64ThreadContext {
-  private LinuxDebugger debugger;
+public class BsdPPC64ThreadContext extends PPC64ThreadContext {
+  private BsdDebugger debugger;
 
-  public LinuxPPC64ThreadContext(LinuxDebugger debugger) {
+  public BsdPPC64ThreadContext(BsdDebugger debugger) {
     super();
     this.debugger = debugger;
   }
