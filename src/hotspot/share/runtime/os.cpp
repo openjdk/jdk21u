@@ -1455,7 +1455,6 @@ static const char* errno_to_string (int e, bool short_text) {
     X(ENETUNREACH, "Network unreachable") \
     X(ENFILE, "Too many files open in system") \
     X(ENOBUFS, "No buffer space available") \
-    X(ENODATA, "No message is available on the STREAM head read queue") \
     X(ENODEV, "No such device") \
     X(ENOENT, "No such file or directory") \
     X(ENOEXEC, "Executable file format error") \
@@ -1465,8 +1464,6 @@ static const char* errno_to_string (int e, bool short_text) {
     X(ENOMSG, "No message of the desired type") \
     X(ENOPROTOOPT, "Protocol not available") \
     X(ENOSPC, "No space left on device") \
-    X(ENOSR, "No STREAM resources") \
-    X(ENOSTR, "Not a STREAM") \
     X(ENOSYS, "Function not supported") \
     X(ENOTCONN, "The socket is not connected") \
     X(ENOTDIR, "Not a directory") \
@@ -1486,7 +1483,6 @@ static const char* errno_to_string (int e, bool short_text) {
     X(EROFS, "Read-only file system") \
     X(ESPIPE, "Invalid seek") \
     X(ESRCH, "No such process") \
-    X(ETIME, "Stream ioctl() timeout") \
     X(ETIMEDOUT, "Connection timed out") \
     X(ETXTBSY, "Text file busy") \
     X(EWOULDBLOCK, "Operation would block") \
@@ -1511,6 +1507,18 @@ static const char* errno_to_string (int e, bool short_text) {
     #endif
     #ifdef EMULTIHOP
     DEFINE_ENTRY(EMULTIHOP, "Reserved")
+    #endif
+    #ifdef ENODATA
+    DEFINE_ENTRY(ENODATA, "No message is available on the STREAM head read queue")
+    #endif
+    #ifdef ENOSR
+    DEFINE_ENTRY(ENOSR, "No STREAM resources")
+    #endif
+    #ifdef ENOSTR
+    DEFINE_ENTRY(ENOSTR, "Not a STREAM")
+    #endif
+    #ifdef ETIME
+    DEFINE_ENTRY(ETIME, "Stream ioctl() timeout")
     #endif
 
     // End marker.
