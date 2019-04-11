@@ -25,7 +25,8 @@
 
 #include "com_sun_management_internal_OperatingSystemImpl.h"
 
-#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/sysctl.h>
 
 #include "jvm.h"
 
@@ -33,31 +34,28 @@ JNIEXPORT jdouble JNICALL
 Java_com_sun_management_internal_OperatingSystemImpl_getSystemCpuLoad0
 (JNIEnv *env, jobject dummy)
 {
-#if 0
-    // This code is influenced by the darwin top source
-
-    kern_return_t kr;
-    mach_msg_type_number_t count;
-    host_cpu_load_info_data_t load;
+#ifdef __FreeBSD__
+    /* This is largely based on the MacOS X implementation */
 
     static jlong last_used  = 0;
     static jlong last_total = 0;
 
-    count = HOST_CPU_LOAD_INFO_COUNT;
-    kr = host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, (host_info_t)&load, &count);
-    if (kr != KERN_SUCCESS) {
-        return -1;
+    /* Load CPU times */
+    long cp_time[CPUSTATES];
+    size_t len = sizeof(cp_time);
+    if (sysctlbyname("kern.cp_time", &cp_time, &len, NULL, 0) == -1) {
+        return -1.;
     }
 
-    jlong used  = load.cpu_ticks[CPU_STATE_USER] + load.cpu_ticks[CPU_STATE_NICE] + load.cpu_ticks[CPU_STATE_SYSTEM];
-    jlong total = used + load.cpu_ticks[CPU_STATE_IDLE];
+    jlong used  = cp_time[CP_USER] + cp_time[CP_NICE] + cp_time[CP_SYS] + cp_time[CP_INTR];
+    jlong total = used + cp_time[CP_IDLE];
 
     if (last_used == 0 || last_total == 0) {
         // First call, just set the last values
         last_used  = used;
         last_total = total;
         // return 0 since we have no data, not -1 which indicates error
-        return 0;
+        return 0.;
     }
 
     jlong used_delta  = used - last_used;
@@ -70,8 +68,8 @@ Java_com_sun_management_internal_OperatingSystemImpl_getSystemCpuLoad0
 
     return cpu;
 #else
-    // Not implemented yet 
-    return -1;
+    // Not implemented yet
+    return -1.;
 #endif
 }
 
@@ -163,7 +161,7 @@ Java_com_sun_management_internal_OperatingSystemImpl_getProcessCpuLoad0
 
     return cpu;
 #else
-    // Not implemented yet 
-    return -1;
+    // Not implemented yet
+    return -1.;
 #endif
 }
