@@ -27,6 +27,9 @@
 
 #include <sys/resource.h>
 #include <sys/sysctl.h>
+#include <sys/time.h>
+#include <sys/user.h>
+#include <unistd.h>
 
 #include "jvm.h"
 
@@ -35,7 +38,7 @@ Java_com_sun_management_internal_OperatingSystemImpl_getSystemCpuLoad0
 (JNIEnv *env, jobject dummy)
 {
 #ifdef __FreeBSD__
-    /* This is largely based on the MacOS X implementation */
+    /* This is based on the MacOS X implementation */
 
     static jlong last_used  = 0;
     static jlong last_total = 0;
@@ -88,70 +91,47 @@ JNIEXPORT jdouble JNICALL
 Java_com_sun_management_internal_OperatingSystemImpl_getProcessCpuLoad0
 (JNIEnv *env, jobject dummy)
 {
-#if 0
-    // This code is influenced by the darwin top source
-
-    struct task_basic_info_64 task_info_data;
-    struct task_thread_times_info thread_info_data;
-    struct timeval user_timeval, system_timeval, task_timeval;
-    struct timeval now;
-    mach_port_t task = mach_task_self();
-    kern_return_t kr;
+#ifdef __FreeBSD__
+    /* This is based on the MacOS X implementation */
 
     static jlong last_task_time = 0;
     static jlong last_time      = 0;
 
-    mach_msg_type_number_t thread_info_count = TASK_THREAD_TIMES_INFO_COUNT;
-    kr = task_info(task,
-            TASK_THREAD_TIMES_INFO,
-            (task_info_t)&thread_info_data,
-            &thread_info_count);
-    if (kr != KERN_SUCCESS) {
-        // Most likely cause: |task| is a zombie.
-        return -1;
+    struct timeval now;
+    struct kinfo_proc kp;
+    int mib[4];
+    size_t len = sizeof(struct kinfo_proc);
+
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROC;
+    mib[2] = KERN_PROC_PID;
+    mib[3] = getpid();
+
+    if (sysctl(mib, 4, &kp, &len, NULL, 0) == -1) {
+        return -1.;
     }
 
-    mach_msg_type_number_t count = TASK_BASIC_INFO_64_COUNT;
-    kr = task_info(task,
-            TASK_BASIC_INFO_64,
-            (task_info_t)&task_info_data,
-            &count);
-    if (kr != KERN_SUCCESS) {
-        // Most likely cause: |task| is a zombie.
-        return -1;
+    if (gettimeofday(&now, NULL) == -1) {
+        return -1.;
     }
 
-    /* Set total_time. */
-    // thread info contains live time...
-    TIME_VALUE_TO_TIMEVAL(&thread_info_data.user_time, &user_timeval);
-    TIME_VALUE_TO_TIMEVAL(&thread_info_data.system_time, &system_timeval);
-    timeradd(&user_timeval, &system_timeval, &task_timeval);
-
-    // ... task info contains terminated time.
-    TIME_VALUE_TO_TIMEVAL(&task_info_data.user_time, &user_timeval);
-    TIME_VALUE_TO_TIMEVAL(&task_info_data.system_time, &system_timeval);
-    timeradd(&user_timeval, &task_timeval, &task_timeval);
-    timeradd(&system_timeval, &task_timeval, &task_timeval);
-
-    if (gettimeofday(&now, NULL) < 0) {
-       return -1;
-    }
     jint ncpus      = JVM_ActiveProcessorCount();
     jlong time      = TIME_VALUE_TO_MICROSECONDS(now) * ncpus;
-    jlong task_time = TIME_VALUE_TO_MICROSECONDS(task_timeval);
+    jlong task_time = TIME_VALUE_TO_MICROSECONDS(kp.ki_rusage.ru_utime) +
+                      TIME_VALUE_TO_MICROSECONDS(kp.ki_rusage.ru_stime);
 
     if ((last_task_time == 0) || (last_time == 0)) {
         // First call, just set the last values.
         last_task_time = task_time;
         last_time      = time;
         // return 0 since we have no data, not -1 which indicates error
-        return 0;
+        return 0.;
     }
 
     jlong task_time_delta = task_time - last_task_time;
     jlong time_delta      = time - last_time;
     if (time_delta == 0) {
-        return -1;
+        return -1.;
     }
 
     jdouble cpu = (jdouble) task_time_delta / time_delta;
