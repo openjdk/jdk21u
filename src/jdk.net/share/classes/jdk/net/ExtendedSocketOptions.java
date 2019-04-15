@@ -345,6 +345,8 @@ public final class ExtendedSocketOptions {
                 return newInstance("jdk.net.LinuxSocketOptions");
             } else if (osname.startsWith("Mac")) {
                 return newInstance("jdk.net.MacOSXSocketOptions");
+            } else if (osname.endsWith("BSD")) {
+                return newInstance("jdk.net.BsdSocketOptions");
             } else {
                 return new PlatformSocketOptions();
             }
