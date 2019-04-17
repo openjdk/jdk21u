@@ -68,7 +68,7 @@ static void handleError(JNIEnv *env, jint rv, const char *errmsg) {
 JNIEXPORT jboolean JNICALL Java_jdk_net_BsdSocketOptions_keepAliveOptionsSupported0
 (JNIEnv *env, jobject unused) {
 #ifdef __OpenBSD__
-    return false;
+    return JNI_FALSE;
 #else
     return socketOptionSupported(TCP_KEEPIDLE) && socketOptionSupported(TCP_KEEPCNT)
             && socketOptionSupported(TCP_KEEPINTVL);
@@ -133,6 +133,7 @@ JNIEXPORT jint JNICALL Java_jdk_net_BsdSocketOptions_getTcpkeepAliveProbes0
 #ifdef __OpenBSD__
     JNU_ThrowByName(env, "java/lang/UnsupportedOperationException",
                     "unsupported socket option");
+    return -1;
 #else
     jint optval, rv;
     socklen_t sz = sizeof (optval);
@@ -152,6 +153,7 @@ JNIEXPORT jint JNICALL Java_jdk_net_BsdSocketOptions_getTcpKeepAliveTime0
 #ifdef __OpenBSD__
     JNU_ThrowByName(env, "java/lang/UnsupportedOperationException",
                     "unsupported socket option");
+    return -1;
 #else
     jint optval, rv;
     socklen_t sz = sizeof (optval);
@@ -171,6 +173,7 @@ JNIEXPORT jint JNICALL Java_jdk_net_BsdSocketOptions_getTcpKeepAliveIntvl0
 #ifdef __OpenBSD__
     JNU_ThrowByName(env, "java/lang/UnsupportedOperationException",
                     "unsupported socket option");
+    return -1;
 #else
     jint optval, rv;
     socklen_t sz = sizeof (optval);
