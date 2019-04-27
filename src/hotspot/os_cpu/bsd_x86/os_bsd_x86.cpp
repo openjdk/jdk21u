@@ -56,7 +56,6 @@
 // put OS-includes here
 # include <sys/types.h>
 # include <sys/mman.h>
-# include <pthread.h>
 # include <signal.h>
 # include <errno.h>
 # include <dlfcn.h>
@@ -64,7 +63,6 @@
 # include <stdio.h>
 # include <unistd.h>
 # include <sys/resource.h>
-# include <pthread.h>
 # include <sys/stat.h>
 # include <sys/time.h>
 # include <sys/utsname.h>
@@ -74,10 +72,6 @@
 # include <poll.h>
 #ifndef __OpenBSD__
 # include <ucontext.h>
-#endif
-
-#if !defined(__APPLE__) && !defined(__NetBSD__)
-# include <pthread_np.h>
 #endif
 
 // needed by current_stack_region() workaround for Mavericks

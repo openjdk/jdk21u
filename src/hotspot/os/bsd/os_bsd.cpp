@@ -108,6 +108,10 @@
   #include <vm/vm_param.h>
 #endif
 
+#ifdef __OpenBSD__
+# include <pthread_np.h>
+#endif
+
 #ifdef __APPLE__
   #include <mach-o/dyld.h>
 #endif
