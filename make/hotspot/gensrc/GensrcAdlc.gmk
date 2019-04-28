@@ -50,7 +50,7 @@ ifeq ($(call check-jvm-feature, compiler2), true)
     # seem needed any more.
     ADLC_CFLAGS_WARNINGS := -W3 -D_CRT_SECURE_NO_WARNINGS
   else ifeq ($(call isBuildOs, bsd), true)
-    ADLC_CFLAGS := -fno-exceptions
+    ADLC_CFLAGS := -fno-exceptions -D_ALLBSD_SOURCE=1 -D_BSDONLY_SOURCE
   endif
 
   # Set the C++ standard if supported
