@@ -210,6 +210,10 @@ else ifeq ($(call isTargetOs, bsd), true)
     BUILD_LIBJVM_unsafe.cpp_CXXFLAGS := -O1
   endif
 
+  ifeq ($(TOOLCHAIN_TYPE), gcc)
+    BUILD_LIBJVM_unsafe.cpp_CXXFLAGS += -Wno-maybe-uninitialized
+  endif
+
   ifeq ($(TOOLCHAIN_TYPE), clang)
     # The following files are compiled at various optimization
     # levels due to optimization issues encountered at the
