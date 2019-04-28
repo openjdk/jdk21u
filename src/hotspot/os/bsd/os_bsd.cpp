@@ -3095,7 +3095,7 @@ void os::Bsd::install_signal_handlers() {
 
 static const char* get_signal_handler_name(address handler,
                                            char* buf, int buflen) {
-  int offset;
+  int offset = 0;
   bool found = os::dll_address_to_library_name(handler, buf, buflen, &offset);
   if (found) {
     // skip directory names
