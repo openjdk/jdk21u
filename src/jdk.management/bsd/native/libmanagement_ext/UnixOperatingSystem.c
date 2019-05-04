@@ -26,6 +26,7 @@
 #include "com_sun_management_internal_OperatingSystemImpl.h"
 
 #include <sys/resource.h>
+#include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/user.h>
