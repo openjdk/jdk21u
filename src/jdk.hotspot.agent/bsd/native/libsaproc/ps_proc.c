@@ -42,6 +42,12 @@
 // This file has the libproc implementation specific to live process
 // For core files, refer to ps_core.c
 
+typedef enum {
+  ATTACH_SUCCESS,
+  ATTACH_FAIL,
+  ATTACH_THREAD_DEAD
+} attach_state_t;
+
 static inline uintptr_t align(uintptr_t ptr, size_t size) {
   return (ptr & ~(size - 1));
 }
@@ -140,10 +146,11 @@ static bool ptrace_continue(pid_t pid, int signal) {
 
 // waits until the ATTACH has stopped the process
 // by signal SIGSTOP
-static bool ptrace_waitpid(pid_t pid) {
+static attach_state_t ptrace_waitpid(pid_t pid) {
   int ret;
   int status;
-  do {
+  errno = 0;
+  while (true) {
     // Wait for debuggee to stop.
     ret = waitpid(pid, &status, 0);
     if (ret >= 0) {
@@ -153,15 +160,15 @@ static bool ptrace_waitpid(pid_t pid) {
         // will go to sleep.
         if (WSTOPSIG(status) == SIGSTOP) {
           // Debuggee stopped by SIGSTOP.
-          return true;
+          return ATTACH_SUCCESS;
         }
         if (!ptrace_continue(pid, WSTOPSIG(status))) {
           print_error("Failed to correctly attach to VM. VM might HANG! [PTRACE_CONT failed, stopped by %d]\n", WSTOPSIG(status));
-          return false;
+          return ATTACH_FAIL;
         }
       } else {
-        print_debug("waitpid(): Child process exited/terminated (status = 0x%x)\n", status);
-        return false;
+        print_debug("waitpid(): Child process %d exited/terminated (status = 0x%x)\n", pid, status);
+        return ATTACH_THREAD_DEAD;
       }
     } else {
       switch (errno) {
@@ -170,25 +177,45 @@ static bool ptrace_waitpid(pid_t pid) {
           break;
         case ECHILD:
           print_debug("waitpid() failed. Child process pid (%d) does not exist \n", pid);
-          break;
+          return ATTACH_THREAD_DEAD;
         case EINVAL:
-          print_debug("waitpid() failed. Invalid options argument.\n");
-          break;
+          print_error("waitpid() failed. Invalid options argument.\n");
+          return ATTACH_FAIL;
         default:
-          print_debug("waitpid() failed. Unexpected error %d\n",errno);
+          print_error("waitpid() failed. Unexpected error %d\n",errno);
+          return ATTACH_FAIL;
       }
-      return false;
-    }
-  } while(true);
+    } //else
+  } // while
+}
+
+static bool process_doesnt_exist(pid_t pid) {
+  // XXX: This is a stub.
+  return true;
 }
 
 // attach to a process/thread specified by "pid"
-static bool ptrace_attach(pid_t pid) {
+static attach_state_t ptrace_attach(pid_t pid, char* err_buf, size_t err_buf_len) {
+  errno = 0;
   if (ptrace(PT_ATTACH, pid, NULL, 0) < 0) {
-    print_debug("ptrace(PTRACE_ATTACH, ..) failed for %d\n", pid);
-    return false;
+    if (errno == EPERM || errno == ESRCH) {
+      // Check if the process/thread is exiting or is a zombie
+      if (process_doesnt_exist(pid)) {
+        print_debug("Thread with pid %d does not exist\n", pid);
+        return ATTACH_THREAD_DEAD;
+      }
+    }
+    char buf[200];
+    strerror_r(errno, buf, sizeof(buf));
+    snprintf(err_buf, err_buf_len, "ptrace(PTRACE_ATTACH, ..) failed for %d: %s", pid, buf);
+    print_error("%s\n", err_buf);
+    return ATTACH_FAIL;
   } else {
-    return ptrace_waitpid(pid);
+    attach_state_t wait_ret = ptrace_waitpid(pid);
+    if (wait_ret == ATTACH_THREAD_DEAD) {
+      print_debug("Thread with pid %d does not exist\n", pid);
+    }
+    return wait_ret;
   }
 }
 
@@ -432,17 +459,21 @@ static ps_prochandle_ops process_ops = {
 };
 
 // attach to the process. One and only one exposed stuff
-struct ps_prochandle* Pgrab(pid_t pid) {
+struct ps_prochandle* Pgrab(pid_t pid, char* err_buf, size_t err_buf_len) {
   struct ps_prochandle* ph = NULL;
+  attach_state_t attach_status = ATTACH_SUCCESS;
 
   if ( (ph = (struct ps_prochandle*) calloc(1, sizeof(struct ps_prochandle))) == NULL) {
-     print_debug("can't allocate memory for ps_prochandle\n");
-     return NULL;
+    print_debug("can't allocate memory for ps_prochandle\n");
+    return NULL;
   }
 
-  if (ptrace_attach(pid) != true) {
-     free(ph);
-     return NULL;
+  if ((attach_status = ptrace_attach(pid, err_buf, err_buf_len)) != ATTACH_SUCCESS) {
+    if (attach_status == ATTACH_THREAD_DEAD) {
+       print_error("The process with pid %d does not exist.\n", pid);
+    }
+    free(ph);
+    return NULL;
   }
 
   // initialize ps_prochandle

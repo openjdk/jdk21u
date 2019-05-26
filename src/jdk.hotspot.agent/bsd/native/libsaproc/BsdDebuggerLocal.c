@@ -167,9 +167,12 @@ static void fillThreadsAndLoadObjects(JNIEnv* env, jobject this_obj, struct ps_p
 JNIEXPORT void JNICALL Java_sun_jvm_hotspot_debugger_bsd_BsdDebuggerLocal_attach0__I
   (JNIEnv *env, jobject this_obj, jint jpid) {
 
+  char err_buf[200];
   struct ps_prochandle* ph;
-  if ( (ph = Pgrab(jpid)) == NULL) {
-    THROW_NEW_DEBUGGER_EXCEPTION("Can't attach to the process");
+  if ( (ph = Pgrab(jpid, err_buf, sizeof(err_buf))) == NULL) {
+    char msg[230];
+    snprintf(msg, sizeof(msg), "Can't attach to the process: %s", err_buf);
+    THROW_NEW_DEBUGGER_EXCEPTION(msg);
   }
   (*env)->SetLongField(env, this_obj, p_ps_prochandle_ID, (jlong)(intptr_t)ph);
   fillThreadsAndLoadObjects(env, this_obj, ph);
