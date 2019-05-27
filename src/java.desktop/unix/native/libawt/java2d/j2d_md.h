@@ -30,9 +30,9 @@
 /*
  * Linux, MACOSX and BSD's version of <sys/types.h> does not define intptr_t
  */
-#if defined(__linux__) || defined(_ALLBSD_SOURCE)
+#if defined(__linux__) || defined(MACOSX) || defined(_ALLBSD_SOURCE)
 #include <stdint.h>
-#endif /* __linux__ || MACOSX */
+#endif /* __linux__ || MACOSX || _ALLBSD_SOURCE */
 
 typedef unsigned char   jubyte;
 typedef unsigned short  jushort;
