@@ -63,7 +63,7 @@ isAsciiDigit(char c)
   return c >= '0' && c <= '9';
 }
 
-#if defined(__OpenBSD__)
+#if defined(_BSDONLY_SOURCE)
 /*
  * Quoting POSIX: "If a multi-threaded process calls fork(), the new
  * process shall contain a replica of the calling thread and its entire
@@ -93,7 +93,7 @@ closeDescriptors(void)
   #define opendir opendir64
   #define readdir readdir64
   #define closedir closedir64
-#elif defined(_ALLBSD_SOURCE)
+#elif defined(MACOSX)
   #define FD_DIR "/dev/fd"
 #else
   #define FD_DIR "/proc/self/fd"
@@ -136,7 +136,7 @@ closeDescriptors(void)
 
     return 1;
 }
-#endif /* __OpenBSD__ */
+#endif /* _BSDONLY_SOURCE */
 
 int
 moveDescriptor(int fd_from, int fd_to)
