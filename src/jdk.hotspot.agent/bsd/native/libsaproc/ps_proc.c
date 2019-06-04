@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/sysctl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/ptrace.h>
@@ -190,7 +191,21 @@ static attach_state_t ptrace_waitpid(pid_t pid) {
 }
 
 static bool process_doesnt_exist(pid_t pid) {
-  // XXX: This is a stub.
+#if defined(__FreeBSD__)
+  struct kinfo_proc kproc;
+  size_t klen;
+  int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, pid };
+  if (sysctl(mib, 4, &kproc, &klen, NULL, 0) == -1) {
+    return true;
+  }
+
+  switch (kproc.ki_stat) {
+    case SZOMB:
+      return true;
+    default:
+      return false;
+  }
+#endif
   return true;
 }
 
@@ -357,8 +372,7 @@ static bool read_lib_info(struct ps_prochandle* ph) {
   for (i = 0; i < cnt; i++) {
     kve = &freep[i];
     if ((kve->kve_flags & KVME_FLAG_COW) &&
-        kve->kve_path != NULL &&
-        strlen(kve->kve_path) > 0) {
+        strnlen(kve->kve_path, PATH_MAX) > 0) {
 
       if (find_lib(ph, kve->kve_path) == false) {
         lib_info* lib;
