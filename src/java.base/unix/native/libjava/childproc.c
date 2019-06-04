@@ -79,9 +79,13 @@ isAsciiDigit(char c)
 int
 closeDescriptors(void)
 {
+#if defined(__FreeBSD__)
+    closefrom(FAIL_FILENO + 1);
+#else
     int err;
     RESTARTABLE(closefrom(FAIL_FILENO + 1), err);
-    return err;
+#endif
+    return 1;
 }
 #else
 
