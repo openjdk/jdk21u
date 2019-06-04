@@ -23,6 +23,10 @@
  * questions.
  */
 
+#ifdef __NetBSD__
+#define _KMEMUSER
+#endif
+
 #include "jni.h"
 #include "jni_util.h"
 #include "java_lang_ProcessHandleImpl.h"
@@ -46,17 +50,26 @@
 #endif
 
 #if defined(__OpenBSD__)
+#define KINFO_PROC_T   kinfo_proc
 #define KI_PID         p_pid
 #define KI_PPID        p_ppid
 #define KI_UID         p_uid
 #define KI_START_SEC   p_ustart_sec
 #define KI_START_USEC  p_ustart_usec
 #elif defined(__FreeBSD__)
+#define KINFO_PROC_T   kinfo_proc
 #define KI_PID         ki_pid
 #define KI_PPID        ki_ppid
 #define KI_UID         ki_uid
 #define KI_START_SEC   ki_start.tv_sec
 #define KI_START_USEC  ki_start.tv_usec
+#elif defined(__NetBSD__)
+#define KINFO_PROC_T   kinfo_proc2
+#define KI_PID         p_pid
+#define KI_PPID        p_ppid
+#define KI_UID         p_uid
+#define KI_START_SEC   p_ustart_sec
+#define KI_START_USEC  p_ustart_usec
 #endif
 
 /**
@@ -112,7 +125,7 @@ jint os_getChildren(JNIEnv *env, jlong jpid, jlongArray jarray,
     // Get buffer size needed to read all processes
 #if defined(__OpenBSD__)
     u_int namelen = 6;
-    int mib[6] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), 0};
+    int mib[6] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0, sizeof(struct KINFO_PROC_T), 0};
 #else
     u_int namelen = 4;
     int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
@@ -131,7 +144,7 @@ jint os_getChildren(JNIEnv *env, jlong jpid, jlongArray jarray,
     }
 
 #if defined(__OpenBSD__)
-    mib[5] = bufSize / sizeof(struct kinfo_proc);
+    mib[5] = bufSize / sizeof(struct KINFO_PROC_T);
 #endif
 
     // Read process info for all processes
@@ -143,8 +156,8 @@ jint os_getChildren(JNIEnv *env, jlong jpid, jlongArray jarray,
     }
 
     do { // Block to break out of on Exception
-        struct kinfo_proc *kp = (struct kinfo_proc *) buffer;
-        unsigned long nentries = bufSize / sizeof (struct kinfo_proc);
+        struct KINFO_PROC_T *kp = (struct KINFO_PROC_T *) buffer;
+        unsigned long nentries = bufSize / sizeof (struct KINFO_PROC_T);
         long i;
 
         pids = (*env)->GetLongArrayElements(env, jarray, NULL);
@@ -211,7 +224,7 @@ pid_t os_getParentPidAndTimings(JNIEnv *env, pid_t jpid,
                                 jlong *totalTime, jlong *startTime) {
     const pid_t pid = (pid_t) jpid;
     pid_t ppid = -1;
-    struct kinfo_proc kp;
+    struct KINFO_PROC_T kp;
     size_t bufSize = sizeof kp;
 
     // Read the process info for the specific pid
@@ -273,7 +286,7 @@ pid_t os_getParentPidAndTimings(JNIEnv *env, pid_t jpid,
  * Return the uid of a process or -1 on error
  */
 static uid_t getUID(pid_t pid) {
-    struct kinfo_proc kp;
+    struct KINFO_PROC_T kp;
     size_t bufSize = sizeof kp;
 
     // Read the process info for the specific pid
