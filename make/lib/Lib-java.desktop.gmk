@@ -67,6 +67,10 @@ ifeq ($(call isTargetOs, aix), false)
     LIBJSOUND_EXCLUDE_SRC_PATTERNS := bsd
   endif
 
+  ifeq ($(OPENJDK_TARGET_OS_ENV), bsd.netbsd)
+    LIBJSOUND_EXCLUDE_SRC_PATTERNS := bsd
+  endif
+
   $(eval $(call SetupJdkLibrary, BUILD_LIBJSOUND, \
       NAME := jsound, \
       EXCLUDE_SRC_PATTERNS := $(LIBJSOUND_EXCLUDE_SRC_PATTERNS), \
