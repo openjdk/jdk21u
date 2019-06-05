@@ -23,10 +23,6 @@
  * questions.
  */
 
-#ifdef __NetBSD__
-#define _KMEMUSER
-#endif
-
 #include "jni.h"
 #include "jni_util.h"
 #include "java_lang_ProcessHandleImpl.h"
@@ -42,6 +38,7 @@
 #include <string.h>
 
 #include <sys/types.h>
+#include <sys/resource.h>
 #include <sys/sysctl.h>
 
 #ifdef __FreeBSD__
