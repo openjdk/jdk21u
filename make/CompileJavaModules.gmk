@@ -380,10 +380,18 @@ endif
 
 ifeq ($(OPENJDK_TARGET_OS_ENV), bsd.openbsd)
   jdk.sctp_EXCLUDE_FILES += $(SCTP_IMPL_CLASSES)
+  ## WORKAROUND need to provide Impl classes that throw UnsupportedOperationException
+  ifeq ($(MODULE), jdk.sctp)
+    SRC_SUBDIRS += macosx/classes
+  endif
 endif
 
 ifeq ($(OPENJDK_TARGET_OS_ENV), bsd.netbsd)
   jdk.sctp_EXCLUDE_FILES += $(SCTP_IMPL_CLASSES)
+  ## WORKAROUND need to provide Impl classes that throw UnsupportedOperationException
+  ifeq ($(MODULE), jdk.sctp)
+    SRC_SUBDIRS += macosx/classes
+  endif
 endif
 
 ################################################################################
