@@ -47,6 +47,7 @@
 #endif
 
 #if defined(__OpenBSD__)
+#define KERN_PROC_MIB  KERN_PROC
 #define KINFO_PROC_T   kinfo_proc
 #define KI_PID         p_pid
 #define KI_PPID        p_ppid
@@ -61,6 +62,7 @@
 #define KI_START_SEC   ki_start.tv_sec
 #define KI_START_USEC  ki_start.tv_usec
 #elif defined(__NetBSD__)
+#define KERN_PROC_MIB  KERN_PROC2
 #define KINFO_PROC_T   kinfo_proc2
 #define KI_PID         p_pid
 #define KI_PPID        p_ppid
@@ -120,9 +122,9 @@ jint os_getChildren(JNIEnv *env, jlong jpid, jlongArray jarray,
     }
 
     // Get buffer size needed to read all processes
-#if defined(__OpenBSD__)
+#ifndef __FreeBSD__
     u_int namelen = 6;
-    int mib[6] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0, sizeof(struct KINFO_PROC_T), 0};
+    int mib[6] = {CTL_KERN, KERN_PROC_MIB, KERN_PROC_ALL, 0, sizeof(struct KINFO_PROC_T), 0};
 #else
     u_int namelen = 4;
     int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
@@ -140,7 +142,7 @@ jint os_getChildren(JNIEnv *env, jlong jpid, jlongArray jarray,
         return -1;
     }
 
-#if defined(__OpenBSD__)
+#ifndef __FreeBSD__
     mib[5] = bufSize / sizeof(struct KINFO_PROC_T);
 #endif
 
@@ -225,9 +227,9 @@ pid_t os_getParentPidAndTimings(JNIEnv *env, pid_t jpid,
     size_t bufSize = sizeof kp;
 
     // Read the process info for the specific pid
-#if defined(__OpenBSD__)
+#ifndef __FreeBSD__
     u_int namelen = 6;
-    int mib[6] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, pid, bufSize, 1};
+    int mib[6] = {CTL_KERN, KERN_PROC_MIB, KERN_PROC_PID, pid, bufSize, 1};
 #else
     u_int namelen = 4;
     int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, pid};
@@ -259,7 +261,7 @@ pid_t os_getParentPidAndTimings(JNIEnv *env, pid_t jpid,
         ppid = kp.KI_PPID;
     }
 
-#ifdef __OpenBSD__
+#ifndef __FreeBSD__
     jlong microsecs = kp.p_uutime_sec * 1000 * 1000 + kp.p_uutime_usec +
         kp.p_ustime_sec * 1000 * 1000 + kp.p_ustime_usec;
     *totalTime = microsecs * 1000;
@@ -287,9 +289,9 @@ static uid_t getUID(pid_t pid) {
     size_t bufSize = sizeof kp;
 
     // Read the process info for the specific pid
-#if defined(__OpenBSD__)
+#ifndef __FreeBSD__
     u_int namelen = 6;
-    int mib[6] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, pid, bufSize, 1};
+    int mib[6] = {CTL_KERN, KERN_PROC_MIB, KERN_PROC_PID, pid, bufSize, 1};
 #else
     u_int namelen = 4;
     int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, pid};
