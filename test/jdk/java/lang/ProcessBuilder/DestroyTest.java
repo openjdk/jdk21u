@@ -114,7 +114,8 @@ public class DestroyTest {
             if (osName.startsWith("Linux")
                     || osName.startsWith("Mac OS")
                     || osName.equals("SunOS")
-                    || osName.equals("AIX")) {
+                    || osName.equals("AIX")
+                    || osName.endsWith("BSD")) {
                 return new UnixTest(tempFile);
             }
         }

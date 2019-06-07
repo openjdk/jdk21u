@@ -71,6 +71,8 @@ else
     BUILD_JDK_JTREG_LIBRARIES_LIBS_libInheritedChannel := -ljava
   else ifeq ($(call isTargetOs, solaris), true)
     BUILD_JDK_JTREG_LIBRARIES_LIBS_libInheritedChannel := -ljava -lsocket -lnsl
+  else ifeq ($(OPENJDK_TARGET_OS_ENV), bsd.openbsd)
+    BUILD_JDK_JTREG_EXCLUDE += libDirectIO.c
   endif
   BUILD_JDK_JTREG_EXECUTABLES_LIBS_exeJliLaunchTest := -ljli
   BUILD_JDK_JTREG_EXECUTABLES_LIBS_exeCallerAccessTest := -ljvm

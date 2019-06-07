@@ -42,6 +42,9 @@ case "$OS" in
   AIX )
     PS=":"
     ;;
+  *BSD )
+    PS=":"
+    ;;
   Windows*)
     PS=";"
     ;;

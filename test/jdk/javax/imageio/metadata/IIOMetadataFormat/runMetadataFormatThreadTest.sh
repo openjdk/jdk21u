@@ -90,7 +90,7 @@ case "$OS" in
       FILESEP="/"
       ;;
 
-   Linux | Darwin | AIX )
+   Linux | Darwin | AIX | *BSD )
       VAR="A different value for Linux"
       DEFAULT_JDK=/none
       #DEFAULT_JDK=/usr/local/java/jdk1.4/linux-i386

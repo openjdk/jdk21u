@@ -59,7 +59,7 @@ pass()
 # Checking for proper OS
 OS=`uname -s`
 case "$OS" in
-   AIX | CYGWIN* | Darwin | Linux | SunOS )
+   AIX | CYGWIN* | Darwin | Linux | SunOS | *BSD )
       FILESEP="/"
       ;;
     
@@ -122,7 +122,7 @@ case "$OS" in
     fi
     ;;
 
-  AIX | Linux | SunOS )
+  AIX | Linux | SunOS | *BSD )
     ${COMPILEJAVA}/bin/javac ${TESTJAVACOPTS} \
                          --add-exports java.desktop/sun.awt=ALL-UNNAMED \
                          --add-exports java.desktop/sun.awt.X11=ALL-UNNAMED ${CP} \
@@ -172,7 +172,7 @@ case "$OS" in
     fi
     ;;
 
-  AIX | Linux | SunOS )
+  AIX | Linux | SunOS | *BSD )
     ${TESTJAVA}/bin/java ${TESTVMOPTS} -Djava.awt.headless=true \
                          --add-opens java.desktop/sun.awt=ALL-UNNAMED \
                          --add-opens java.desktop/sun.awt.X11=ALL-UNNAMED ${CP} \

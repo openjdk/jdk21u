@@ -43,7 +43,7 @@ CYGWIN_NT*)
 esac
 
 case $OS in
-SunOS | Linux | Darwin | AIX )
+SunOS | Linux | Darwin | AIX | *BSD )
     PATHSEP=":"
     FILESEP="/"
     DFILESEP=$FILESEP

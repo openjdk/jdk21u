@@ -51,6 +51,10 @@ case "$OS" in
     PS=":"
     FS="/"
     ;;
+  *BSD )
+    PS=":"
+    FS="/"
+    ;;
   Windows*)
     PS=";"
     OS="Windows"

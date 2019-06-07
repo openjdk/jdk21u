@@ -144,7 +144,11 @@ boolean isSupportedSigScenario ()
 
 boolean isSupportedSigMode ()
 {
+#ifdef __OpenBSD__
+    if ( !strcmp(mode, "sigaction") )
+#else
     if ( (!strcmp(mode, "sigset")) || (!strcmp(mode, "sigaction")) )
+#endif
     {
         // printf("%s is a supported mode\n", mode);
         return TRUE;
@@ -240,10 +244,12 @@ void setSignalHandler()
            exit(TEST_FAILED);
         }
     } // end - dealing with sigaction
+#ifndef __OpenBSD__
     else if (!strcmp(mode, "sigset"))
     {
         sigset(signal_num, handler);
     } // end dealing with sigset
+#endif
     printf("%s: signal handler using function '%s' has been set\n", signal_name, mode);
 }
 
@@ -289,7 +295,11 @@ void invokeSignal()
 // Usage function
 void printUsage()
 {
+#ifdef __OpenBSD__
+    printf("Usage: sigtest -sig {signal_name} -mode {signal | sigaction } -scenario {nojvm | postpre | postpost | prepre | prepost}> [-vmopt jvm_option] \n");
+#else
     printf("Usage: sigtest -sig {signal_name} -mode {signal | sigset | sigaction } -scenario {nojvm | postpre | postpost | prepre | prepost}> [-vmopt jvm_option] \n");
+#endif
     printf("\n");
     exit(TEST_FAILED);
 }
