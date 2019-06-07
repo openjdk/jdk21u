@@ -34,6 +34,9 @@
   #include <mach/mach.h>
   #include <mach/task_info.h>
 #endif
+#ifdef __FreeBSD__
+  #include <sys/user.h>
+#endif
 #include <sys/time.h>
 #include <sys/sysctl.h>
 #include <sys/socket.h>
@@ -139,6 +142,36 @@ int CPUPerformanceInterface::CPUPerformance::cpu_load_total_process(double* cpu_
   *cpu_load = (double)used_delta / total_delta;
 
   return OS_OK;
+#elif defined(__FreeBSD__)
+  // counters are user/nice/system/interrupt/idle/states
+  long cpu_load_info[6];
+  size_t length = sizeof(long) * 6;
+
+  if (sysctlbyname("kern.cp_time", &cpu_load_info, &length, NULL, 0) == -1) {
+    return OS_ERR;
+  }
+
+  long used_ticks = cpu_load_info[0] + cpu_load_info[1] + cpu_load_info[2];
+  long total_ticks = used_ticks + cpu_load_info[4];
+
+  if (_used_ticks == 0 || _total_ticks == 0) {
+    // First call, just set the values
+    _used_ticks = used_ticks;
+    _total_ticks = total_ticks;
+    return OS_ERR;
+  }
+
+  long used_delta = used_ticks - _used_ticks;
+  long total_delta = total_ticks - _total_ticks;
+
+  if (total_delta == 0) {
+    // Avoid division by zero
+    return OS_ERR;
+  }
+
+  *cpu_load = (double)used_delta / total_delta;
+
+  return OS_OK;
 #else
   return FUNCTIONALITY_NOT_IMPLEMENTED;
 #endif
@@ -183,6 +216,65 @@ int CPUPerformanceInterface::CPUPerformance::cpu_loads_process(double* pjvmUserL
   _total_cpu_nanos = total_cpu_nanos;
   _jvm_user_nanos = jvm_user_nanos;
   _jvm_system_nanos = jvm_system_nanos;
+
+  return result;
+#elif defined(__FreeBSD__)
+  struct kinfo_proc *lproc;
+  size_t length;
+  int mib[3] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL };
+  int result = cpu_load_total_process(psystemTotalLoad);
+
+  if (sysctl(mib, 3, NULL, &length, NULL, 0) == -1) {
+    return OS_ERR;
+  }
+
+  lproc = (struct kinfo_proc *)malloc(length);
+  if (!lproc) {
+    return OS_ERR;
+  }
+
+  if (sysctl(mib, 3, lproc, &length, NULL, 0) == -1) {
+    free(lproc);
+    return OS_ERR;
+  }
+
+  int active_processor_count = os::active_processor_count();
+  long jvm_user_nanos = 0;
+  long jvm_system_nanos = 0;
+
+  long total_cpu_nanos;
+  if(!now_in_nanos(&total_cpu_nanos)) {
+    free(lproc);
+    return OS_ERR;
+  }
+
+  if (_total_cpu_nanos == 0 || active_processor_count != _active_processor_count) {
+    // First call or change in active processor count
+    result = OS_ERR;
+  }
+
+  for (size_t i = 0; i < length / sizeof(*lproc); i ++) {
+     struct rusage procusg = lproc[i].ki_rusage;
+     jvm_user_nanos += procusg.ru_utime.tv_usec + (1000000 * procusg.ru_utime.tv_sec);
+     jvm_system_nanos += procusg.ru_stime.tv_usec + (1000000 * procusg.ru_stime.tv_sec);
+  }
+
+  long delta_nanos = active_processor_count * (total_cpu_nanos - _total_cpu_nanos);
+  if (delta_nanos == 0) {
+    // Avoid division by zero
+    free(lproc);
+    return OS_ERR;
+  }
+
+  *pjvmUserLoad = normalize((double)(jvm_user_nanos - _jvm_user_nanos)/delta_nanos);
+  *pjvmKernelLoad = normalize((double)(jvm_system_nanos - _jvm_system_nanos)/delta_nanos);
+
+  _active_processor_count = active_processor_count;
+  _total_cpu_nanos = total_cpu_nanos;
+  _jvm_user_nanos = jvm_user_nanos;
+  _jvm_system_nanos = jvm_system_nanos;
+
+  free(lproc);
 
   return result;
 #else
