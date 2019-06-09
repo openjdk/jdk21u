@@ -433,6 +433,58 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
   *system_processes = next;
 
   return OS_OK;
+#elif defined(__FreeBSD__)
+  struct kinfo_proc *lproc;
+  int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL };
+  const size_t miblen = 3;
+  size_t length;
+  int pid_count;
+
+  if (sysctl(mib, miblen, NULL, &length, NULL, 0) == -1) {
+    return OS_ERR;
+  }
+
+  lproc = (struct kinfo_proc *)malloc(length);
+  if (!lproc) {
+    return OS_ERR;
+  }
+
+  if (sysctl(mib, miblen, lproc, &length, NULL, 0) == -1) {
+    free(lproc);
+    return OS_ERR;
+  }
+
+  pid_count = length / sizeof(*lproc);
+  int process_count = 0;
+  SystemProcess *next;
+  
+  for (int i = 0; i < pid_count; i++) {
+     int bmib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, lproc[i].ki_pid };
+     const size_t bmiblen = 4;
+     char buffer[PATH_MAX];
+     length = sizeof(buffer);
+     if (sysctl(bmib, bmiblen, buffer, &length, NULL, 0) == -1) {
+       continue;
+     }
+
+     length = strnlen(buffer, PATH_MAX);
+     if (length > 0) {
+       SystemProcess* current = new SystemProcess();
+       char * path = NEW_C_HEAP_ARRAY(char, length + 1, mtInternal);
+       strcpy(path, buffer);
+       current->set_path(path);
+       current->set_pid((int)lproc[i].ki_pid);
+       current->set_next(next);
+       next = current;
+       process_count++;
+     }
+  }
+
+  free(lproc);
+  *no_of_sys_processes = process_count;
+  *system_processes = next;
+
+  return OS_OK;
 #else
   return FUNCTIONALITY_NOT_IMPLEMENTED;
 #endif
