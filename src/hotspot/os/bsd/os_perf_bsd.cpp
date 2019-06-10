@@ -459,11 +459,11 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
   SystemProcess *next;
   
   for (int i = 0; i < pid_count; i++) {
-     int bmib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, lproc[i].ki_pid };
-     const size_t bmiblen = 4;
+     int pmib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, lproc[i].ki_pid };
+     const size_t pmiblen = 4;
      char buffer[PATH_MAX];
      length = sizeof(buffer);
-     if (sysctl(bmib, bmiblen, buffer, &length, NULL, 0) == -1) {
+     if (sysctl(pmib, pmiblen, buffer, &length, NULL, 0) == -1) {
        continue;
      }
 
@@ -471,7 +471,8 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
      if (length > 0) {
        SystemProcess* current = new SystemProcess();
        char * path = NEW_C_HEAP_ARRAY(char, length + 1, mtInternal);
-       strcpy(path, buffer);
+       strncpy(path, buffer, length);
+       path[length] = 0;
        current->set_path(path);
        current->set_pid((int)lproc[i].ki_pid);
        current->set_next(next);
