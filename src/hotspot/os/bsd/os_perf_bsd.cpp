@@ -36,6 +36,8 @@
 #endif
 #ifdef __FreeBSD__
   #include <sys/user.h>
+  #define NET_RT_IFLIST2 NET_RT_IFLIST
+  #define RTM_IFINFO2 RTM_IFINFO
 #endif
 #include <sys/time.h>
 #include <sys/sysctl.h>
@@ -456,7 +458,7 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
 
   pid_count = length / sizeof(*lproc);
   int process_count = 0;
-  SystemProcess *next;
+  SystemProcess *next = NULL;
   
   for (int i = 0; i < pid_count; i++) {
      int pmib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, lproc[i].ki_pid };
@@ -576,7 +578,7 @@ NetworkPerformanceInterface::NetworkPerformance::~NetworkPerformance() {
 }
 
 int NetworkPerformanceInterface::NetworkPerformance::network_utilization(NetworkInterface** network_interfaces) const {
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
   size_t len;
   int mib[] = {CTL_NET, PF_ROUTE, /* protocol number */ 0, /* address family */ 0, NET_RT_IFLIST2, /* NET_RT_FLAGS mask*/ 0};
   if (sysctl(mib, sizeof(mib) / sizeof(mib[0]), NULL, &len, NULL, 0) != 0) {
@@ -597,8 +599,12 @@ int NetworkPerformanceInterface::NetworkPerformance::network_utilization(Network
       continue;
     }
 
+#if defined(__APPLE__)
     if_msghdr2* msghdr2 = reinterpret_cast<if_msghdr2*>(msghdr);
     sockaddr_dl* sockaddr = reinterpret_cast<sockaddr_dl*>(msghdr2 + 1);
+#else
+    sockaddr_dl* sockaddr = reinterpret_cast<sockaddr_dl*>(msghdr + 1);
+#endif
 
     // The interface name is not necessarily NUL-terminated
     char name_buf[128];
@@ -606,8 +612,13 @@ int NetworkPerformanceInterface::NetworkPerformance::network_utilization(Network
     strncpy(name_buf, sockaddr->sdl_data, name_len);
     name_buf[name_len] = '\0';
 
+#if defined(__APPLE__)
     uint64_t bytes_in = msghdr2->ifm_data.ifi_ibytes;
     uint64_t bytes_out = msghdr2->ifm_data.ifi_obytes;
+#else
+    uint64_t bytes_in = msghdr->ifm_data.ifi_ibytes;
+    uint64_t bytes_out = msghdr->ifm_data.ifi_obytes;
+#endif
 
     NetworkInterface* cur = new NetworkInterface(name_buf, bytes_in, bytes_out, ret);
     ret = cur;
