@@ -47,6 +47,18 @@
 #endif
 
 #if defined(__OpenBSD__)
+#include <sys/event.h> // For kqueue
+#include <sys/time.h>  // For kqueue
+#endif
+
+/* TODO: Refactor. */
+#define RESTARTABLE(_cmd, _result) do { \
+  do { \
+    _result = _cmd; \
+  } while((_result == -1) && (errno == EINTR)); \
+} while(0)
+
+#if defined(__OpenBSD__)
 #define KERN_PROC_MIB  KERN_PROC
 #define KINFO_PROC_T   kinfo_proc
 #define KI_PID         p_pid
@@ -476,3 +488,44 @@ void os_getCmdlineAndUserInfo(JNIEnv *env, jobject jinfo, pid_t pid) {
 #endif
 }
 
+#if defined(__OpenBSD__)
+int os_waitForProcessExitNoReap(pid_t pid) {
+    int kq, ret;
+    struct kevent evSet;
+    struct kevent event;
+
+    kq = kqueue();
+    if (kq == -1)
+        return -1;
+
+    /* block to clean up kq fd */
+    do {
+        EV_SET(&evSet, pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, NULL);
+
+        RESTARTABLE(kevent(kq, &evSet, 1, NULL, 0, NULL), ret);
+        if (ret == -1) {
+            /*
+             * If process doesn't exist (or is a zombie), return 0
+             * since it is not possible to return actual exit status.
+             */
+            if (errno == ESRCH)
+                ret = 0;
+            break;
+        }
+
+        RESTARTABLE(kevent(kq, NULL, 0, &event, 1, NULL), ret);
+        if (ret == -1)
+           break;
+
+        if (event.flags & EV_ERROR) {
+            ret = -1;
+            break;
+        }
+
+        ret = event.data;
+    } while(0);
+
+    close(kq);
+    return ret;
+}
+#endif

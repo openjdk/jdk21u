@@ -74,3 +74,7 @@ extern void unix_fillArgArray(JNIEnv *env, jobject jinfo, int nargs, char *cp,
                               char *argsEnd, jstring cmdexe, char *cmdline);
 
 extern void os_initNative(JNIEnv *env, jclass clazz);
+
+#if defined(__OpenBSD__)
+extern int os_waitForProcessExitNoReap(pid_t pid);
+#endif
