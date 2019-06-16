@@ -284,6 +284,7 @@ int CPUPerformanceInterface::CPUPerformance::cpu_loads_process(double* pjvmUserL
 }
 
 int CPUPerformanceInterface::CPUPerformance::context_switch_rate(double* rate) {
+#if defined(__APPLE__) || defined(__FreeBSD__)
 #ifdef __APPLE__
   mach_port_t task = mach_task_self();
   mach_msg_type_number_t task_info_count = TASK_INFO_MAX;
@@ -293,13 +294,20 @@ int CPUPerformanceInterface::CPUPerformance::context_switch_rate(double* rate) {
     return OS_ERR;
   }
 
+  long jvm_context_switches = ((task_events_info_t)task_info_data)->csw;
+#elif defined(__FreeBSD__)
+  unsigned int jvm_context_switches = 0;
+  size_t length = sizeof(jvm_context_switches);
+  if (sysctlbyname("vm.stats.sys.v_swtch", &jvm_context_switches, &length, NULL, 0) == -1) {
+    return OS_ERR;
+  }
+#endif
+
   int result = OS_OK;
   if (_total_csr_nanos == 0 || _jvm_context_switches == 0) {
     // First call just set initial values.
     result = OS_ERR;
   }
-
-  long jvm_context_switches = ((task_events_info_t)task_info_data)->csw;
 
   long total_csr_nanos;
   if(!now_in_nanos(&total_csr_nanos)) {
