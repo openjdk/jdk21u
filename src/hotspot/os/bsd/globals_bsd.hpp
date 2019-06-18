@@ -46,6 +46,9 @@
   /*  overridden in Arguments::parse_each_vm_init_arg.            */            \
   product(bool, UseBsdPosixThreadCPUClocks, true,                               \
           "enable fast Bsd Posix clocks where available")                       \
+                                                                                \
+  product(bool, UseSHM, false,                                                  \
+          "Use SYSV shared memory for large pages")
 
 //
 // Defines Bsd-specific default values. The flags are available on all
