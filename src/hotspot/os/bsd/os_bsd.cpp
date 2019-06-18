@@ -2337,20 +2337,76 @@ bool os::Bsd::hugetlbfs_sanity_check(bool warn, size_t page_size) {
 
 // Large page support
 
-static size_t _large_page_size = 0;
+static size_t _large_page_size =
+#if defined(__FreeBSD__)
+    AARCH64_ONLY(2 * M)
+    AMD64_ONLY(2 * M)
+    ARM32_ONLY(2 * M)
+    PPC_ONLY(4 * M)
+    SPARC_ONLY(4 * M);
+#else
+    0;
+#endif
 
 void os::large_page_init() {
+#if defined(__FreeBSD__)
+	unsigned int super_pg = 0;
+	size_t length = sizeof(super_pg);
+	// Boot time only knob
+	if (sysctlbyname("vm.pmap.pg_ps_enabled", &super_pg, &length, NULL, 0) == -1 ||
+            super_pg < 1) {
+		_large_page_size = 0;
+	}
+#endif
 }
 
 
 char* os::reserve_memory_special(size_t bytes, size_t alignment, char* req_addr, bool exec) {
+#if defined(__FreeBSD__)
+  assert(UseLargePages && os::large_page_size() > 0, "only for mmap large pages");
+  assert(is_aligned(bytes, os::large_page_size()), "Unaligned size");
+  assert(is_aligned(req_addr, os::large_page_size()), "Unaligned base address");
+  char *addr;
+  int err;
+
+  int pflags = PROT_READ|PROT_WRITE;
+  if (exec) {
+    pflags |= PROT_EXEC;
+  }
+  int mflags = MAP_PRIVATE|MAP_ANONYMOUS|
+	       MAP_ALIGNED_SUPER|MAP_FIXED;
+
+  bool warn_on_failure = UseLargePages &&
+                         (!FLAG_IS_DEFAULT(UseLargePages) ||
+                          !FLAG_IS_DEFAULT(LargePageSizeInBytes));
+
+  addr = (char *)mmap(req_addr, bytes, pflags, mflags, -1, 0);
+  err = errno;
+
+  if ((intptr_t)addr == -1) {
+    if (warn_on_failure) {
+      warning("Failed to attach shared memory (errno = %d).", err);
+    }
+    return NULL;
+  }
+
+  // The memory is committed
+  MemTracker::record_virtual_memory_reserve_and_commit((address)addr, bytes, CALLER_PC);
+
+  return addr;
+#else
   fatal("os::reserve_memory_special should not be called on BSD.");
   return NULL;
+#endif
 }
 
 bool os::release_memory_special(char* base, size_t bytes) {
+#if defined(__FreeBSD__)
+  return anon_munmap(base, bytes);
+#else
   fatal("os::release_memory_special should not be called on BSD.");
   return false;
+#endif
 }
 
 size_t os::large_page_size() {

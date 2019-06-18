@@ -1919,7 +1919,7 @@ jint Arguments::set_aggressive_heap_flags() {
     }
   }
 
-#if !defined(_ALLBSD_SOURCE) && !defined(AIX)  // UseLargePages is not yet supported on BSD and AIX.
+#if !defined(_ALLBSD_SOURCE) && !defined(__FreeBSD__) && !defined(AIX)  // UseLargePages is not yet supported on most of BSDs and AIX.
   FLAG_SET_DEFAULT(UseLargePages, true);
 #endif
 
@@ -3943,7 +3943,7 @@ jint Arguments::parse(const JavaVMInitArgs* initial_cmd_args) {
             " names that are reserved for internal use.");
   }
 
-#if defined(_ALLBSD_SOURCE) || defined(AIX)  // UseLargePages is not yet supported on BSD and AIX.
+#if (defined(_ALLBSD_SOURCE) && !defined(__FreeBSD__))|| defined(AIX)  // UseLargePages is not yet supported on most of BSDs and AIX.
   UNSUPPORTED_OPTION(UseLargePages);
 #endif
 
