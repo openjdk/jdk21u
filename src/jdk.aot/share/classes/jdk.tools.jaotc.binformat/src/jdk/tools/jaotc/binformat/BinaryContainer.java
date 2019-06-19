@@ -540,6 +540,9 @@ public final class BinaryContainer implements SymbolTable {
         switch (osName) {
             case "Linux":
             case "SunOS":
+            case "OpenBSD":
+            case "FreeBSD":
+            case "NetBSD":
                 JELFRelocObject elfobj = JELFRelocObject.newInstance(this, outputFileName);
                 elfobj.createELFRelocObject(relocationTable, symbolTable.values());
                 break;

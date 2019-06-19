@@ -65,9 +65,16 @@ final class ElfTargetInfo {
         }
 
         osName = System.getProperty("os.name").toLowerCase();
-        if (!osName.equals("linux") && !osName.equals("sunos")) {
-            System.out.println("Unsupported Operating System " + osName);
-            osName = "Unknown";
+        switch (osName) {
+            case "linux":
+            case "sunos":
+            case "openbsd":
+            case "freebsd":
+            case "netbsd":
+                break;
+            default:
+                System.out.println("Unsupported Operating System " + osName);
+                osName = "Unknown";
         }
     }
 

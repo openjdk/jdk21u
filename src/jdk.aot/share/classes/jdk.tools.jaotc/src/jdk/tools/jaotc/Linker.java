@@ -75,6 +75,9 @@ final class Linker {
 
         switch (options.osName) {
             case "Linux":
+            case "OpenBSD":
+            case "FreeBSD":
+            case "NetBSD":
                 if (name.endsWith(".so")) {
                     objectFileName = name.substring(0, name.length() - ".so".length());
                 }
