@@ -2342,6 +2342,7 @@ static size_t _large_page_size =
     AARCH64_ONLY(2 * M)
     AMD64_ONLY(2 * M)
     ARM32_ONLY(2 * M)
+    IA32_ONLY(2 * M)
     PPC_ONLY(4 * M)
     SPARC_ONLY(4 * M);
 #else
