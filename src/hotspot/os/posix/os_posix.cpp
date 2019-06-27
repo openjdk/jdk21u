@@ -65,6 +65,10 @@
   #define MAP_NORESERVE 0
 #endif
 
+#ifndef PTHREAD_STACK_MIN
+  #define PTHREAD_STACK_MIN 1UL << 14 // 16KB
+#endif
+
 #define check_with_errno(check_type, cond, msg)                             \
   do {                                                                      \
     int err = errno;                                                        \
