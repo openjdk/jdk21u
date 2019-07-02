@@ -3891,33 +3891,15 @@ bool os::pd_unmap_memory(char* addr, size_t bytes) {
 // the fast estimate available on the platform.
 
 jlong os::current_thread_cpu_time() {
-#ifdef __APPLE__
   return os::thread_cpu_time(Thread::current(), true /* user + sys */);
-#else
-  if (Bsd::_getcpuclockid != NULL)
-    return os::thread_cpu_time(Thread::current(), true /* user + sys */);
-  return -1;
-#endif
 }
 
 jlong os::thread_cpu_time(Thread* thread) {
-#ifdef __APPLE__
   return os::thread_cpu_time(thread, true /* user + sys */);
-#else
-  if (Bsd::_getcpuclockid != NULL)
-    return os::thread_cpu_time(thread, true /* user + sys */);
-  return -1;
-#endif
 }
 
 jlong os::current_thread_cpu_time(bool user_sys_cpu_time) {
-#ifdef __APPLE__
   return os::thread_cpu_time(Thread::current(), user_sys_cpu_time);
-#else
-  if (Bsd::_getcpuclockid != NULL)
-    return os::thread_cpu_time(Thread::current(), user_sys_cpu_time);
-  return -1;
-#endif
 }
 
 jlong os::thread_cpu_time(Thread *thread, bool user_sys_cpu_time) {
@@ -3942,6 +3924,45 @@ jlong os::thread_cpu_time(Thread *thread, bool user_sys_cpu_time) {
     return ((jlong)tinfo.user_time.seconds * 1000000000) + ((jlong)tinfo.user_time.microseconds * (jlong)1000);
   }
 #else
+#if defined(__OpenBSD__)
+  size_t length = 0;
+  pid_t pid = getpid();
+  struct kinfo_proc *ki;
+
+  int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PID|KERN_PROC_SHOW_THREADS, pid, sizeof(struct kinfo_proc), 0 };
+  const u_int miblen = sizeof(mib) / sizeof(mib[0]);
+
+  if (sysctl(mib, miblen, NULL, &length, NULL, 0) < 0) {
+    return -1;
+  }
+
+  size_t num_threads = length / sizeof(*ki);
+  ki = NEW_C_HEAP_ARRAY(struct kinfo_proc, num_threads, mtInternal);
+
+  mib[5] = num_threads;
+
+  if (sysctl(mib, miblen, ki, &length, NULL, 0) < 0) {
+    FREE_C_HEAP_ARRAY(struct kinfo_proc, ki);
+    return -1;
+  }
+
+  num_threads = length / sizeof(*ki);
+
+  for (size_t i = 0; i < num_threads; i++) {
+    if (ki[i].p_tid == thread->osthread()->thread_id()) {
+      jlong nanos = (jlong)ki[i].p_uutime_sec * NANOSECS_PER_SEC;
+      nanos += (jlong)ki[i].p_uutime_usec * 1000;
+      if (user_sys_cpu_time) {
+        nanos += (jlong)ki[i].p_ustime_sec * NANOSECS_PER_SEC;
+        nanos += (jlong)ki[i].p_ustime_usec * 1000;
+      }
+      FREE_C_HEAP_ARRAY(struct kinfo_proc, ki);
+      return nanos;
+    }
+  }
+  FREE_C_HEAP_ARRAY(struct kinfo_proc, ki);
+  return -1;
+#else /* !OpenBSD */
   if (user_sys_cpu_time && Bsd::_getcpuclockid != NULL) {
     struct timespec tp;
     clockid_t clockid;
@@ -3978,6 +3999,7 @@ jlong os::thread_cpu_time(Thread *thread, bool user_sys_cpu_time) {
 #endif
   return -1;
 #endif
+#endif
 }
 
 
@@ -3996,7 +4018,7 @@ void os::thread_cpu_time_info(jvmtiTimerInfo *info_ptr) {
 }
 
 bool os::is_thread_cpu_time_supported() {
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__OpenBSD__)
   return true;
 #else
   return (Bsd::_getcpuclockid != NULL);
