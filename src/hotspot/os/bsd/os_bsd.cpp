@@ -1168,7 +1168,7 @@ pid_t os::Bsd::gettid() {
   return (pid_t)tid;
 #endif
 #elif defined(__OpenBSD__)
-  retval = syscall(SYS_getthrid);
+  retval = getthrid();
 #elif defined(__NetBSD__)
   retval = (pid_t) _lwp_self();
 #endif
@@ -2167,19 +2167,11 @@ static void warn_fail_commit_memory(char* addr, size_t size, bool exec,
 //       problem.
 bool os::pd_commit_memory(char* addr, size_t size, bool exec) {
   int prot = exec ? PROT_READ|PROT_WRITE|PROT_EXEC : PROT_READ|PROT_WRITE;
-#ifdef __OpenBSD__
-  // XXX: Work-around mmap/MAP_FIXED bug temporarily on OpenBSD
-  Events::log(NULL, "Protecting memory [" INTPTR_FORMAT "," INTPTR_FORMAT "] with protection modes %x", p2i(addr), p2i(addr+size), prot);
-  if (::mprotect(addr, size, prot) == 0) {
-    return true;
-  }
-#else
   uintptr_t res = (uintptr_t) ::mmap(addr, size, prot,
                                      MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0);
   if (res != (uintptr_t) MAP_FAILED) {
     return true;
   }
-#endif
 
   // Warn about any commit errors we see in non-product builds just
   // in case mmap() doesn't work as described on the man page.
@@ -2252,15 +2244,9 @@ char *os::scan_pages(char *start, char* end, page_info* page_expected, page_info
 
 
 bool os::pd_uncommit_memory(char* addr, size_t size) {
-#ifdef __OpenBSD__
-  // XXX: Work-around mmap/MAP_FIXED bug temporarily on OpenBSD
-  Events::log(NULL, "Protecting memory [" INTPTR_FORMAT "," INTPTR_FORMAT "] with PROT_NONE", p2i(addr), p2i(addr+size));
-  return ::mprotect(addr, size, PROT_NONE) == 0;
-#else
   uintptr_t res = (uintptr_t) ::mmap(addr, size, PROT_NONE,
                                      MAP_PRIVATE|MAP_FIXED|MAP_NORESERVE|MAP_ANONYMOUS, -1, 0);
   return res  != (uintptr_t) MAP_FAILED;
-#endif
 }
 
 bool os::pd_create_stack_guard_pages(char* addr, size_t size) {
@@ -2579,13 +2565,10 @@ static int prio_init() {
 OSReturn os::set_native_priority(Thread* thread, int newpri) {
   if (!UseThreadPriorities || ThreadPriorityPolicy == 0) return OS_OK;
 
-#ifdef __OpenBSD__
-  // OpenBSD pthread_setprio starves low priority threads
-  return OS_OK;
-#elif defined(__FreeBSD__)
+#if defined(__FreeBSD__)
   int ret = pthread_setprio(thread->osthread()->pthread_id(), newpri);
   return (ret == 0) ? OS_OK : OS_ERR;
-#elif defined(__APPLE__) || defined(__NetBSD__)
+#elif defined(__APPLE__) || defined(__NetBSD__) || defined(__OpenBSD__)
   struct sched_param sp;
   int policy;
 
@@ -2612,9 +2595,9 @@ OSReturn os::get_native_priority(const Thread* const thread, int *priority_ptr) 
   }
 
   errno = 0;
-#if defined(__OpenBSD__) || defined(__FreeBSD__)
+#if defined(__FreeBSD__)
   *priority_ptr = pthread_getprio(thread->osthread()->pthread_id());
-#elif defined(__APPLE__) || defined(__NetBSD__)
+#elif defined(__APPLE__) || defined(__NetBSD__) || defined(__OpenBSD__)
   int policy;
   struct sched_param sp;
 
