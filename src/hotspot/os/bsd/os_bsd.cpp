@@ -1160,13 +1160,7 @@ pid_t os::Bsd::gettid() {
   return retval;
 
 #elif defined(__FreeBSD__)
-#if __FreeBSD_version > 900030
   return ::pthread_getthreadid_np();
-#else
-  long tid;
-  thr_self(&tid);
-  return (pid_t)tid;
-#endif
 #elif defined(__OpenBSD__)
   retval = getthrid();
 #elif defined(__NetBSD__)
@@ -2565,10 +2559,6 @@ static int prio_init() {
 OSReturn os::set_native_priority(Thread* thread, int newpri) {
   if (!UseThreadPriorities || ThreadPriorityPolicy == 0) return OS_OK;
 
-#if defined(__FreeBSD__)
-  int ret = pthread_setprio(thread->osthread()->pthread_id(), newpri);
-  return (ret == 0) ? OS_OK : OS_ERR;
-#elif defined(__APPLE__) || defined(__NetBSD__) || defined(__OpenBSD__)
   struct sched_param sp;
   int policy;
 
@@ -2582,10 +2572,6 @@ OSReturn os::set_native_priority(Thread* thread, int newpri) {
   }
 
   return OS_OK;
-#else
-  int ret = setpriority(PRIO_PROCESS, thread->osthread()->thread_id(), newpri);
-  return (ret == 0) ? OS_OK : OS_ERR;
-#endif
 }
 
 OSReturn os::get_native_priority(const Thread* const thread, int *priority_ptr) {
@@ -2595,9 +2581,6 @@ OSReturn os::get_native_priority(const Thread* const thread, int *priority_ptr) 
   }
 
   errno = 0;
-#if defined(__FreeBSD__)
-  *priority_ptr = pthread_getprio(thread->osthread()->pthread_id());
-#elif defined(__APPLE__) || defined(__NetBSD__) || defined(__OpenBSD__)
   int policy;
   struct sched_param sp;
 
@@ -2609,9 +2592,6 @@ OSReturn os::get_native_priority(const Thread* const thread, int *priority_ptr) 
     *priority_ptr = sp.sched_priority;
     return OS_OK;
   }
-#else
-  *priority_ptr = getpriority(PRIO_PROCESS, thread->osthread()->thread_id());
-#endif
   return (*priority_ptr != -1 || errno == 0 ? OS_OK : OS_ERR);
 }
 
