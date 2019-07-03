@@ -1579,6 +1579,22 @@ void os::print_dll_info(outputStream *st) {
   }
 }
 
+#if defined(__OpenBSD__)
+struct iterate_data {
+  os::LoadedModulesCallbackFunc callback;
+  void *param;
+};
+
+static int iter_callback(struct dl_phdr_info *info, size_t size, void* d) {
+  struct iterate_data *data = (struct iterate_data *)d;
+
+  if(data->callback(info->dlpi_name, (address)info->dlpi_addr, (address)0, data->param))
+    return 1;
+
+  return 0;
+}
+#endif
+
 int os::get_loaded_modules_info(os::LoadedModulesCallbackFunc callback, void *param) {
 #ifdef RTLD_DI_LINKMAP
   Dl_info dli;
@@ -1622,6 +1638,10 @@ int os::get_loaded_modules_info(os::LoadedModulesCallbackFunc callback, void *pa
     }
   }
   return 0;
+#elif defined(__OpenBSD__)
+  struct iterate_data data = { callback, param };
+
+  return dl_iterate_phdr(iter_callback, &data);
 #else
   return 1;
 #endif
