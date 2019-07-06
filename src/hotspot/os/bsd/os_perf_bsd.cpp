@@ -50,7 +50,9 @@
 #include <net/if_dl.h>
 #include <net/route.h>
 
-static const double NANOS_PER_SEC = 1000000000.0;
+static const time_t NANOS_PER_SEC = 1000000000LL;
+static const time_t MICROS_PER_SEC = 1000000LL;
+static const time_t NANOS_PER_MICROSEC = 1000LL;
 
 class CPUPerformanceInterface::CPUPerformance : public CHeapObj<mtInternal> {
    friend class CPUPerformanceInterface;
@@ -99,7 +101,7 @@ class CPUPerformanceInterface::CPUPerformance : public CHeapObj<mtInternal> {
       // Error getting current time
       return false;
     }
-    *resultp = current_time.tv_sec * NANOS_PER_SEC + 1000L * current_time.tv_usec;
+    *resultp = (current_time.tv_sec * NANOS_PER_SEC) + (current_time.tv_usec * NANOS_PER_MICROSEC);
     return true;
   }
 
@@ -231,7 +233,7 @@ CPUPerformanceInterface::CPUPerformance::CPUPerformance() {
 }
 
 bool CPUPerformanceInterface::CPUPerformance::initialize() {
-  _num_procs = os::active_processor_count();
+  _num_procs = os::processor_count();
   if (_num_procs < 1) {
     return false;
   }
@@ -354,7 +356,7 @@ int CPUPerformanceInterface::CPUPerformance::get_cpu_ticks(CPUTicks *ticks, int 
 uint64_t CPUPerformanceInterface::CPUPerformance::tvtoticks(struct timeval tv) {
   uint64_t ticks = 0;
   ticks += (uint64_t)tv.tv_sec * _stathz;
-  ticks += (uint64_t)tv.tv_usec * _stathz / (1000 * 1000);
+  ticks += (uint64_t)tv.tv_usec * _stathz / MICROS_PER_SEC;
   return ticks;
 }
 
@@ -535,7 +537,7 @@ int CPUPerformanceInterface::CPUPerformance::context_switch_rate(double* rate) {
   if(!now_in_nanos(&total_csr_nanos)) {
     return OS_ERR;
   }
-  double delta_in_sec = (double)(total_csr_nanos - _total_csr_nanos) / NANOS_PER_SEC;
+  double delta_in_sec = (double)(total_csr_nanos - _total_csr_nanos) / (double)NANOS_PER_SEC;
   if (delta_in_sec == 0.0) {
     // Avoid division by zero
     return OS_ERR;
@@ -664,7 +666,7 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
   return OS_OK;
 #elif defined(__FreeBSD__)
   struct kinfo_proc *lproc;
-  int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL };
+  int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PROC };
   const u_int miblen = sizeof(mib) / sizeof(mib[0]);
   size_t length;
   int pid_count;
@@ -673,44 +675,70 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
     return OS_ERR;
   }
 
-  lproc = (struct kinfo_proc *)malloc(length);
-  if (!lproc) {
+  lproc = NEW_C_HEAP_ARRAY_RETURN_NULL(struct kinfo_proc, length, mtInternal);
+  if (lproc == NULL) {
     return OS_ERR;
   }
 
   if (sysctl(mib, miblen, lproc, &length, NULL, 0) == -1) {
-    free(lproc);
+    FREE_C_HEAP_ARRAY(struct kinfo_proc, lproc);
     return OS_ERR;
   }
 
   pid_count = length / sizeof(*lproc);
   int process_count = 0;
   SystemProcess *next = NULL;
-  
-  for (int i = 0; i < pid_count; i++) {
-     int pmib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, lproc[i].ki_pid };
-     const u_int pmiblen = sizeof(pmib) / sizeof(pmib[0]);
-     char buffer[PATH_MAX];
-     length = sizeof(buffer);
-     if (sysctl(pmib, pmiblen, buffer, &length, NULL, 0) == -1) {
-       continue;
-     }
 
-     length = strnlen(buffer, PATH_MAX);
-     if (length > 0) {
-       SystemProcess* current = new SystemProcess();
-       char * path = NEW_C_HEAP_ARRAY(char, length + 1, mtInternal);
-       strncpy(path, buffer, length);
-       path[length] = 0;
-       current->set_path(path);
-       current->set_pid((int)lproc[i].ki_pid);
-       current->set_next(next);
-       next = current;
-       process_count++;
-     }
+  for (int i = 0; i < pid_count; i++) {
+    // Executable path
+    int pmib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, lproc[i].ki_pid };
+    const u_int pmiblen = sizeof(pmib) / sizeof(pmib[0]);
+    char pbuf[PATH_MAX];
+    size_t plen = sizeof(pbuf);
+    if (sysctl(pmib, pmiblen, pbuf, &plen, NULL, 0) == -1) {
+      continue;
+    }
+    plen = strnlen(pbuf, PATH_MAX);
+    if (plen == 0) {
+      continue;
+    }
+    char *path = NEW_C_HEAP_ARRAY_RETURN_NULL(char, plen + 1, mtInternal);
+    if (path == NULL) {
+      continue;
+    }
+    strncpy(path, pbuf, plen);
+    path[plen] = '\0';
+
+    // Command line
+    int amib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ARGS, lproc[i].ki_pid };
+    const u_int amiblen = sizeof(amib) / sizeof(amib[0]);
+    char abuf[ARG_MAX];
+    size_t alen = sizeof(abuf);
+    char *cmdline = NULL;
+    if (sysctl(amib, amiblen, abuf, &alen, NULL, 0) != -1 && alen > 0) {
+      // Arguments are NUL separated in the result, replace that with a space
+      for (size_t j = 0; j < alen; j++) {
+        if (abuf[j] == '\0') {
+          abuf[j] = ' ';
+        }
+      }
+      cmdline = NEW_C_HEAP_ARRAY_RETURN_NULL(char, alen + 1, mtInternal);
+      if (cmdline != NULL) {
+        strncpy(cmdline, abuf, alen);
+        cmdline[alen] = '\0';
+      }
+    }
+
+    SystemProcess* current = new SystemProcess();
+    current->set_pid((int)lproc[i].ki_pid);
+    current->set_path(path);
+    current->set_command_line(cmdline);
+    current->set_next(next);
+    next = current;
+    process_count++;
   }
 
-  free(lproc);
+  FREE_C_HEAP_ARRAY(struct kinfo_proc, lproc);
   *no_of_sys_processes = process_count;
   *system_processes = next;
 
@@ -726,15 +754,15 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
     return OS_ERR;
   }
 
-  lproc = (struct kinfo_proc *)malloc(length);
-  if (!lproc) {
+  lproc = NEW_C_HEAP_ARRAY_RETURN_NULL(struct kinfo_proc, length, mtInternal);
+  if (lproc == NULL) {
     return OS_ERR;
   }
 
   mib[5] = length / sizeof(struct kinfo_proc);
 
   if (sysctl(mib, miblen, lproc, &length, NULL, 0) == -1) {
-    free(lproc);
+    FREE_C_HEAP_ARRAY(struct kinfo_proc, lproc);
     return OS_ERR;
   }
 
@@ -753,7 +781,7 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
     }
 
     // Allocate space for args and get the arguments
-    char **argv = (char **)malloc(length);
+    char **argv = NEW_C_HEAP_ARRAY_RETURN_NULL(char*, length, mtInternal);
     if (argv == NULL) {
       ret = OS_ERR;
       break;
@@ -761,12 +789,12 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
 
     if (sysctl(pmib, pmiblen, argv, &length, NULL, 0) == -1) {
       ret = OS_ERR;
-      free(argv);
+      FREE_C_HEAP_ARRAY(char*, argv);
       break;
     }
 
     if (argv[0] == NULL) {
-      free(argv);
+      FREE_C_HEAP_ARRAY(char*, argv);
       continue;
     }
 
@@ -784,10 +812,10 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
       process_count++;
     }
 
-    free(argv);
+    FREE_C_HEAP_ARRAY(char*, argv);
   }
 
-  free(lproc);
+  FREE_C_HEAP_ARRAY(struct kinfo_proc, lproc);
 
   if (ret != OS_OK) {
     SystemProcess* current = next;
@@ -803,8 +831,88 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
   *system_processes = next;
 
   return OS_OK;
+#elif defined(__NetBSD__)
+  struct kinfo_proc2 *lproc;
+  int mib[] = { CTL_KERN, KERN_PROC2, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc2), 0 };
+  const u_int miblen = sizeof(mib) / sizeof(mib[0]);
+  size_t length;
+  int pid_count;
+
+  if (sysctl(mib, miblen, NULL, &length, NULL, 0) == -1) {
+    return OS_ERR;
+  }
+
+  lproc = NEW_C_HEAP_ARRAY_RETURN_NULL(struct kinfo_proc2, length, mtInternal);
+  if (lproc == NULL) {
+    return OS_ERR;
+  }
+
+  mib[5] = length / sizeof(struct kinfo_proc2);
+
+  if (sysctl(mib, miblen, lproc, &length, NULL, 0) == -1) {
+    FREE_C_HEAP_ARRAY(struct kinfo_proc2, lproc);
+    return OS_ERR;
+  }
+
+  pid_count = length / sizeof(*lproc);
+  int process_count = 0;
+  SystemProcess *next = NULL;
+
+  for (int i = 0; i < pid_count; i++) {
+    // Executable path
+    int pmib[] = { CTL_KERN, KERN_PROC_ARGS, lproc[i].p_pid, KERN_PROC_PATHNAME };
+    const u_int pmiblen = sizeof(pmib) / sizeof(pmib[0]);
+    char pbuf[PATH_MAX];
+    size_t plen = sizeof(pbuf);
+    if (sysctl(pmib, pmiblen, pbuf, &plen, NULL, 0) == -1) {
+      continue;
+    }
+    plen = strnlen(pbuf, PATH_MAX);
+    if (plen == 0) {
+      continue;
+    }
+    char *path = NEW_C_HEAP_ARRAY_RETURN_NULL(char, plen + 1, mtInternal);
+    if (path == NULL) {
+      continue;
+    }
+    strncpy(path, pbuf, plen);
+    path[plen] = '\0';
+
+    // Command line
+    int amib[] = { CTL_KERN, KERN_PROC_ARGS, lproc[i].p_pid, KERN_PROC_ARGV };
+    const u_int amiblen = sizeof(amib) / sizeof(amib[0]);
+    char abuf[ARG_MAX];
+    size_t alen = sizeof(abuf);
+    char *cmdline = NULL;
+    if (sysctl(amib, amiblen, abuf, &alen, NULL, 0) != -1 && alen > 0) {
+      // Arguments are NUL separated in the result, replace that with a space
+      for (size_t j = 0; j < alen; j++) {
+        if (abuf[j] == '\0') {
+          abuf[j] = ' ';
+        }
+      }
+      cmdline = NEW_C_HEAP_ARRAY_RETURN_NULL(char, alen + 1, mtInternal);
+      if (cmdline != NULL) {
+        strncpy(cmdline, abuf, alen);
+        cmdline[alen] = '\0';
+      }
+    }
+
+    SystemProcess* current = new SystemProcess();
+    current->set_pid((int)lproc[i].p_pid);
+    current->set_path(path);
+    current->set_command_line(cmdline);
+    current->set_next(next);
+    next = current;
+    process_count++;
+  }
+
+  FREE_C_HEAP_ARRAY(struct kinfo_proc2, lproc);
+  *no_of_sys_processes = process_count;
+  *system_processes = next;
+
+  return OS_OK;
 #else
-  /* TODO: NetBSD */
   return FUNCTIONALITY_NOT_IMPLEMENTED;
 #endif
 }
