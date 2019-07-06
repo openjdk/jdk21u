@@ -66,7 +66,11 @@
 #endif
 
 #ifndef PTHREAD_STACK_MIN
-  #define PTHREAD_STACK_MIN 1UL << 14 // 16KB
+  #ifdef _SC_THREAD_STACK_MIN
+    #define PTHREAD_STACK_MIN sysconf(_SC_THREAD_STACK_MIN)
+  #else
+    #define PTHREAD_STACK_MIN 1UL << 14 // 16KB
+  #endif
 #endif
 
 #define check_with_errno(check_type, cond, msg)                             \
