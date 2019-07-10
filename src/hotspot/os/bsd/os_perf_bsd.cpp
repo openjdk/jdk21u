@@ -706,8 +706,7 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
     if (path == NULL) {
       continue;
     }
-    strncpy(path, pbuf, plen);
-    path[plen] = '\0';
+    strlcpy(path, pbuf, plen + 1);
 
     // Command line
     int amib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ARGS, lproc[i].ki_pid };
@@ -724,8 +723,7 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
       }
       cmdline = NEW_C_HEAP_ARRAY_RETURN_NULL(char, alen + 1, mtInternal);
       if (cmdline != NULL) {
-        strncpy(cmdline, abuf, alen);
-        cmdline[alen] = '\0';
+        strlcpy(cmdline, abuf, alen + 1);
       }
     }
 
@@ -802,8 +800,7 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
     if (slen > 0) {
       SystemProcess* current = new SystemProcess();
       char * path = NEW_C_HEAP_ARRAY(char, slen + 1, mtInternal);
-      strncpy(path, argv[0], slen);
-      path[slen] = '\0';
+      strlcpy(path, argv[0], slen + 1);
       current->set_path(path);
       current->set_pid((int)lproc[i].p_pid);
       /* TODO: build concatenated string for current->set_command_line() */
@@ -875,8 +872,7 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
     if (path == NULL) {
       continue;
     }
-    strncpy(path, pbuf, plen);
-    path[plen] = '\0';
+    strlcpy(path, pbuf, plen + 1);
 
     // Command line
     int amib[] = { CTL_KERN, KERN_PROC_ARGS, lproc[i].p_pid, KERN_PROC_ARGV };
@@ -893,8 +889,7 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
       }
       cmdline = NEW_C_HEAP_ARRAY_RETURN_NULL(char, alen + 1, mtInternal);
       if (cmdline != NULL) {
-        strncpy(cmdline, abuf, alen);
-        cmdline[alen] = '\0';
+        strlcpy(cmdline, abuf, alen + 1);
       }
     }
 
@@ -1032,8 +1027,7 @@ int NetworkPerformanceInterface::NetworkPerformance::network_utilization(Network
     // The interface name is not necessarily NUL-terminated
     char name_buf[128];
     size_t name_len = MIN2(sizeof(name_buf) - 1, static_cast<size_t>(sockaddr->sdl_nlen));
-    strncpy(name_buf, sockaddr->sdl_data, name_len);
-    name_buf[name_len] = '\0';
+    strlcpy(name_buf, sockaddr->sdl_data, name_len + 1);
 
 #if defined(__APPLE__)
     uint64_t bytes_in = msghdr2->ifm_data.ifi_ibytes;
