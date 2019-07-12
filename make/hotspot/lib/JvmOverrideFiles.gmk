@@ -200,7 +200,7 @@ else ifeq ($(call isTargetOs, windows), true)
   # Workaround for jvmciCompilerToVM.cpp long compilation time
   BUILD_LIBJVM_jvmciCompilerToVMInit.cpp_OPTIMIZATION := NONE
 
-else ifeq ($(OPENJDK_TARGET_OS), bsd)
+else ifeq ($(call isTargetOs, bsd), true)
   JVM_EXCLUDE_FILES += decoder_mach0.cpp
   BUILD_LIBJVM_sharedRuntimeTrig.cpp_CXXFLAGS := -DNO_PCH $(FDLIBM_CFLAGS) $(LIBJVM_FDLIBM_COPY_OPT_FLAG)
   BUILD_LIBJVM_sharedRuntimeTrans.cpp_CXXFLAGS := -DNO_PCH $(FDLIBM_CFLAGS) $(LIBJVM_FDLIBM_COPY_OPT_FLAG)

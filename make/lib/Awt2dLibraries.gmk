@@ -313,7 +313,7 @@ ifeq ($(call isTargetOs, windows macosx), false)
       LIBAWT_XAWT_LIBS += -lpthread
     endif
 
-    ifeq ($(OPENJDK_TARGET_OS), bsd)
+    ifeq ($(call isTargetOs, bsd), true)
       LIBAWT_XAWT_LIBS += -pthread
     endif
 
@@ -829,7 +829,7 @@ ifeq ($(ENABLE_HEADLESS_ONLY), false)
         -framework JavaNativeFoundation
   else ifeq ($(call isTargetOs, windows), true)
     LIBSPLASHSCREEN_LIBS += kernel32.lib user32.lib gdi32.lib delayimp.lib $(WIN_JAVA_LIB) jvm.lib
-  else ifeq ($(OPENJDK_TARGET_OS), bsd)
+  else ifeq ($(call isTargetOs, bsd), true)
     LIBSPLASHSCREEN_CFLAGS += $(ICONV_CFLAGS)
     LIBSPLASHSCREEN_LIBS += $(X_LIBS) -lX11 -lXext $(LIBM) $(ICONV_LIBS) -pthread
   else

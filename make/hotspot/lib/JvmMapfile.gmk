@@ -129,7 +129,7 @@ else ifeq ($(call isTargetOs, windows), true)
       '{ \
         if ($$7 ~ /??_7.*@@6B@/ && $$7 !~ /type_info/) print $$7; \
       }'
-else ifeq ($(OPENJDK_TARGET_OS), bsd)
+else ifeq ($(call isTargetOs, bsd), true)
   ifneq ($(FILTER_SYMBOLS_PATTERN), )
     FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)|
   endif

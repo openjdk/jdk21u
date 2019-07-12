@@ -36,7 +36,7 @@ ifeq ($(call isTargetOs, windows), true)
   WINDOWS_JLI_LIB := $(SUPPORT_OUTPUTDIR)/native/java.base/libjli/jli.lib
 endif
 
-ifeq ($(OPENJDK_TARGET_OS), bsd)
+ifeq ($(call isTargetOs, bsd), true)
     LIBINSTRUMENT_CFLAGS += $(ICONV_CFLAGS)
 endif
 

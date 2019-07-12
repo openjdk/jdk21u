@@ -59,7 +59,7 @@ ifeq ($(call isTargetOs, aix), false)
     LIBJSOUND_TOOLCHAIN := TOOLCHAIN_LINK_CXX
   endif
 
-  ifeq ($(OPENJDK_TARGET_OS), bsd)
+  ifeq ($(call isTargetOs, bsd), true)
     LIBJSOUND_CFLAGS += $(ICONV_CFLAGS)
   endif
 

@@ -49,7 +49,7 @@ ifeq ($(call check-jvm-feature, compiler2), true)
     # NOTE: The old build also have -D_CRT_SECURE_NO_DEPRECATE but it doesn't
     # seem needed any more.
     ADLC_CFLAGS_WARNINGS := -W3 -D_CRT_SECURE_NO_WARNINGS
-  else ifeq ($(OPENJDK_BUILD_OS), bsd)
+  else ifeq ($(call isBuildOs, bsd), true)
     ADLC_CFLAGS := -fno-exceptions
   endif
 
@@ -98,7 +98,7 @@ ifeq ($(call check-jvm-feature, compiler2), true)
     ADLCFLAGS += -DAIX=1
   else ifeq ($(call isTargetOs, macosx), true)
     ADLCFLAGS += -D_ALLBSD_SOURCE=1 -D_GNU_SOURCE=1
-  else ifeq ($(OPENJDK_TARGET_OS), bsd)
+  else ifeq ($(call isTargetOs, bsd), true)
     ADLCFLAGS += -D_ALLBSD_SOURCE=1 -D_BSDONLY_SOURCE
   endif
 
