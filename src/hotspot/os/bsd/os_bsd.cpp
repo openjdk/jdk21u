@@ -1365,16 +1365,13 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
   Elf32_Ehdr elf_head;
 
   const char* const error_report = ::dlerror();
-  if (error_report == NULL) {
-    error_report = "dlerror returned no error description";
-  }
   if (ebuf != NULL && ebuflen > 0) {
     // Read system error message into ebuf
     ::strncpy(ebuf, error_report, ebuflen-1);
     ebuf[ebuflen-1]='\0';
   }
-  Events::log(NULL, "Loading shared library %s failed, %s", filename, error_report);
-  log_info(os)("shared library load of %s failed, %s", filename, error_report);
+  Events::log(NULL, "Loading shared library %s failed, %s", filename, error_report == NULL ? "dlerror returned no error description" : error_report);
+  log_info(os)("shared library load of %s failed, %s", filename, error_report == NULL ? "dlerror returned no error description" : error_report);
 
   int diag_msg_max_length=ebuflen-strlen(ebuf);
   char* diag_msg_buf=ebuf+strlen(ebuf);
