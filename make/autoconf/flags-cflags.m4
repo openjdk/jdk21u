@@ -546,6 +546,10 @@ AC_DEFUN([FLAGS_SETUP_CFLAGS_HELPER],
     # works for all platforms.
     TOOLCHAIN_CFLAGS_JVM="$TOOLCHAIN_CFLAGS_JVM -mno-omit-leaf-frame-pointer -mstack-alignment=16"
 
+    if test "x$OPENJDK_TARGET_CPU" = xx86; then
+      TOOLCHAIN_CFLAGS_JVM="$TOOLCHAIN_CFLAGS_JVM -mstackrealign"
+    fi
+
     if test "x$OPENJDK_TARGET_OS" = xlinux; then
       if test "x$DEBUG_LEVEL" = xrelease; then
         # Clang does not inline as much as GCC does for functions with "inline" keyword by default.
