@@ -215,6 +215,14 @@ else ifeq ($(call isTargetOs, bsd), true)
   endif
 
   ifeq ($(TOOLCHAIN_TYPE), clang)
+    ifeq ($(OPENJDK_TARGET_CPU), x86)
+      ifneq ($(DEBUG_LEVEL), slowdebug)
+        # hotspot/jtreg/compiler/c2/Test8062950.java test fails on x86
+        # with clang when parse2.cpp is optimized above -O1
+        BUILD_LIBJVM_parse2.cpp_CXXFLAGS := -O1
+      endif
+    endif
+
     # The following files are compiled at various optimization
     # levels due to optimization issues encountered at the
     # default level. The Clang compiler issues a compile
@@ -229,7 +237,8 @@ else ifeq ($(call isTargetOs, bsd), true)
         sharedRuntimeTrig.cpp \
         sharedRuntimeTrans.cpp \
         loopTransform.cpp \
-        unsafe.cpp
+        unsafe.cpp \
+        parse2.cpp \
         #
   endif
 
