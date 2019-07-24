@@ -215,7 +215,7 @@ else ifeq ($(call isTargetOs, bsd), true)
   endif
 
   ifeq ($(TOOLCHAIN_TYPE), clang)
-    ifeq ($(OPENJDK_TARGET_CPU), x86)
+    ifeq ($(call isTargetCpu, x86), true)
       ifneq ($(DEBUG_LEVEL), slowdebug)
         # hotspot/jtreg/compiler/c2/Test8062950.java test fails on x86
         # with clang when parse2.cpp is optimized above -O1
