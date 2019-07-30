@@ -35,8 +35,15 @@
 
 #include OS_HEADER_INLINE(os)
 
+#if defined (__linux__)
 #include <sys/auxv.h>
 #include <asm/hwcap.h>
+#elif defined (__FreeBSD__)
+#include <machine/elf.h>
+#endif
+#else
+#define getauxval(hwcap) 0
+#endif
 
 #ifndef HWCAP_AES
 #define HWCAP_AES   (1<<3)
@@ -161,6 +168,7 @@ void VM_Version::get_processor_features() {
     SoftwarePrefetchHintDistance &= ~7;
   }
 
+#if defined(__linux__)
   unsigned long auxv = getauxval(AT_HWCAP);
 
   char buf[512];
@@ -193,6 +201,11 @@ void VM_Version::get_processor_features() {
     }
     fclose(f);
   }
+#elif defined(__FreeBSD__)
+  char buf[512];
+  int cpu_lines = 0;
+  unsigned long auxv = os_get_processor_features();
+#endif
 
   if (os::supports_map_sync()) {
     // if dcpop is available publish data cache line flush size via

@@ -240,6 +240,13 @@ else ifeq ($(call isTargetOs, bsd), true)
         unsafe.cpp \
         parse2.cpp \
         #
+
+    ifeq ($(OPENJDK_TARGET_CPU), aarch64)
+      JVM_PRECOMPILED_HEADER_EXCLUDE += \
+          memnode.cpp
+          #
+      BUILD_LIBJVM_memnode.cpp_CXXFLAGS := -O0
+    endif
   endif
 
 endif

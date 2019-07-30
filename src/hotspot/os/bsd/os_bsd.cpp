@@ -249,6 +249,8 @@ static char cpu_arch[] = "sparcv9";
   #else
 static char cpu_arch[] = "sparc";
   #endif
+#elif defined(AARCH64)
+static char cpu_arch[] = "aarch64";
 #else
   #error Add appropriate cpu_arch setting
 #endif
