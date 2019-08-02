@@ -427,9 +427,17 @@ void AllocClass::output(FILE *fp) {       // Write info to output files
 //==============================Frame Handling=================================
 //------------------------------FrameForm--------------------------------------
 FrameForm::FrameForm() {
+  _direction = false;
+  _sync_stack_slots = NULL;
+  _inline_cache_reg = NULL;
+  _interpreter_method_oop_reg = NULL;
+  _interpreter_frame_pointer_reg = NULL;
+  _cisc_spilling_operand_name = NULL;
   _frame_pointer = NULL;
   _c_frame_pointer = NULL;
   _alignment = NULL;
+  _return_addr_loc = false;
+  _c_return_addr_loc = false;
   _return_addr = NULL;
   _c_return_addr = NULL;
   _in_preserve_slots = NULL;
@@ -438,7 +446,6 @@ FrameForm::FrameForm() {
   _c_calling_convention = NULL;
   _return_value = NULL;
   _c_return_value = NULL;
-  _interpreter_frame_pointer_reg = NULL;
 }
 
 FrameForm::~FrameForm() {
