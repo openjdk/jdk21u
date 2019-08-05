@@ -51,7 +51,7 @@ public class SystemLookAndFeelTest {
             expLAF = "com.sun.java.swing.plaf.windows.WindowsLookAndFeel";
         } else if (os.contains("macos")) {
             expLAF = "com.apple.laf.AquaLookAndFeel";
-        } else if (os.contains("linux") || os.contains("sunos")) {
+        } else if (os.contains("linux") || os.contains("sunos") || os.contains("bsd")) {
            /*
             * The implementation keys off the following desktop setting to
             * decide if GTK is an appropriate system L&F.
@@ -65,7 +65,7 @@ public class SystemLookAndFeelTest {
            System.out.println("Gnome desktop session ID is " + gnome);
            if (gnome != null) {
                expLAF = "com.sun.java.swing.plaf.gtk.GTKLookAndFeel";
-           } else if (os.contains("linux")) {
+           } else if (os.contains("linux") || os.contains("bsd")) {
                expLAF = "javax.swing.plaf.metal.MetalLookAndFeel";
            } else if (os.contains("sunos")) {
                expLAF = "com.sun.java.swing.plaf.motif.MotifLookAndFeel";
