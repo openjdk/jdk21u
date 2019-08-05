@@ -175,7 +175,7 @@ static X11InputMethodData * getX11InputMethodData(JNIEnv *, jobject);
 static void setX11InputMethodData(JNIEnv *, jobject, X11InputMethodData *);
 static void destroyX11InputMethodData(JNIEnv *, X11InputMethodData *);
 static void freeX11InputMethodData(JNIEnv *, X11InputMethodData *);
-#if defined(__linux__) || defined(MACOSX)
+#if defined(__linux__) || defined(MACOSX) || defined(_ALLBSD_SOURCE)
 static Window getParentWindow(Window);
 #endif
 
@@ -1607,7 +1607,7 @@ JNIEXPORT jboolean JNICALL Java_sun_awt_X11InputMethodBase_setCompositionEnabled
     X11InputMethodData *pX11IMData;
     char * ret = NULL;
     XVaNestedList   pr_atrb;
-#if defined(__linux__) || defined(MACOSX)
+#if defined(__linux__) || defined(MACOSX) || defined(_ALLBSD_SOURCE)
     Boolean calledXSetICFocus = False;
 #endif
 
@@ -1619,7 +1619,7 @@ JNIEXPORT jboolean JNICALL Java_sun_awt_X11InputMethodBase_setCompositionEnabled
         return JNI_FALSE;
     }
 
-#if defined(__linux__) || defined(MACOSX)
+#if defined(__linux__) || defined(MACOSX) || defined(_ALLBSD_SOURCE)
     if (NULL != pX11IMData->statusWindow) {
         Window focus = 0;
         int revert_to;
@@ -1647,7 +1647,7 @@ JNIEXPORT jboolean JNICALL Java_sun_awt_X11InputMethodBase_setCompositionEnabled
                   NULL);
     ret = XSetICValues(pX11IMData->current_ic, XNPreeditAttributes, pr_atrb, NULL);
     XFree((void *)pr_atrb);
-#if defined(__linux__) || defined(MACOSX)
+#if defined(__linux__) || defined(MACOSX) || defined(_ALLBSD_SOURCE)
     if (calledXSetICFocus) {
         XSetICFocus(pX11IMData->ic_active);
     }
@@ -1679,7 +1679,7 @@ JNIEXPORT jboolean JNICALL Java_sun_awt_X11InputMethodBase_isCompositionEnabledN
 {
     X11InputMethodData *pX11IMData = NULL;
     char * ret = NULL;
-#if defined(__linux__) && defined(_LP64) && !defined(_LITTLE_ENDIAN)
+#if (defined(__linux__) || defined(_ALLBSD_SOURCE)) && defined(_LP64) && !defined(_LITTLE_ENDIAN)
     // XIMPreeditState value which is used for XGetICValues must be 32bit on BigEndian XOrg's xlib
     unsigned int state = XIMPreeditUnKnown;
 #else
@@ -1721,7 +1721,7 @@ JNIEXPORT void JNICALL Java_sun_awt_X11_XInputMethod_adjustStatusWindow
 #endif
 }
 
-#if defined(__linux__) || defined(MACOSX)
+#if defined(__linux__) || defined(MACOSX) || defined(_ALLBSD_SOURCE)
 static Window getParentWindow(Window w)
 {
     Window root=None, parent=None, *ignore_children=NULL;
