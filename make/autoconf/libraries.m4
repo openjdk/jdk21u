@@ -192,6 +192,10 @@ AC_DEFUN_ONCE([LIB_SETUP_MISC_LIBS],
       ICONV_CFLAGS="-I/usr/local/include"
       ICONV_LDFLAGS="-L/usr/local/lib"
       ICONV_LIBS=-liconv
+    elif test "x$OPENJDK_TARGET_OS_ENV" = "xbsd.freebsd"; then
+      ICONV_CFLAGS=-DLIBICONV_PLUG
+      ICONV_LDFLAGS=
+      ICONV_LIBS=
     else
       ICONV_CFLAGS=
       ICONV_LDFLAGS=
