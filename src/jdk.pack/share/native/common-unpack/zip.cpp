@@ -37,6 +37,10 @@
 #include <strings.h>
 #endif
 
+#ifdef _ALLBSD_SOURCE
+#include <machine/endian.h>
+#endif
+
 #include "defines.h"
 #include "bytes.h"
 #include "utils.h"
@@ -62,7 +66,7 @@ inline uint jar::get_crc32(uint c, uchar *ptr, uint len) { return crc32(c, ptr, 
 
 #endif // End of ZLIB
 
-#ifdef _BIG_ENDIAN
+#if (defined(_ALLBSD_SOURCE) && (BYTE_ORDER == BIG_ENDIAN)) || (!defined(_ALLBSD_SOURCE) && defined(_BIG_ENDIAN))
 #define SWAP_BYTES(a) \
     ((((a) << 8) & 0xff00) | 0x00ff) & (((a) >> 8) | 0xff00)
 #else

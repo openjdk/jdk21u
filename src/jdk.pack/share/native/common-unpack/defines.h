@@ -32,6 +32,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef _ALLBSD_SOURCE
+#include <machine/endian.h>
+#endif
+
 #ifndef NO_ZLIB
 #include <zconf.h>
 #endif
@@ -91,7 +95,7 @@ extern int assert_failed(const char*);
 #define T_NEW(T, n)  (T*) u->temp_alloc(scale_size(n, sizeof(T)))
 
 // Dealing with big-endian arch
-#ifdef _BIG_ENDIAN
+#if (defined(_ALLBSD_SOURCE) && (BYTE_ORDER == BIG_ENDIAN)) || (!defined(_ALLBSD_SOURCE) && defined(_BIG_ENDIAN))
 #define SWAP_INT(a) (((a>>24)&0xff) | ((a<<8)&0xff0000) | ((a>>8)&0xff00) | ((a<<24)&0xff000000))
 #else
 #define SWAP_INT(a) (a)
