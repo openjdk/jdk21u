@@ -138,8 +138,8 @@ jint os_getChildren(JNIEnv *env, jlong jpid, jlongArray jarray,
     u_int namelen = 6;
     int mib[6] = {CTL_KERN, KERN_PROC_MIB, KERN_PROC_ALL, 0, sizeof(struct KINFO_PROC_T), 0};
 #else
-    u_int namelen = 4;
-    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
+    u_int namelen = 3;
+    int mib[3] = {CTL_KERN, KERN_PROC, KERN_PROC_PROC};
 #endif
     if (sysctl(mib, namelen, NULL, &bufSize, NULL, 0) < 0) {
         JNU_ThrowByNameWithLastError(env,
