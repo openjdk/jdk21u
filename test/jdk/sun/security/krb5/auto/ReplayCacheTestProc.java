@@ -148,8 +148,8 @@ public class ReplayCacheTestProc {
             if (userLibs != null) {
                 libs = userLibs.split(",");
             } else {
-                if (Platform.isOSX() || Platform.isWindows()) {
-                    // macOS uses Heimdal and Windows has no native lib
+                if (Platform.isOSX() || Platform.isWindows() || Platform.isBSD()) {
+                    // macOS and BSD uses Heimdal and Windows has no native lib
                     libs = new String[]{"J"};
                 } else {
                     if (acceptor("N", "sanity").waitFor() != 0) {
