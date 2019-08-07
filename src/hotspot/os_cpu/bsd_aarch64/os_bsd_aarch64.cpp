@@ -329,15 +329,18 @@ JVM_handle_bsd_signal(int sig,
     }
 #endif
 
+    address addr = (address) info->si_addr;
+
+    // Make sure the high order byte is sign extended, as it may be masked away by the hardware.
+    if ((uintptr_t(addr) & (uintptr_t(1) << 55)) != 0) {
+      addr = address(uintptr_t(addr) | (uintptr_t(0xFF) << 56));
+    }
     // Handle ALL stack overflow variations here
     if (sig == SIGSEGV) {
-      address addr = (address) info->si_addr;
-
       // check if fault address is within thread stack
       if (thread->on_local_stack(addr)) {
         // stack overflow
         if (thread->in_stack_yellow_reserved_zone(addr)) {
-          thread->disable_stack_yellow_reserved_zone();
           if (thread->thread_state() == _thread_in_Java) {
             if (thread->in_stack_reserved_zone(addr)) {
               frame fr;
@@ -359,9 +362,11 @@ JVM_handle_bsd_signal(int sig,
             }
             // Throw a stack overflow exception.  Guard pages will be reenabled
             // while unwinding the stack.
+            thread->disable_stack_yellow_reserved_zone();
             stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime::STACK_OVERFLOW);
           } else {
             // Thread was in the vm or native code.  Return and try to finish.
+            thread->disable_stack_yellow_reserved_zone();
             return 1;
           }
         } else if (thread->in_stack_red_zone(addr)) {
@@ -413,7 +418,7 @@ JVM_handle_bsd_signal(int sig,
                                               SharedRuntime::
                                               IMPLICIT_DIVIDE_BY_ZERO);
       } else if (sig == SIGSEGV &&
-               !MacroAssembler::needs_explicit_null_check((intptr_t)info->si_addr)) {
+                 MacroAssembler::uses_implicit_null_check((void*)addr)) {
           // Determination of interpreter/vtable stub/compiled code null exception
           stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime::IMPLICIT_NULL);
       }
@@ -431,17 +436,6 @@ JVM_handle_bsd_signal(int sig,
       if (addr != (address)-1) {
         stub = addr;
       }
-    }
-
-    // Check to see if we caught the safepoint code in the
-    // process of write protecting the memory serialization page.
-    // It write enables the page immediately after protecting it
-    // so we can just return to retry the write.
-    if ((sig == SIGSEGV) &&
-        os::is_memory_serialize_page(thread, (address) info->si_addr)) {
-      // Block current thread until the memory serialize page permission restored.
-      os::block_on_serialize_page_trap();
-      return true;
     }
   }
 
