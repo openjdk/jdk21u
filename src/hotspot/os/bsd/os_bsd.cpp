@@ -4184,9 +4184,9 @@ bool os::start_debugging(char *buf, int buflen) {
 //
 //   Low memory addresses
 //    +------------------------+
-//    |                        |\  Java thread created by VM does not have glibc
-//    |    glibc guard page    | - guard, attached Java thread usually has
-//    |                        |/  1 glibc guard page.
+//    |                        |\  Java thread created by VM does not have
+//    |   pthread guard page   | - pthread guard, attached Java thread usually
+//    |                        |/  has 1 pthread guard page.
 // P1 +------------------------+ Thread::stack_base() - Thread::stack_size()
 //    |                        |\
 //    |  HotSpot Guard Pages   | - red, yellow and reserved pages
@@ -4202,7 +4202,7 @@ bool os::start_debugging(char *buf, int buflen) {
 //   Low memory addresses
 //    +------------------------+
 //    |                        |\
-//    |  glibc guard page      | - usually 1 page
+//    |   pthread guard page   | - usually 1 page
 //    |                        |/
 // P1 +------------------------+ Thread::stack_base() - Thread::stack_size()
 //    |                        |\
