@@ -314,8 +314,7 @@ static void current_stack_region(address *bottom, size_t *size) {
   if (rslt != 0)
     fatal("pthread_attr_get_np failed with error = " INT32_FORMAT, rslt);
 
-  if (pthread_attr_getstackaddr(&attr, (void **) &stack_bottom) != 0 ||
-      pthread_attr_getstacksize(&attr, &stack_bytes) != 0) {
+  if (pthread_attr_getstack(&attr, (void **) &stack_bottom, &stack_bytes) != 0) {
     fatal("Can not locate current stack attributes!");
   }
 
