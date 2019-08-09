@@ -90,6 +90,7 @@ public final class SystemProps {
         putIfAbsent(props, "http.nonProxyHosts", raw.propDefault(Raw._http_nonProxyHosts_NDX));
         putIfAbsent(props, "ftp.nonProxyHosts", raw.propDefault(Raw._ftp_nonProxyHosts_NDX));
         putIfAbsent(props, "socksNonProxyHosts", raw.propDefault(Raw._socksNonProxyHosts_NDX));
+        putIfAbsent(props, "java.net.preferIPv4Stack", raw.propDefault(Raw._java_net_preferIPV4Stack_NDX));
         putIfAbsent(props, "sun.arch.abi", raw.propDefault(Raw._sun_arch_abi_NDX));
         putIfAbsent(props, "sun.arch.data.model", raw.propDefault(Raw._sun_arch_data_model_NDX));
         putIfAbsent(props, "sun.os.patch.level", raw.propDefault(Raw._sun_os_patch_level_NDX));
@@ -203,7 +204,8 @@ public final class SystemProps {
         @Native private static final int _https_proxyHost_NDX = 1 + _http_proxyPort_NDX;
         @Native private static final int _https_proxyPort_NDX = 1 + _https_proxyHost_NDX;
         @Native private static final int _java_io_tmpdir_NDX = 1 + _https_proxyPort_NDX;
-        @Native private static final int _line_separator_NDX = 1 + _java_io_tmpdir_NDX;
+        @Native private static final int _java_net_preferIPV4Stack_NDX = 1 + _java_io_tmpdir_NDX;
+        @Native private static final int _line_separator_NDX = 1 +_java_net_preferIPV4Stack_NDX;
         @Native private static final int _os_arch_NDX = 1 + _line_separator_NDX;
         @Native private static final int _os_name_NDX = 1 + _os_arch_NDX;
         @Native private static final int _os_version_NDX = 1 + _os_name_NDX;
