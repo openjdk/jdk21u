@@ -1055,8 +1055,8 @@ class Socket implements java.io.Closeable {
             if (linger < 0) {
                 throw new IllegalArgumentException("invalid value for SO_LINGER");
             }
-            if (linger > 65535)
-                linger = 65535;
+            if (linger > 32767)
+                linger = 32767;
             getImpl().setOption(SocketOptions.SO_LINGER, linger);
         }
     }
