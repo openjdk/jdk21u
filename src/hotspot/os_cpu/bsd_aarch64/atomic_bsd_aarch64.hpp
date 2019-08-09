@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2019, Oracle and/or its affiliates. All rights reserved.
  * Copyright (c) 2014, 2019, Red Hat Inc. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_BSD_AARCH64_VM_ATOMIC_BSD_AARCH64_HPP
-#define OS_CPU_BSD_AARCH64_VM_ATOMIC_BSD_AARCH64_HPP
+#ifndef OS_CPU_BSD_AARCH64_ATOMIC_BSD_AARCH64_HPP
+#define OS_CPU_BSD_AARCH64_ATOMIC_BSD_AARCH64_HPP
 
 #include "runtime/vm_version.hpp"
 
@@ -101,4 +101,4 @@ struct Atomic::PlatformOrderedStore<byte_size, RELEASE_X_FENCE>
   void operator()(volatile T* p, T v) const { release_store(p, v); OrderAccess::fence(); }
 };
 
-#endif // OS_CPU_BSD_AARCH64_VM_ATOMIC_BSD_AARCH64_HPP
+#endif // OS_CPU_BSD_AARCH64_ATOMIC_BSD_AARCH64_HPP

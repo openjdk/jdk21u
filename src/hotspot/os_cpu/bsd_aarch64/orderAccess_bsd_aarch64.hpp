@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2019, Oracle and/or its affiliates. All rights reserved.
  * Copyright (c) 2014, 2019, Red Hat Inc. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_BSD_AARCH64_VM_ORDERACCESS_BSD_AARCH64_HPP
-#define OS_CPU_BSD_AARCH64_VM_ORDERACCESS_BSD_AARCH64_HPP
+#ifndef OS_CPU_BSD_AARCH64_ORDERACCESS_BSD_AARCH64_HPP
+#define OS_CPU_BSD_AARCH64_ORDERACCESS_BSD_AARCH64_HPP
 
 // Included in orderAccess.hpp header file.
 
@@ -55,4 +55,4 @@ inline void OrderAccess::fence() {
 
 inline void OrderAccess::cross_modify_fence() { }
 
-#endif // OS_CPU_BSD_AARCH64_VM_ORDERACCESS_BSD_AARCH64_HPP
+#endif // OS_CPU_BSD_AARCH64_ORDERACCESS_BSD_AARCH64_HPP

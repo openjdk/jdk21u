@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2019, Oracle and/or its affiliates. All rights reserved.
  * Copyright (c) 2014, Red Hat Inc. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_BSD_AARCH64_VM_BYTES_BSD_AARCH64_INLINE_HPP
-#define OS_CPU_BSD_AARCH64_VM_BYTES_BSD_AARCH64_INLINE_HPP
+#ifndef OS_CPU_BSD_AARCH64_BYTES_BSD_AARCH64_INLINE_HPP
+#define OS_CPU_BSD_AARCH64_BYTES_BSD_AARCH64_INLINE_HPP
 
 #define bswap_16(x) __bswap16(x)
 #define bswap_32(x) __bswap32(x)
@@ -44,4 +44,4 @@ inline u8 Bytes::swap_u8(u8 x) {
   return bswap_64(x);
 }
 
-#endif // OS_CPU_BSD_AARCH64_VM_BYTES_BSD_AARCH64_INLINE_HPP
+#endif // OS_CPU_BSD_AARCH64_BYTES_BSD_AARCH64_INLINE_HPP
