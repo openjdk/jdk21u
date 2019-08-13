@@ -155,6 +155,34 @@ DLDFLAGS        += -lz
 LDFLAGS         += -ldl
 OUTFLAGS        += -o $@
 else
+## OS = BSD ##
+ifneq ($(findstring BSD,$(OS)),)
+CPU             = $(shell uname -m)
+ARCH1=$(CPU:x86_64=amd64)
+ARCH2=$(ARCH1:i686=i386)
+ARCH=$(ARCH2:sparc64=sparcv9)
+ifdef LP64
+CFLAGS/sparcv9  += -m64
+CFLAGS/amd64    += -m64
+CFLAGS/ppc64    += -m64
+else # LP64
+ARCH=$(ARCH2:amd64=i386)
+ifneq ($(findstring arm,$(ARCH)),)
+ARCH=arm
+endif
+CFLAGS/i386     += -m32
+CFLAGS/sparc    += -m32
+endif # LP64
+CFLAGS          += $(CFLAGS/$(ARCH))
+CFLAGS          += -fPIC
+OS              = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+LIB_EXT         = .so
+CC              = cc
+CFLAGS          += -O
+DLDFLAGS        += -shared
+LDFLAGS         += -ldl
+OUTFLAGS        += -o $@
+else
 ## OS = Windows ##
 OS		= windows
 CC		= gcc
@@ -164,6 +192,7 @@ DLDFLAGS	+= /dll /subsystem:windows /incremental:no \
 			/export:decode_instruction
 OUTFLAGS	+= /link /out:$@
 LIB_EXT		= .dll
+endif   # BSD
 endif   # Darwin
 endif   # AIX
 endif	# Linux
