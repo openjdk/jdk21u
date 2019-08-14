@@ -250,12 +250,11 @@ unsigned long VM_Version::os_get_processor_features() {
   if (ID_AA64ISAR0_CRC32(id_aa64isar0) == ID_AA64ISAR0_CRC32_BASE) {
     auxv = auxv | HWCAP_CRC32;
   }
- 
+
   if (ID_AA64PFR0_AdvSIMD(id_aa64pfr0) == ID_AA64PFR0_AdvSIMD_IMPL || \
       ID_AA64PFR0_AdvSIMD(id_aa64pfr0) == ID_AA64PFR0_AdvSIMD_HP ) {
     auxv = auxv | HWCAP_ASIMD;
   }
-	
+
   return auxv;
 }
-
