@@ -113,6 +113,7 @@
 #define	CPU_PART(midr)	(((midr) >> 4) & 0xfff)
 #define	CPU_VAR(midr)	(((midr) >> 20) & 0xf)
 #define	CPU_REV(midr)	(((midr) >> 0) & 0xf)
+#define UL(x)   UINT64_C(x)
 
 struct cpu_desc {
 	u_int		cpu_impl;
