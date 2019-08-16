@@ -27,7 +27,7 @@
             regardless of jdk.gtk.version flag values.
   @bug 8156121
   @key headful
-  @requires (os.family == "linux" | os.family == "solaris")
+  @requires (os.family == "linux" | os.family == "solaris" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd")
   @run main/othervm -Djdk.gtk.version=2 DemandGTK
   @run main/othervm -Djdk.gtk.version=3 DemandGTK
 */

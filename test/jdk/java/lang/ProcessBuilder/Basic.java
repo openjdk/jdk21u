@@ -39,7 +39,7 @@
 /*
  * @test
  * @modules java.base/java.lang:open
- * @requires (os.family == "linux")
+ * @requires (os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd")
  * @run main/othervm/timeout=300 -Djdk.lang.Process.launchMechanism=posix_spawn Basic
  */
 

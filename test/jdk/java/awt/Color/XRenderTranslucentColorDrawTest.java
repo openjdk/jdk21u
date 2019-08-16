@@ -27,7 +27,7 @@
  * @bug      8176795
  * @summary  Test verifies that we get proper color when we draw translucent
  *           color over an opaque color using X Render extension in Linux.
- * @requires (os.family == "linux")
+ * @requires (os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd")
  * @run      main XRenderTranslucentColorDrawTest -Dsun.java2d.xrender=true
  */
 
