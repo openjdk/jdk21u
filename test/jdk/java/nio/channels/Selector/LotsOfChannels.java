@@ -44,6 +44,7 @@ public class LotsOfChannels {
         Pipe[] pipes = new Pipe[PIPES_COUNT];
         Pipe pipe = Pipe.open();
         Pipe.SinkChannel sink = pipe.sink();
+        sink.configureBlocking(false);
         Pipe.SourceChannel source = pipe.source();
         Selector sel = Selector.open();
         source.configureBlocking(false);
