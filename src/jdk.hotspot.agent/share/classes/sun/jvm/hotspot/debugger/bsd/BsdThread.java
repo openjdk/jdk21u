@@ -25,6 +25,7 @@
 package sun.jvm.hotspot.debugger.bsd;
 
 import sun.jvm.hotspot.debugger.*;
+import sun.jvm.hotspot.utilities.PlatformInfo;
 
 class BsdThread implements ThreadProxy {
     private BsdDebugger debugger;
@@ -64,8 +65,12 @@ class BsdThread implements ThreadProxy {
         return Integer.toString(thread_id);
     }
 
+    private boolean isDarwin() {
+        return PlatformInfo.getOS().equals("darwin");
+    }
+
     public ThreadContext getContext() throws IllegalThreadStateException {
-        long[] data = debugger.getThreadIntegerRegisterSet(unique_thread_id);
+        long[] data = debugger.getThreadIntegerRegisterSet(isDarwin() ? unique_thread_id : thread_id);
         ThreadContext context = BsdThreadContextFactory.createThreadContext(debugger);
         for (int i = 0; i < data.length; i++) {
             context.setRegister(i, data[i]);
