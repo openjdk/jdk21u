@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -55,14 +55,27 @@ final public class BsdX86CFrame extends BasicCFrame {
 
    public CFrame sender(ThreadProxy thread) {
       X86ThreadContext context = (X86ThreadContext) thread.getContext();
-      Address esp = context.getRegisterAsAddress(X86ThreadContext.ESP);
+      /*
+       * Native code fills in the stack pointer register value using index
+       * X86ThreadContext.SP.
+       * See file BsdDebuggerLocal.c macro REG_INDEX(reg).
+       *
+       * Be sure to use SP, or UESP which is aliased to SP in Java code,
+       * for the frame pointer validity check.
+       */
+      Address esp = context.getRegisterAsAddress(X86ThreadContext.SP);
 
       if ( (ebp == null) || ebp.lessThan(esp) ) {
         return null;
       }
 
+      // Check alignment of ebp
+      if ( dbg.getAddressValue(ebp) % ADDRESS_SIZE != 0) {
+        return null;
+      }
+
       Address nextEBP = ebp.getAddressAt( 0 * ADDRESS_SIZE);
-      if (nextEBP == null) {
+      if (nextEBP == null || nextEBP.lessThanOrEqual(ebp)) {
         return null;
       }
       Address nextPC  = ebp.getAddressAt( 1 * ADDRESS_SIZE);

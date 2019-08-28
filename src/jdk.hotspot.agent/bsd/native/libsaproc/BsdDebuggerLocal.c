@@ -38,16 +38,16 @@
 #include "sun_jvm_hotspot_debugger_amd64_AMD64ThreadContext.h"
 #endif
 
+#if defined(sparc) || defined(sparcv9)
+#include "sun_jvm_hotspot_debugger_sparc_SPARCThreadContext.h"
+#endif
+
 #ifdef ppc64
 #include "sun_jvm_hotspot_debugger_ppc64_PPC64ThreadContext.h"
 #endif
 
 #ifdef aarch64
 #include "sun_jvm_hotspot_debugger_aarch64_AARCH64ThreadContext.h"
-#endif
-
-#if defined(sparc) || defined(sparcv9)
-#include "sun_jvm_hotspot_debugger_sparc_SPARCThreadContext.h"
 #endif
 
 static jfieldID p_ps_prochandle_ID = 0;
@@ -64,11 +64,14 @@ static jmethodID listAdd_ID = 0;
 #define THROW_NEW_DEBUGGER_EXCEPTION_(str, value) { throw_new_debugger_exception(env, str); return value; }
 #define THROW_NEW_DEBUGGER_EXCEPTION(str) { throw_new_debugger_exception(env, str); return;}
 
-static void throw_new_debugger_exception(JNIEnv* env, const char* errMsg) {
-  (*env)->ThrowNew(env, (*env)->FindClass(env, "sun/jvm/hotspot/debugger/DebuggerException"), errMsg);
+void throw_new_debugger_exception(JNIEnv* env, const char* errMsg) {
+  jclass clazz;
+  clazz = (*env)->FindClass(env, "sun/jvm/hotspot/debugger/DebuggerException");
+  CHECK_EXCEPTION;
+  (*env)->ThrowNew(env, clazz, errMsg);
 }
 
-static struct ps_prochandle* get_proc_handle(JNIEnv* env, jobject this_obj) {
+struct ps_prochandle* get_proc_handle(JNIEnv* env, jobject this_obj) {
   jlong ptr = (*env)->GetLongField(env, this_obj, p_ps_prochandle_ID);
   return (struct ps_prochandle*)(intptr_t)ptr;
 }
@@ -150,11 +153,14 @@ static void fillThreadsAndLoadObjects(JNIEnv* env, jobject this_obj, struct ps_p
      const char* name;
      jobject loadObject;
      jobject loadObjectList;
+     jstring str;
 
      base = get_lib_base(ph, i);
      name = get_lib_name(ph, i);
-     loadObject = (*env)->CallObjectMethod(env, this_obj, createLoadObject_ID,
-                                   (*env)->NewStringUTF(env, name), (jlong)0, (jlong)base);
+
+     str = (*env)->NewStringUTF(env, name);
+     CHECK_EXCEPTION;
+     loadObject = (*env)->CallObjectMethod(env, this_obj, createLoadObject_ID, str, (jlong)0, (jlong)base);
      CHECK_EXCEPTION;
      loadObjectList = (*env)->GetObjectField(env, this_obj, loadObjectList_ID);
      CHECK_EXCEPTION;
@@ -260,13 +266,18 @@ JNIEXPORT jlong JNICALL Java_sun_jvm_hotspot_debugger_bsd_BsdDebuggerLocal_looku
 JNIEXPORT jobject JNICALL Java_sun_jvm_hotspot_debugger_bsd_BsdDebuggerLocal_lookupByAddress0
   (JNIEnv *env, jobject this_obj, jlong addr) {
   uintptr_t offset;
+  jobject obj;
+  jstring str;
   const char* sym = NULL;
 
   struct ps_prochandle* ph = get_proc_handle(env, this_obj);
   sym = symbol_for_pc(ph, (uintptr_t) addr, &offset);
   if (sym == NULL) return 0;
-  return (*env)->CallObjectMethod(env, this_obj, createClosestSymbol_ID,
-                          (*env)->NewStringUTF(env, sym), (jlong)offset);
+  str = (*env)->NewStringUTF(env, sym);
+  CHECK_EXCEPTION_(NULL);
+  obj = (*env)->CallObjectMethod(env, this_obj, createClosestSymbol_ID, str, (jlong)offset);
+  CHECK_EXCEPTION_(NULL);
+  return obj;
 }
 
 /*
@@ -371,12 +382,19 @@ JNIEXPORT jlongArray JNICALL Java_sun_jvm_hotspot_debugger_bsd_BsdDebuggerLocal_
   regs[REG_INDEX(CS)] = gregs.r_cs;
   regs[REG_INDEX(RSP)] = gregs.r_rsp;
   regs[REG_INDEX(SS)] = gregs.r_ss;
-//  regs[REG_INDEX(FSBASE)] = gregs.fs_base;
-//  regs[REG_INDEX(GSBASE)] = gregs.gs_base;
-//  regs[REG_INDEX(DS)] = gregs.ds;
-//  regs[REG_INDEX(ES)] = gregs.es;
-//  regs[REG_INDEX(FS)] = gregs.fs;
-//  regs[REG_INDEX(GS)] = gregs.gs;
+#ifdef __FreeBSD__
+#include <machine/sysarch.h>
+  void **fs_base = NULL, **gs_base = NULL;
+  amd64_get_fsbase(fs_base);
+  amd64_get_gsbase(gs_base);
+
+  regs[REG_INDEX(FSBASE)] = (long) *fs_base;
+  regs[REG_INDEX(GSBASE)] = (long) *gs_base;
+  regs[REG_INDEX(DS)] = gregs.r_ds;
+  regs[REG_INDEX(ES)] = gregs.r_es;
+  regs[REG_INDEX(FS)] = gregs.r_fs;
+  regs[REG_INDEX(GS)] = gregs.r_gs;
+#endif /* __FreeBSD__ */
 
 #endif /* amd64 */
 

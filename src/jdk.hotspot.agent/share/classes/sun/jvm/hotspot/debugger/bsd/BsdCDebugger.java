@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2003, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Red Hat Inc.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,12 +27,17 @@ package sun.jvm.hotspot.debugger.bsd;
 
 import java.io.*;
 import java.util.*;
+
 import sun.jvm.hotspot.debugger.*;
 import sun.jvm.hotspot.debugger.cdbg.*;
 import sun.jvm.hotspot.debugger.x86.*;
 import sun.jvm.hotspot.debugger.amd64.*;
+import sun.jvm.hotspot.debugger.aarch64.*;
+import sun.jvm.hotspot.debugger.ppc64.*;
 import sun.jvm.hotspot.debugger.bsd.x86.*;
 import sun.jvm.hotspot.debugger.bsd.amd64.*;
+import sun.jvm.hotspot.debugger.bsd.ppc64.*;
+import sun.jvm.hotspot.debugger.bsd.aarch64.*;
 import sun.jvm.hotspot.utilities.*;
 
 class BsdCDebugger implements CDebugger {
@@ -53,31 +59,21 @@ class BsdCDebugger implements CDebugger {
     if (pc == null) {
       return null;
     }
-    List objs = getLoadObjectList();
-    Object[] arr = objs.toArray();
-    // load objects are sorted by base address, do binary search
-    int mid  = -1;
-    int low  = 0;
-    int high = arr.length - 1;
 
-    while (low <= high) {
-       mid = (low + high) >> 1;
-       LoadObject midVal = (LoadObject) arr[mid];
-       long cmp = pc.minus(midVal.getBase());
-       if (cmp < 0) {
-          high = mid - 1;
-       } else if (cmp > 0) {
-          long size = midVal.getSize();
-          if (cmp >= size) {
-             low = mid + 1;
-          } else {
-             return (LoadObject) arr[mid];
-          }
-       } else { // match found
-          return (LoadObject) arr[mid];
-       }
+    /* Typically we have about ten loaded objects here. So no reason to do
+      sort/binary search here. Linear search gives us acceptable performance.*/
+
+    List objs = getLoadObjectList();
+
+    for (int i = 0; i < objs.size(); i++) {
+      LoadObject ob = (LoadObject) objs.get(i);
+      Address base = ob.getBase();
+      long size = ob.getSize();
+      if ( pc.greaterThanOrEqual(base) && pc.lessThan(base.addOffsetTo(size))) {
+        return ob;
+      }
     }
-    // no match found.
+
     return null;
   }
 
@@ -97,8 +93,24 @@ class BsdCDebugger implements CDebugger {
        Address pc  = context.getRegisterAsAddress(AMD64ThreadContext.RIP);
        if (pc == null) return null;
        return new BsdAMD64CFrame(dbg, rbp, pc);
-    } else {
-       throw new DebuggerException(cpu + " is not yet supported");
+    }  else if (cpu.equals("ppc64")) {
+        PPC64ThreadContext context = (PPC64ThreadContext) thread.getContext();
+        Address sp = context.getRegisterAsAddress(PPC64ThreadContext.SP);
+        if (sp == null) return null;
+        Address pc  = context.getRegisterAsAddress(PPC64ThreadContext.PC);
+        if (pc == null) return null;
+        return new BsdPPC64CFrame(dbg, sp, pc, BsdDebuggerLocal.getAddressSize());
+    } else if (cpu.equals("aarch64")) {
+       AARCH64ThreadContext context = (AARCH64ThreadContext) thread.getContext();
+       Address fp = context.getRegisterAsAddress(AARCH64ThreadContext.FP);
+       if (fp == null) return null;
+       Address pc  = context.getRegisterAsAddress(AARCH64ThreadContext.PC);
+       if (pc == null) return null;
+       return new BsdAARCH64CFrame(dbg, fp, pc);
+     } else {
+       // Runtime exception thrown by BsdThreadContextFactory if unknown cpu
+       ThreadContext context = (ThreadContext) thread.getContext();
+       return context.getTopFrame(dbg);
     }
   }
 
