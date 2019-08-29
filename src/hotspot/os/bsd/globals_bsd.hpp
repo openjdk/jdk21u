@@ -47,6 +47,9 @@
   product(bool, UseBsdPosixThreadCPUClocks, true,                               \
           "enable fast Bsd Posix clocks where available")                       \
                                                                                 \
+  product(bool, UseHugeTLBFS, false,                                            \
+          "Use MAP_HUGETLB for large pages")                                    \
+                                                                                \
   product(bool, UseSHM, false,                                                  \
           "Use SYSV shared memory for large pages")
 
