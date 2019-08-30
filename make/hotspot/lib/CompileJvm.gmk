@@ -91,7 +91,8 @@ endif
 DISABLED_WARNINGS_clang := tautological-compare \
     undefined-var-template sometimes-uninitialized unknown-pragmas \
     delete-non-virtual-dtor missing-braces char-subscripts \
-    ignored-qualifiers missing-field-initializers mismatched-tags
+    ignored-qualifiers missing-field-initializers mismatched-tags \
+    unnamed-type-template-args
 
 DISABLED_WARNINGS_solstudio := labelnotused hidef w_novirtualdescr inlafteruse \
     unknownpragma doubunder w_enumnotused w_toomanyenumnotused \
