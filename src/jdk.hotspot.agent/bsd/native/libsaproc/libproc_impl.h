@@ -79,8 +79,9 @@ typedef struct thread_command thread_command;
 typedef struct dylib_command dylib_command;
 typedef struct symtab_command symtab_command;
 typedef struct nlist_64 nlist_64;
-#else
-#include <thread_db.h>
+#elif defined(__FreeBSD__)
+#include <sys/types.h>
+#include <sys/ptrace.h>
 #include "salibelf.h"
 #endif //  __APPLE__
 

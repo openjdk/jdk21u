@@ -118,11 +118,11 @@ static bool process_write_data(struct ps_prochandle* ph,
 }
 
 // "user" should be a pointer to a reg
-static bool process_get_lwp_regs(struct ps_prochandle* ph, pid_t pid, struct reg *user) {
+static bool process_get_lwp_regs(struct ps_prochandle* ph, lwpid_t lwpid, struct reg *user) {
   // we have already attached to all thread 'pid's, just use ptrace call
   // to get regset now. Note that we don't cache regset upfront for processes.
- if (ptrace(PT_GETREGS, pid, (caddr_t) user, 0) < 0) {
-   print_debug("ptrace(PTRACE_GETREGS, ...) failed for lwp %d\n", pid);
+ if (ptrace(PT_GETREGS, ph->pid, (caddr_t) user, 0) < 0) {
+   print_debug("ptrace(PTRACE_GETREGS, ...) failed for lwp %d (%d)\n", lwpid, ph->pid);
    return false;
  }
  return true;
@@ -243,123 +243,8 @@ static bool add_new_thread(struct ps_prochandle* ph, pthread_t pthread_id, lwpid
   return add_thread_info(ph, pthread_id, lwp_id) != NULL;
 }
 
-#if defined(__FreeBSD__) && __FreeBSD_version < 701000
-/*
- * TEXT_START_ADDR from binutils/ld/emulparams/<arch_spec>.sh
- * Not the most robust but good enough.
- */
-
-#if defined(amd64) || defined(x86_64)
-#define TEXT_START_ADDR 0x400000
-#elif defined(i386)
-#define TEXT_START_ADDR 0x8048000
-#else
-#error TEXT_START_ADDR not defined
-#endif
-
-#define BUF_SIZE (PATH_MAX + NAME_MAX + 1)
-
-uintptr_t linkmap_addr(struct ps_prochandle *ph) {
-  uintptr_t ehdr_addr, phdr_addr, dyn_addr, dmap_addr, lmap_addr;
-  ELF_EHDR ehdr;
-  ELF_PHDR *phdrs, *phdr;
-  ELF_DYN *dyns, *dyn;
-  struct r_debug dmap;
-  unsigned long hdrs_size;
-  unsigned int i;
-
-  /* read ELF_EHDR at TEXT_START_ADDR and validate */
-
-  ehdr_addr = (uintptr_t)TEXT_START_ADDR;
-
-  if (process_read_data(ph, ehdr_addr, (char *)&ehdr, sizeof(ehdr)) != true) {
-    print_debug("process_read_data failed for ehdr_addr %p\n", ehdr_addr);
-    return (0);
-  }
-
-  if (!IS_ELF(ehdr) ||
-        ehdr.e_ident[EI_CLASS] != ELF_TARG_CLASS ||
-        ehdr.e_ident[EI_DATA] != ELF_TARG_DATA ||
-        ehdr.e_ident[EI_VERSION] != EV_CURRENT ||
-        ehdr.e_phentsize != sizeof(ELF_PHDR) ||
-        ehdr.e_version != ELF_TARG_VER ||
-        ehdr.e_machine != ELF_TARG_MACH) {
-    print_debug("not an ELF_EHDR at %p\n", ehdr_addr);
-    return (0);
-  }
-
-  /* allocate space for all ELF_PHDR's and read */
-
-  phdr_addr = ehdr_addr + ehdr.e_phoff;
-  hdrs_size = ehdr.e_phnum * sizeof(ELF_PHDR);
-
-  if ((phdrs = malloc(hdrs_size)) == NULL)
-    return (0);
-
-  if (process_read_data(ph, phdr_addr, (char *)phdrs, hdrs_size) != true) {
-    print_debug("process_read_data failed for phdr_addr %p\n", phdr_addr);
-    return (0);
-  }
-
-  /* find PT_DYNAMIC section */
-
-  for (i = 0, phdr = phdrs; i < ehdr.e_phnum; i++, phdr++) {
-    if (phdr->p_type == PT_DYNAMIC)
-      break;
-  }
-
-  if (i >= ehdr.e_phnum) {
-    print_debug("PT_DYNAMIC section not found!\n");
-    free(phdrs);
-    return (0);
-  }
-
-  /* allocate space and read in ELF_DYN headers */
-
-  dyn_addr = phdr->p_vaddr;
-  hdrs_size = phdr->p_memsz;
-  free(phdrs);
-
-  if ((dyns = malloc(hdrs_size)) == NULL)
-    return (0);
-
-  if (process_read_data(ph, dyn_addr, (char *)dyns, hdrs_size) != true) {
-    print_debug("process_read_data failed for dyn_addr %p\n", dyn_addr);
-    free(dyns);
-    return (0);
-  }
-
-  /* find DT_DEBUG */
-
-  dyn = dyns;
-  while (dyn->d_tag != DT_DEBUG && dyn->d_tag != DT_NULL) {
-    dyn++;
-  }
-
-  if (dyn->d_tag != DT_DEBUG) {
-    print_debug("failed to find DT_DEBUG\n");
-    free(dyns);
-    return (0);
-  }
-
-  /* read struct r_debug into dmap */
-
-  dmap_addr = (uintptr_t)dyn->d_un.d_ptr;
-  free(dyns);
-
-  if (process_read_data(ph, dmap_addr, (char *)&dmap, sizeof(dmap)) != true) {
-    print_debug("process_read_data failed for dmap_addr %p\n", dmap_addr);
-    return (0);
-  }
-
-  lmap_addr = (uintptr_t)dmap.r_map;
-
-  return (lmap_addr);
-}
-#endif // __FreeBSD__ && __FreeBSD_version < 701000
-
 static bool read_lib_info(struct ps_prochandle* ph) {
-#if defined(__FreeBSD__) && __FreeBSD_version >= 701000
+#if defined(__FreeBSD__)
   struct kinfo_vmentry *freep, *kve;
   int i, cnt;
 

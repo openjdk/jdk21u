@@ -163,13 +163,6 @@ bool is_macho_file(int fd) {
 // initialize libproc
 bool init_libproc(bool debug) {
    _libsaproc_debug = debug;
-#ifndef __APPLE__
-   // initialize the thread_db library
-   if (td_init() != TD_OK) {
-     print_debug("libthread_db's td_init failed\n");
-     return false;
-   }
-#endif // __APPLE__
    return true;
 }
 
@@ -350,65 +343,48 @@ void delete_thread_info(struct ps_prochandle* ph, sa_thread_info* thr_to_be_remo
     free(current_thr);
 }
 
-#ifndef __APPLE__
-// struct used for client data from thread_db callback
-struct thread_db_client_data {
-  struct ps_prochandle* ph;
-  thread_info_callback callback;
-};
-
-// callback function for libthread_db
-static int thread_db_callback(const td_thrhandle_t *th_p, void *data) {
-  struct thread_db_client_data* ptr = (struct thread_db_client_data*) data;
-  td_thrinfo_t ti;
-  td_err_e err;
-
-  memset(&ti, 0, sizeof(ti));
-  err = td_thr_get_info(th_p, &ti);
-  if (err != TD_OK) {
-    print_debug("libthread_db : td_thr_get_info failed, can't get thread info\n");
-    return err;
-  }
-
-  print_debug("thread_db : pthread %d (lwp %d)\n", ti.ti_tid, ti.ti_lid);
-
-  if (ti.ti_state == TD_THR_UNKNOWN || ti.ti_state == TD_THR_ZOMBIE) {
-    print_debug("Skipping pthread %d (lwp %d)\n", ti.ti_tid, ti.ti_lid);
-    return TD_OK;
-  }
-
-  if (ptr->callback(ptr->ph, (pthread_t)ti.ti_tid, ti.ti_lid) != true)
-    return TD_ERR;
-
-  return TD_OK;
-}
-
-// read thread_info using libthread_db
+#ifdef __FreeBSD__
+/* Read thread info via ptrace */
 bool read_thread_info(struct ps_prochandle* ph, thread_info_callback cb) {
-  struct thread_db_client_data mydata;
-  td_thragent_t* thread_agent = NULL;
-  if (td_ta_new(ph, &thread_agent) != TD_OK) {
-     print_debug("can't create libthread_db agent\n");
-     return false;
+  int num_threads = ptrace(PT_GETNUMLWPS, ph->pid, NULL, 0);
+  if (num_threads == -1) {
+    print_debug("ptrace : PT_GETNUMLWPS failed, can't get thread info\n");
+    return false;
   }
 
-  mydata.ph = ph;
-  mydata.callback = cb;
-
-  // we use libthread_db iterator to iterate thru list of threads.
-  if (td_ta_thr_iter(thread_agent, thread_db_callback, &mydata,
-                 TD_THR_ANY_STATE, TD_THR_LOWEST_PRIORITY,
-                 TD_SIGNO_MASK, TD_THR_ANY_USER_FLAGS) != TD_OK) {
-     td_ta_delete(thread_agent);
-     return false;
+  lwpid_t *thread_ids = malloc(sizeof(lwpid_t) * num_threads);
+  if (thread_ids == NULL) {
+    print_debug("malloc failed, can't get thread info\n");
+    return false;
   }
 
-  // delete thread agent
-  td_ta_delete(thread_agent);
+  int rc = ptrace(PT_GETLWPLIST, ph->pid, (caddr_t) thread_ids, num_threads);
+  if (rc == -1) {
+    print_debug("ptrace : PT_GETLWPLIST failed, can't get thread info\n");
+    return false;
+  }
+
+  for (int i = 0; i < num_threads; i++) {
+    // Skip over exited threads
+    struct ptrace_lwpinfo pinfo;
+    if (ptrace(PT_LWPINFO, thread_ids[i], (caddr_t) &pinfo, sizeof(pinfo)) == -1) {
+      print_debug("ptrace : PT_LWPINFO failed, can't find info on LWP %d\n", thread_ids[i]);
+      return false;
+    }
+    if (pinfo.pl_flags & PL_FLAG_EXITED) {
+            continue;
+    }
+
+    // Execute callback
+    if (cb(ph, (pthread_t) -1, thread_ids[i]) != true) {
+      print_debug("Callback : unable to add LWP %d\n", thread_ids[i]);
+      return false;
+    }
+  }
+
   return true;
 }
-
-#endif // __APPLE__
+#endif // __FreeBSD__
 
 // get number of threads
 int get_num_threads(struct ps_prochandle* ph) {
@@ -560,7 +536,7 @@ ps_plog (const char *format, ...)
   va_end(alist);
 }
 
-#ifndef __APPLE__
+#ifdef __FreeBSD__
 // ------------------------------------------------------------------------
 // Functions below this point are not yet implemented. They are here only
 // to make the linker happy.
@@ -585,7 +561,7 @@ ps_lgetfpregs(struct  ps_prochandle  *ph,  lwpid_t lid, prfpregset_t *fpregs) {
 
 JNIEXPORT ps_err_e JNICALL
 ps_lgetregs(struct ps_prochandle *ph, lwpid_t lid, prgregset_t gregset) {
-  print_debug("ps_lgetfpregs not implemented\n");
+  print_debug("ps_lgetregs not implemented\n");
   return PS_OK;
 }
 
@@ -600,4 +576,4 @@ ps_pcontinue(struct ps_prochandle *ph) {
   print_debug("ps_pcontinue not implemented\n");
   return PS_OK;
 }
-#endif // __APPLE__
+#endif // __FreeBSD__

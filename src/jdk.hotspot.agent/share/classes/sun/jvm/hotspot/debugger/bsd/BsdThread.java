@@ -47,6 +47,9 @@ class BsdThread implements ThreadProxy {
         this.debugger = debugger;
         // use unique_thread_id to identify thread
         this.unique_thread_id = id;
+        if (!isDarwin()) {
+            thread_id = (int) id;
+        }
     }
 
     public boolean equals(Object obj) {
@@ -54,7 +57,10 @@ class BsdThread implements ThreadProxy {
             return false;
         }
 
-        return (((BsdThread) obj).unique_thread_id == unique_thread_id);
+        if (isDarwin()) {
+            return (((BsdThread) obj).unique_thread_id == unique_thread_id);
+        }
+        return (((BsdThread) obj).thread_id == thread_id);
     }
 
     public int hashCode() {
@@ -65,7 +71,7 @@ class BsdThread implements ThreadProxy {
         return Integer.toString(thread_id);
     }
 
-    private boolean isDarwin() {
+    private static boolean isDarwin() {
         return PlatformInfo.getOS().equals("darwin");
     }
 
