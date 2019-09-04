@@ -267,7 +267,7 @@ void os::Bsd::initialize_system_info() {
   int mib[2];
   size_t len;
   int cpu_val;
-  julong mem_val;
+  size_t mem_val;
 
   // get processors count via hw.ncpus sysctl
   mib[0] = CTL_HW;
