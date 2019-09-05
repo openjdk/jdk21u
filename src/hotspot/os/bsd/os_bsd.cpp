@@ -267,7 +267,18 @@ void os::Bsd::initialize_system_info() {
   int mib[2];
   size_t len;
   int cpu_val;
-  size_t mem_val;
+#if defined (HW_MEMSIZE) // Apple
+  uint64_t mem_val;
+  #define MEMMIB HW_MEMSIZE;
+#elif defined(HW_PHYSMEM64) // OpenBSD & NetBSD
+  int64_t mem_val;
+  #define MEMMIB HW_PHYSMEM64;
+#elif defined(HW_PHYSMEM) // FreeBSD
+  unsigned long mem_val;
+  #define MEMMIB HW_PHYSMEM;
+#else
+  #error No ways to get physmem
+#endif
 
   // get processors count via hw.ncpus sysctl
   mib[0] = CTL_HW;
@@ -280,21 +291,9 @@ void os::Bsd::initialize_system_info() {
     set_processor_count(1);   // fallback
   }
 
-  // get physical memory via hw.memsize sysctl (hw.memsize is used
-  // since it returns a 64 bit value)
+  // get physical memory via sysctl
   mib[0] = CTL_HW;
-
-#if defined (HW_MEMSIZE) // Apple
-  mib[1] = HW_MEMSIZE;
-#elif defined(HW_PHYSMEM64) // OpenBSD & NetBSD
-  mib[1] = HW_PHYSMEM64;
-#elif defined(HW_PHYSMEM) // Most of BSD
-  mib[1] = HW_PHYSMEM;
-#elif defined(HW_REALMEM) // Old FreeBSD
-  mib[1] = HW_REALMEM;
-#else
-  #error No ways to get physmem
-#endif
+  mib[1] = MEMMIB;
 
   len = sizeof(mem_val);
   if (sysctl(mib, 2, &mem_val, &len, NULL, 0) != -1) {

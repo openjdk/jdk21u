@@ -263,7 +263,7 @@ Java_com_sun_management_internal_OperatingSystemImpl_getCommittedVirtualMemorySi
         throw_internal_error(env, "task_info failed");
     }
     return t_info.virtual_size;
-f defined(__FreeBSD__)
+#elif defined(__FreeBSD__)
     FILE *fp;
     unsigned long end, start;
     jlong total = 0;
@@ -402,20 +402,24 @@ Java_com_sun_management_internal_OperatingSystemImpl_getTotalPhysicalMemorySize0
   (JNIEnv *env, jobject mbean)
 {
 #ifdef _ALLBSD_SOURCE
-    jlong result = 0;
     int mib[2];
     size_t rlen;
+#if defined (HW_MEMSIZE) // Apple
+    uint64_t result = 0;
+    #define MEMMIB HW_MEMSIZE;
+#elif defined(HW_PHYSMEM64) // OpenBSD & NetBSD
+    int64_t result = 0;
+    #define MEMMIB HW_PHYSMEM64;
+#elif defined(HW_PHYSMEM) // FreeBSD
+    unsigned long result = 0;
+    #define MEMMIB HW_PHYSMEM;
+#else
+    #error No ways to get physmem
+#endif
 
     mib[0] = CTL_HW;
-#if defined (HW_MEMSIZE) // Apple
-    mib[1] = HW_MEMSIZE;
-#elif defined(HW_PHYSMEM64) // OpenBSD & NetBSD
-    mib[1] = HW_PHYSMEM64;
-#elif defined(HW_PHYSMEM) // Most of BSD
-    mib[1] = HW_PHYSMEM;
-#else
-  #error No ways to get physmem
-#endif
+    mib[1] = MEMMIB;
+
     rlen = sizeof(result);
     if (sysctl(mib, 2, &result, &rlen, NULL, 0) != 0) {
         throw_internal_error(env, "sysctl failed");
