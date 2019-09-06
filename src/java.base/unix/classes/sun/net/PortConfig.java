@@ -52,9 +52,15 @@ public final class PortConfig {
         } else if (os.contains("OS X")) {
             defaultLower = 49152;
             defaultUpper = 65535;
-        } else if (os.endsWith("BSD")) {
+        } else if (os.startsWith("FreeBSD")) {
+            defaultLower = 10000;
+            defaultUpper = 65535;
+        } else if (os.startsWith("NetBSD")) {
             defaultLower = 49152;
             defaultUpper = 65535;
+        } else if (os.startsWith("OpenBSD")) {
+            defaultLower = 1024;
+            defaultUpper = 49151;
         } else if (os.startsWith("AIX")) {
             // The ephemeral port is OS version dependent on AIX:
             // http://publib.boulder.ibm.com/infocenter/aix/v7r1/topic/com.ibm.aix.rsct315.admin/bl503_ephport.htm
