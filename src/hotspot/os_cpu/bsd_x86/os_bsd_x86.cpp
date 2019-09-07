@@ -829,7 +829,7 @@ bool os::is_allocatable(size_t bytes) {
 size_t os::Posix::_compiler_thread_min_stack_allowed = 48 * K;
 size_t os::Posix::_java_thread_min_stack_allowed = 48 * K;
 #ifdef _LP64
-size_t os::Posix::_vm_internal_thread_min_stack_allowed = 64 * K;
+size_t os::Posix::_vm_internal_thread_min_stack_allowed = 128 * K;
 #else
 size_t os::Posix::_vm_internal_thread_min_stack_allowed = (48 DEBUG_ONLY(+ 4)) * K;
 #endif // _LP64
