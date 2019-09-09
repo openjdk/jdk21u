@@ -73,6 +73,10 @@
 #ifndef __OpenBSD__
 # include <ucontext.h>
 #endif
+#ifdef __FreeBSD__
+# include <sys/sysctl.h>
+# include <sys/procctl.h>
+#endif
 
 // needed by current_stack_region() workaround for Mavericks
 #if defined(__APPLE__)
@@ -510,6 +514,43 @@ JVM_handle_bsd_signal(int sig,
     // Handle ALL stack overflow variations here
     if (sig == SIGSEGV || sig == SIGBUS) {
       address addr = (address) info->si_addr;
+#if defined(__FreeBSD__) && !defined(PROC_STACKGAP_CTL)
+      /*
+       * Try to work around the problems caused on FreeBSD where the kernel
+       * may place guard pages above JVM guard pages and prevent the Java
+       * thread stacks growing into the JVM guard pages.  The work around
+       * is to determine how many such pages there may be and round down the
+       * fault address so that tests of whether it is in the JVM guard zone
+       * succeed.
+       *
+       * Note that this is a partial workaround at best since the normally
+       * the JVM could then unprotect the reserved area to allow a critical
+       * section to complete.  This is not possible if the kernel has
+       * placed guard pages below the reserved area.
+       *
+       * This also suffers from the problem that the
+       * security.bsd.stack_guard_page sysctl is dynamic and may have
+       * changed since the stack was allocated.  This is likely to be rare
+       * in practice though.
+       *
+       * What this does do is prevent the JVM crashing on FreeBSD and
+       * instead throwing a StackOverflowError when infinite recursion
+       * is attempted, which is the expected behaviour.  Due to it's
+       * limitations though, objects may be in unexpected states when
+       * this occurs.
+       *
+       * A better way to avoid these problems is either to be on a new
+       * enough version of FreeBSD (one that has PROC_STACKGAP_CTL) or set
+       * security.bsd.stack_guard_page to zero.
+       */
+      int guard_pages = 0;
+      size_t size = sizeof(guard_pages);
+      if (sysctlbyname("security.bsd.stack_guard_page",
+                       &guard_pages, &size, NULL, 0) == 0 &&
+          guard_pages > 0) {
+        addr -= guard_pages * os::vm_page_size();
+      }
+#endif
 
       // check if fault address is within thread stack
       if (thread->on_local_stack(addr)) {
