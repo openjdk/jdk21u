@@ -37,6 +37,7 @@
 #include <sys/types.h>
 #ifdef __FreeBSD__
 #include <sys/sysctl.h>
+#include <sys/procctl.h>
 #endif
 #include "manifest_info.h"
 
@@ -829,6 +830,11 @@ JVMInit(InvocationFunctions* ifn, jlong threadStackSize,
         int argc, char **argv,
         int mode, char *what, int ret)
 {
+#if defined(__FreeBSD__) && defined(PROC_STACKGAP_CTL)
+    /* Must disable the kernel stack guard pages before threads are created */
+    int arg = PROC_STACKGAP_DISABLE | PROC_STACKGAP_ENABLE_EXEC;
+    procctl(P_PID, getpid(), PROC_STACKGAP_CTL, &arg);
+#endif
     ShowSplashScreen();
     return ContinueInNewThread(ifn, threadStackSize, argc, argv, mode, what, ret);
 }
