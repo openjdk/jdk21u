@@ -832,7 +832,7 @@ JVMInit(InvocationFunctions* ifn, jlong threadStackSize,
 {
 #if defined(__FreeBSD__) && defined(PROC_STACKGAP_CTL)
     /* Must disable the kernel stack guard pages before threads are created */
-    int arg = PROC_STACKGAP_DISABLE | PROC_STACKGAP_ENABLE_EXEC;
+    int arg = PROC_STACKGAP_DISABLE;
     procctl(P_PID, getpid(), PROC_STACKGAP_CTL, &arg);
 #endif
     ShowSplashScreen();
