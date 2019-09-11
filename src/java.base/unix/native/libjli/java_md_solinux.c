@@ -38,7 +38,13 @@
 #ifdef __FreeBSD__
 #include <sys/sysctl.h>
 #include <sys/procctl.h>
+#ifndef PROC_STACKGAP_DISABLE
+#define PROC_STACKGAP_DISABLE	0x0002
 #endif
+#ifndef PROC_STACKGAP_CTL
+#define PROC_STACKGAP_CTL	17
+#endif
+#endif /* __FreeBSD__ */
 #include "manifest_info.h"
 
 
@@ -830,8 +836,15 @@ JVMInit(InvocationFunctions* ifn, jlong threadStackSize,
         int argc, char **argv,
         int mode, char *what, int ret)
 {
-#if defined(__FreeBSD__) && defined(PROC_STACKGAP_CTL)
-    /* Must disable the kernel stack guard pages before threads are created */
+#ifdef __FreeBSD__
+    /*
+     * Kernel stack guard pages interfere with the JVM's guard pages on the
+     * thread stacks and prevent correct stack overflow detection and the
+     * use of reserved pages to allow critical sections to complete.
+     *
+     * Attempt to disable the kernel stack guard pages here before any threads
+     * are created.
+     */
     int arg = PROC_STACKGAP_DISABLE;
     procctl(P_PID, getpid(), PROC_STACKGAP_CTL, &arg);
 #endif
