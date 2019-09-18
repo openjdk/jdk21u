@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,14 +23,45 @@
  */
 
 #include "precompiled.hpp"
-#include "oops/access.inline.hpp"
-#include "oops/accessDecorators.hpp"
+#include "jfr/utilities/jfrBlob.hpp"
 
-// This macro allows instantiating selected accesses to be usable from the
-// access.hpp file, to break dependencies to the access.inline.hpp file.
-#define INSTANTIATE_HPP_ACCESS(decorators, T, barrier_type)  \
-  template struct RuntimeDispatch<DecoratorFixup<decorators>::value, T, barrier_type>
+JfrBlob::JfrBlob(const u1* checkpoint, size_t size) :
+  _data(JfrCHeapObj::new_array<u1>(size)),
+  _next(),
+  _size(size),
+  _written(false) {
+  assert(_data != NULL, "invariant");
+  memcpy(const_cast<u1*>(_data), checkpoint, size);
+}
 
-namespace AccessInternal {
-  INSTANTIATE_HPP_ACCESS(DECORATORS_NONE, oop, BARRIER_EQUALS);
+JfrBlob::~JfrBlob() {
+  JfrCHeapObj::free(const_cast<u1*>(_data), _size);
+}
+
+void JfrBlob::reset_write_state() const {
+  if (!_written) {
+    return;
+  }
+  _written = false;
+  if (_next.valid()) {
+    _next->reset_write_state();
+  }
+}
+
+void JfrBlob::set_next(const JfrBlobHandle& ref) {
+  if (_next == ref) {
+    return;
+  }
+  assert(_next != ref, "invariant");
+  if (_next.valid()) {
+    _next->set_next(ref);
+    return;
+  }
+  _next = ref;
+}
+
+JfrBlobHandle JfrBlob::make(const u1* data, size_t size) {
+  const JfrBlob* const blob = new JfrBlob(data, size);
+  assert(blob != NULL, "invariant");
+  return JfrBlobReference::make(blob);
 }

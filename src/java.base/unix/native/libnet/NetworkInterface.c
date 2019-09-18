@@ -252,6 +252,7 @@ JNIEXPORT jobject JNICALL Java_java_net_NetworkInterface_getByName0
 
     ifs = enumInterfaces(env);
     if (ifs == NULL) {
+        (*env)->ReleaseStringUTFChars(env, name, name_utf);
         return NULL;
     }
 
@@ -1406,6 +1407,10 @@ static int getFlags(int sock, const char *ifname, int *flags) {
 /** AIX **/
 #if defined(_AIX)
 
+/* seems getkerninfo is guarded by _KERNEL in the system headers */
+/* see net/proto_uipc.h */
+int getkerninfo(int, char *, int *, int32long64_t);
+
 /*
  * Opens a socket for further ioctl calls. Tries AF_INET socket first and
  * if it fails return AF_INET6 socket.
@@ -1625,7 +1630,7 @@ static int getMacAddress
         return -1;
     }
 
-    if (getkerninfo(KINFO_NDD, nddp, &size, 0) < 0) {
+    if (getkerninfo(KINFO_NDD, (char*) nddp, &size, 0) < 0) {
         perror("getkerninfo 2");
         free(nddp);
         return -1;

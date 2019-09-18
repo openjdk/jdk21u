@@ -269,7 +269,6 @@ public class Platform {
                     return false;
                 }
             } catch (PrivilegedActionException e) {
-                @SuppressWarnings("unchecked")
                 IOException t = (IOException) e.getException();
                 throw t;
             }
@@ -293,7 +292,6 @@ public class Platform {
                     return false;
                 }
             } catch (PrivilegedActionException e) {
-                @SuppressWarnings("unchecked")
                 IOException t = (IOException) e.getException();
                 throw t;
             }

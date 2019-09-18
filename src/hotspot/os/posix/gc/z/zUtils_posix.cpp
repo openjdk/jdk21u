@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -19,13 +19,22 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 
 #include "precompiled.hpp"
-#include "gc/g1/g1HeapSizingPolicy.hpp"
-#include "memory/allocation.inline.hpp"
+#include "gc/z/zUtils.hpp"
+#include "utilities/debug.hpp"
 
-G1HeapSizingPolicy* G1HeapSizingPolicy::create(const G1CollectedHeap* g1h, const G1Analytics* analytics) {
-  return new G1HeapSizingPolicy(g1h, analytics);
+#include <stdlib.h>
+
+uintptr_t ZUtils::alloc_aligned(size_t alignment, size_t size) {
+  void* res = NULL;
+
+  if (posix_memalign(&res, alignment, size) != 0) {
+    fatal("posix_memalign() failed");
+  }
+
+  memset(res, 0, size);
+
+  return (uintptr_t)res;
 }

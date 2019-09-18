@@ -631,7 +631,7 @@ JRT_ENTRY(jboolean, JVMCIRuntime::thread_is_interrupted(JavaThread* thread, oopD
     // The other thread may exit during this process, which is ok so return false.
     return JNI_FALSE;
   } else {
-    return (jint) Thread::is_interrupted(receiverThread, clear_interrupted != 0);
+    return (jint) receiverThread->is_interrupted(clear_interrupted != 0);
   }
 JRT_END
 
@@ -941,10 +941,8 @@ void JVMCIRuntime::exit_on_pending_exception(JVMCIEnv* JVMCIENV, const char* mes
       describe_pending_hotspot_exception(THREAD, true);
     }
   } else {
-    // Allow error reporting thread to print the stack trace.  Windows
-    // doesn't allow uninterruptible wait for JavaThreads
-    const bool interruptible = true;
-    os::sleep(THREAD, 200, interruptible);
+    // Allow error reporting thread to print the stack trace.
+    THREAD->sleep(200);
   }
 
   before_exit(THREAD);

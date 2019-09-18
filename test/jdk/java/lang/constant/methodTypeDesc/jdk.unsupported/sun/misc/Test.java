@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -19,51 +19,13 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 
-#ifndef SHARE_RUNTIME_GLOBALS_EXT_HPP
-#define SHARE_RUNTIME_GLOBALS_EXT_HPP
+package sun.misc;
 
-#include "runtime/flags/jvmFlag.hpp"
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
 
-// globals_extension.hpp extension
-
-// Additional JVMFlagsEnum values
-#define JVMFLAGSENUM_EXT
-
-
-// globals.cpp extension
-
-// Additional flag definitions
-#define MATERIALIZE_FLAGS_EXT
-
-// Additional flag descriptors: see flagTable definition
-#define FLAGTABLE_EXT
-
-
-// Default method implementations
-
-inline bool JVMFlag::is_unlocker_ext() const {
-  return false;
+public class Test {
+     public static final Lookup LOOKUP = MethodHandles.lookup();
 }
-
-inline bool JVMFlag::is_unlocked_ext() const {
-  return true;
-}
-
-inline bool JVMFlag::is_writeable_ext() const {
-  return false;
-}
-
-inline bool JVMFlag::is_external_ext() const {
-  return false;
-}
-
-inline JVMFlag::MsgType JVMFlag::get_locked_message_ext(char* buf, int buflen) const {
-  assert(buf != NULL, "Buffer cannot be NULL");
-  buf[0] = '\0';
-  return JVMFlag::NONE;
-}
-
-#endif // SHARE_RUNTIME_GLOBALS_EXT_HPP

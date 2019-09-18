@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Loongson Technology Co. Ltd. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,20 +21,19 @@
  * questions.
  */
 
-#include "precompiled.hpp"
-#include "gc/z/zUtils.inline.hpp"
-#include "utilities/debug.hpp"
+/*
+ * @test
+ * @bug 8230943
+ * @summary possible deadlock was detected when ran with -XX:+CIPrintCompileQueue
+ * @run main/othervm -Xcomp -XX:+UnlockDiagnosticVMOptions -XX:+CIPrintCompileQueue
+ *                   compiler.print.PrintCompileQueue
+ *
+ */
 
-#include <stdlib.h>
+package compiler.print;
 
-uintptr_t ZUtils::alloc_aligned(size_t alignment, size_t size) {
-  void* res = NULL;
-
-  if (posix_memalign(&res, alignment, size) != 0) {
-    fatal("posix_memalign() failed");
-  }
-
-  memset(res, 0, size);
-
-  return (uintptr_t)res;
+public class PrintCompileQueue {
+    public static void main(String[] args) {
+        System.out.println("Passed");
+    }
 }
