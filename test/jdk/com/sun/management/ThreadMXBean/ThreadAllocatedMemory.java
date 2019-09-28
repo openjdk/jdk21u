@@ -23,7 +23,7 @@
 
 /*
  * @test
- * @bug     6173675 8207266
+ * @bug     6173675 8231209
  * @summary Basic test of ThreadMXBean.getThreadAllocatedBytes
  * @author  Paul Hohensee
  */

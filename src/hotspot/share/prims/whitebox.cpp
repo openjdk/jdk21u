@@ -820,10 +820,8 @@ WB_ENTRY(jint, WB_DeoptimizeFrames(JNIEnv* env, jobject o, jboolean make_not_ent
 WB_END
 
 WB_ENTRY(void, WB_DeoptimizeAll(JNIEnv* env, jobject o))
-  MutexLocker mu(Compile_lock);
   CodeCache::mark_all_nmethods_for_deoptimization();
-  VM_Deoptimize op;
-  VMThread::execute(&op);
+  Deoptimization::deoptimize_all_marked();
 WB_END
 
 WB_ENTRY(jint, WB_DeoptimizeMethod(JNIEnv* env, jobject o, jobject method, jboolean is_osr))
@@ -840,8 +838,7 @@ WB_ENTRY(jint, WB_DeoptimizeMethod(JNIEnv* env, jobject o, jobject method, jbool
   }
   result += CodeCache::mark_for_deoptimization(mh());
   if (result > 0) {
-    VM_Deoptimize op;
-    VMThread::execute(&op);
+    Deoptimization::deoptimize_all_marked();
   }
   return result;
 WB_END
@@ -1738,12 +1735,12 @@ WB_ENTRY(jlong, WB_MetaspaceReserveAlignment(JNIEnv* env, jobject wb))
 WB_END
 
 WB_ENTRY(void, WB_AssertMatchingSafepointCalls(JNIEnv* env, jobject o, jboolean mutexSafepointValue, jboolean attemptedNoSafepointValue))
-  Monitor::SafepointCheckRequired sfpt_check_required = mutexSafepointValue ?
-                                           Monitor::_safepoint_check_always :
-                                           Monitor::_safepoint_check_never;
-  Monitor::SafepointCheckFlag sfpt_check_attempted = attemptedNoSafepointValue ?
-                                           Monitor::_no_safepoint_check_flag :
-                                           Monitor::_safepoint_check_flag;
+  Mutex::SafepointCheckRequired sfpt_check_required = mutexSafepointValue ?
+                                           Mutex::_safepoint_check_always :
+                                           Mutex::_safepoint_check_never;
+  Mutex::SafepointCheckFlag sfpt_check_attempted = attemptedNoSafepointValue ?
+                                           Mutex::_no_safepoint_check_flag :
+                                           Mutex::_safepoint_check_flag;
   MutexLocker ml(new Mutex(Mutex::leaf, "SFPT_Test_lock", true, sfpt_check_required),
                  sfpt_check_attempted);
 WB_END
