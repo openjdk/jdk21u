@@ -533,6 +533,7 @@ static SpecialFlag const special_jvm_flags[] = {
   { "FieldsAllocationStyle",        JDK_Version::jdk(14), JDK_Version::jdk(15), JDK_Version::jdk(16) },
   { "CompactFields",                JDK_Version::jdk(14), JDK_Version::jdk(15), JDK_Version::jdk(16) },
   { "MonitorBound",                 JDK_Version::jdk(14), JDK_Version::jdk(15), JDK_Version::jdk(16) },
+  { "G1RSetScanBlockSize",          JDK_Version::jdk(14), JDK_Version::jdk(15), JDK_Version::jdk(16) },
 
   // --- Deprecated alias flags (see also aliased_jvm_flags) - sorted by obsolete_in then expired_in:
   { "DefaultMaxRAMFraction",        JDK_Version::jdk(8),  JDK_Version::undefined(), JDK_Version::undefined() },
@@ -1453,7 +1454,7 @@ const char* unsupported_options[] = { "--limit-modules",
                                       "--patch-module"
                                     };
 void Arguments::check_unsupported_dumping_properties() {
-  assert(DumpSharedSpaces || DynamicDumpSharedSpaces,
+  assert(is_dumping_archive(),
          "this function is only used with CDS dump time");
   assert(ARRAY_SIZE(unsupported_properties) == ARRAY_SIZE(unsupported_options), "must be");
   // If a vm option is found in the unsupported_options array, vm will exit with an error message.
@@ -3536,7 +3537,7 @@ bool Arguments::init_shared_archive_paths() {
     SharedArchivePath = get_default_shared_archive_path();
   } else {
     int archives = num_archives(SharedArchiveFile);
-    if (DynamicDumpSharedSpaces || DumpSharedSpaces) {
+    if (is_dumping_archive()) {
       if (archives > 1) {
         vm_exit_during_initialization(
           "Cannot have more than 1 archive file specified in -XX:SharedArchiveFile during CDS dumping");
@@ -3549,7 +3550,7 @@ bool Arguments::init_shared_archive_paths() {
         }
       }
     }
-    if (!DynamicDumpSharedSpaces && !DumpSharedSpaces){
+    if (!is_dumping_archive()){
       if (archives > 2) {
         vm_exit_during_initialization(
           "Cannot have more than 2 archive files specified in the -XX:SharedArchiveFile option");
