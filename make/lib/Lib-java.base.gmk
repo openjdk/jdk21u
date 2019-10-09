@@ -73,6 +73,7 @@ $(eval $(call SetupJdkLibrary, BUILD_LIBNIO, \
     OPTIMIZATION := HIGH, \
     WARNINGS_AS_ERRORS_xlc := false, \
     CFLAGS := $(CFLAGS_JDKLIB), \
+    CFLAGS_bsd := -D_WITH_GETLINE, \
     DISABLED_WARNINGS_gcc := undef, \
     DISABLED_WARNINGS_clang := undef, \
     EXTRA_HEADER_DIRS := \
