@@ -24,7 +24,7 @@
 /* @test
  * @bug 8181493 8231174
  * @summary Verify that nanosecond precision is maintained for file timestamps
- * @requires (os.family == "linux") | (os.family == "mac") | (os.family == "solaris") | (os.family == "windows")
+ * @requires (os.family == "linux") | (os.family == "mac") | (os.family == "solaris") | (os.family == "windows") | (os.family == "freebsd") | (os.family == "netbsd") | (os.family == "openbsd")
  * @modules java.base/sun.nio.fs:+open
  */
 
@@ -64,7 +64,7 @@ public class SetTimesNanos {
             dir, store.name(), store.type());
 
         Set<String> testedTypes = IS_WINDOWS ?
-            Set.of("NTFS") : Set.of("apfs", "ext4", "xfs", "zfs");
+            Set.of("NTFS") : Set.of("apfs", "ext4", "ufs", "xfs", "zfs");
         if (!testedTypes.contains(store.type())) {
             System.err.format("%s not in %s; skipping test", store.type(), testedTypes);
             return;
