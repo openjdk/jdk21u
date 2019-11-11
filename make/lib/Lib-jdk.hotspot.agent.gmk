@@ -63,6 +63,9 @@ SA_TOOLCHAIN := $(TOOLCHAIN_DEFAULT)
 ifeq ($(call isTargetOs, linux), true)
   SA_TOOLCHAIN := TOOLCHAIN_LINK_CXX
 endif
+ifeq ($(call isTargetOs, bsd), true)
+  SA_TOOLCHAIN := TOOLCHAIN_LINK_CXX
+endif
 
 ################################################################################
 

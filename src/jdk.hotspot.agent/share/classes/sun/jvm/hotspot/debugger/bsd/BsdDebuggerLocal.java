@@ -111,6 +111,9 @@ public class BsdDebuggerLocal extends DebuggerBase implements BsdDebugger {
                                 throws DebuggerException;
     public native static int  getAddressSize() ;
 
+    @Override
+    public native String demangle(String sym);
+
     // Note on Bsd threads are really processes. When target process is
     // attached by a serviceability agent thread, only that thread can do
     // ptrace operations on the target. This is because from kernel's point

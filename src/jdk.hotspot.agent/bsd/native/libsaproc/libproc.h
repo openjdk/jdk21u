@@ -75,9 +75,11 @@ typedef int bool;
 
 // This C bool type must be int for compatibility with BSD calls and
 // it would be a mistake to equivalence it to C++ bool on many platforms
+#ifndef __cplusplus
 typedef int bool;
 #define true  1
 #define false 0
+#endif
 
 #endif // __APPLE__
 
@@ -111,6 +113,10 @@ combination of ptrace and /proc calls.
 
 struct reg;
 struct ps_prochandle;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // attach to a process
 struct ps_prochandle* Pgrab(pid_t pid, char* err_buf, size_t err_buf_len);
@@ -154,5 +160,9 @@ uintptr_t lookup_symbol(struct ps_prochandle* ph,  const char* object_name,
 
 // address->nearest symbol lookup. return NULL for no symbol
 const char* symbol_for_pc(struct ps_prochandle* ph, uintptr_t addr, uintptr_t* poffset);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //__LIBPROC_H_
