@@ -272,6 +272,7 @@ bool read_string(struct ps_prochandle* ph, uintptr_t addr, char* buf, size_t siz
 #elif defined(_ALLBSD_SOURCE)
 #define SHARED_ARCHIVE_PATH_SYM "__ZN9Arguments17SharedArchivePathE"
 #define USE_SHARED_SPACES_SYM "UseSharedSpaces"
+#define SHARED_BASE_ADDRESS_SYM "SharedBaseAddress"
 #define LIBJVM_NAME "/libjvm.so"
 #endif
 
