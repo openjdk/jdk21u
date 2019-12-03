@@ -26,7 +26,6 @@
 #include "memory/resourceArea.hpp"
 #include "runtime/os.hpp"
 #include "runtime/os_perf.hpp"
-
 #include CPU_HEADER(vm_version_ext)
 
 #ifdef __APPLE__

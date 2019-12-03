@@ -32,10 +32,10 @@
 #include "runtime/java.hpp"
 #include "runtime/os.hpp"
 #include "runtime/stubCodeGenerator.hpp"
+#include "runtime/vm_version.hpp"
 #include "utilities/align.hpp"
 #include "utilities/defaultStream.hpp"
 #include "utilities/globalDefinitions.hpp"
-#include "vm_version_ppc.hpp"
 
 #ifndef _ALLBSD_SOURCE
 #include <sys/sysinfo.h>

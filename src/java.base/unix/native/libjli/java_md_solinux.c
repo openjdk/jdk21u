@@ -198,6 +198,7 @@ ContainsLibJVM(const char *env) {
     char serverPattern[] = "lib/server";
     char *envpath;
     char *path;
+    char* save_ptr = NULL;
     jboolean clientPatternFound;
     jboolean serverPatternFound;
 
@@ -217,7 +218,7 @@ ContainsLibJVM(const char *env) {
      * we have a suspicious path component, check if it contains a libjvm.so
      */
     envpath = JLI_StringDup(env);
-    for (path = JLI_StrTok(envpath, ":"); path != NULL; path = JLI_StrTok(NULL, ":")) {
+    for (path = strtok_r(envpath, ":", &save_ptr); path != NULL; path = strtok_r(NULL, ":", &save_ptr)) {
         if (clientPatternFound && JLI_StrStr(path, clientPattern) != NULL) {
             if (JvmExists(path)) {
                 JLI_MemFree(envpath);
@@ -754,13 +755,6 @@ void* SplashProcAddress(const char* name) {
         return sym;
     } else {
         return NULL;
-    }
-}
-
-void SplashFreeLibrary() {
-    if (hSplashLib) {
-        dlclose(hSplashLib);
-        hSplashLib = NULL;
     }
 }
 
