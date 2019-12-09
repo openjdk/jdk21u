@@ -110,6 +110,19 @@ void HeapRegion::setup_heap_region_size(size_t initial_heap_size, size_t max_hea
   }
 }
 
+void HeapRegion::handle_evacuation_failure() {
+  uninstall_surv_rate_group();
+  clear_young_index_in_cset();
+  set_evacuation_failed(false);
+  set_old();
+}
+
+void HeapRegion::unlink_from_list() {
+  set_next(NULL);
+  set_prev(NULL);
+  set_containing_set(NULL);
+}
+
 void HeapRegion::hr_clear(bool keep_remset, bool clear_space, bool locked) {
   assert(_humongous_start_region == NULL,
          "we should have already filtered out humongous regions");
@@ -137,8 +150,6 @@ void HeapRegion::hr_clear(bool keep_remset, bool clear_space, bool locked) {
 
   _evacuation_failed = false;
   _gc_efficiency = 0.0;
-  _recorded_rs_length = 0;
-  _predicted_elapsed_time_ms = 0.0;
 }
 
 void HeapRegion::clear_cardtable() {
@@ -149,14 +160,12 @@ void HeapRegion::clear_cardtable() {
 void HeapRegion::calc_gc_efficiency() {
   // GC efficiency is the ratio of how much space would be
   // reclaimed over how long we predict it would take to reclaim it.
-  G1CollectedHeap* g1h = G1CollectedHeap::heap();
-  G1Policy* policy = g1h->policy();
+  G1Policy* policy = G1CollectedHeap::heap()->policy();
 
   // Retrieve a prediction of the elapsed time for this region for
   // a mixed gc because the region will only be evacuated during a
   // mixed gc.
-  double region_elapsed_time_ms =
-    policy->predict_region_elapsed_time_ms(this, false /* for_young_gc */);
+  double region_elapsed_time_ms = policy->predict_region_total_time_ms(this, false /* for_young_gc */);
   _gc_efficiency = (double) reclaimable_bytes() / region_elapsed_time_ms;
 }
 
@@ -256,8 +265,7 @@ HeapRegion::HeapRegion(uint hrm_index,
   _prev_top_at_mark_start(NULL), _next_top_at_mark_start(NULL),
   _prev_marked_bytes(0), _next_marked_bytes(0),
   _young_index_in_cset(-1),
-  _surv_rate_group(NULL), _age_index(-1), _gc_efficiency(0.0),
-  _recorded_rs_length(0), _predicted_elapsed_time_ms(0),
+  _surv_rate_group(NULL), _age_index(G1SurvRateGroup::InvalidAgeIndex), _gc_efficiency(0.0),
   _node_index(G1NUMA::UnknownNodeIndex)
 {
   assert(Universe::on_page_boundary(mr.start()) && Universe::on_page_boundary(mr.end()),

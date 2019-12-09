@@ -63,6 +63,7 @@
 #include "oops/klass.inline.hpp"
 #include "oops/method.hpp"
 #include "oops/oop.inline.hpp"
+#include "oops/recordComponent.hpp"
 #include "oops/symbol.hpp"
 #include "prims/jvmtiExport.hpp"
 #include "prims/jvmtiRedefineClasses.hpp"
@@ -436,6 +437,7 @@ InstanceKlass::InstanceKlass(const ClassFileParser& parser, unsigned kind, Klass
   _nest_members(NULL),
   _nest_host_index(0),
   _nest_host(NULL),
+  _record_components(NULL),
   _static_field_size(parser.static_field_size()),
   _nonstatic_oop_map_size(nonstatic_oop_map_size(parser.total_oop_map_count())),
   _itable_len(parser.itable_size()),
@@ -504,6 +506,17 @@ void InstanceKlass::deallocate_interfaces(ClassLoaderData* loader_data,
   }
 }
 
+void InstanceKlass::deallocate_record_components(ClassLoaderData* loader_data,
+                                                 Array<RecordComponent*>* record_components) {
+  if (record_components != NULL && !record_components->is_shared()) {
+    for (int i = 0; i < record_components->length(); i++) {
+      RecordComponent* record_component = record_components->at(i);
+      MetadataFactory::free_metadata(loader_data, record_component);
+    }
+    MetadataFactory::free_array<RecordComponent*>(loader_data, record_components);
+  }
+}
+
 // This function deallocates the metadata and C heap pointers that the
 // InstanceKlass points to.
 void InstanceKlass::deallocate_contents(ClassLoaderData* loader_data) {
@@ -531,6 +544,9 @@ void InstanceKlass::deallocate_contents(ClassLoaderData* loader_data) {
 
   deallocate_methods(loader_data, methods());
   set_methods(NULL);
+
+  deallocate_record_components(loader_data, record_components());
+  set_record_components(NULL);
 
   if (method_ordering() != NULL &&
       method_ordering() != Universe::the_empty_int_array() &&
@@ -1579,26 +1595,33 @@ static int linear_search(const Array<Method*>* methods,
 
 bool InstanceKlass::_disable_method_binary_search = false;
 
-int InstanceKlass::quick_search(const Array<Method*>* methods, const Symbol* name) {
+NOINLINE int linear_search(const Array<Method*>* methods, const Symbol* name) {
   int len = methods->length();
   int l = 0;
   int h = len - 1;
+  while (l <= h) {
+    Method* m = methods->at(l);
+    if (m->name() == name) {
+      return l;
+    }
+    l++;
+  }
+  return -1;
+}
 
+inline int InstanceKlass::quick_search(const Array<Method*>* methods, const Symbol* name) {
   if (_disable_method_binary_search) {
+    assert(DynamicDumpSharedSpaces, "must be");
     // At the final stage of dynamic dumping, the methods array may not be sorted
     // by ascending addresses of their names, so we can't use binary search anymore.
     // However, methods with the same name are still laid out consecutively inside the
     // methods array, so let's look for the first one that matches.
-    assert(DynamicDumpSharedSpaces, "must be");
-    while (l <= h) {
-      Method* m = methods->at(l);
-      if (m->name() == name) {
-        return l;
-      }
-      l ++;
-    }
-    return -1;
+    return linear_search(methods, name);
   }
+
+  int len = methods->length();
+  int l = 0;
+  int h = len - 1;
 
   // methods are sorted by ascending addresses of their names, so do binary search
   while (l <= h) {
@@ -1980,7 +2003,7 @@ jmethodID InstanceKlass::get_jmethod_id(const methodHandle& method_h) {
         // we're single threaded or at a safepoint - no locking needed
         get_jmethod_id_length_value(jmeths, idnum, &length, &id);
       } else {
-        MutexLocker ml(JmethodIdCreation_lock);
+        MutexLocker ml(JmethodIdCreation_lock, Mutex::_no_safepoint_check_flag);
         get_jmethod_id_length_value(jmeths, idnum, &length, &id);
       }
     }
@@ -2030,7 +2053,7 @@ jmethodID InstanceKlass::get_jmethod_id(const methodHandle& method_h) {
       id = get_jmethod_id_fetch_or_update(idnum, new_id, new_jmeths,
                                           &to_dealloc_id, &to_dealloc_jmeths);
     } else {
-      MutexLocker ml(JmethodIdCreation_lock);
+      MutexLocker ml(JmethodIdCreation_lock, Mutex::_no_safepoint_check_flag);
       id = get_jmethod_id_fetch_or_update(idnum, new_id, new_jmeths,
                                           &to_dealloc_id, &to_dealloc_jmeths);
     }
@@ -2339,6 +2362,7 @@ void InstanceKlass::metaspace_pointers_do(MetaspaceClosure* it) {
   }
 
   it->push(&_nest_members);
+  it->push(&_record_components);
 }
 
 void InstanceKlass::remove_unshareable_info() {
@@ -3270,6 +3294,9 @@ void InstanceKlass::print_on(outputStream* st) const {
   }
   st->print(BULLET"inner classes:     "); inner_classes()->print_value_on(st);     st->cr();
   st->print(BULLET"nest members:     "); nest_members()->print_value_on(st);     st->cr();
+  if (record_components() != NULL) {
+    st->print(BULLET"record components:     "); record_components()->print_value_on(st);     st->cr();
+  }
   if (java_mirror() != NULL) {
     st->print(BULLET"java mirror:       ");
     java_mirror()->print_value_on(st);
@@ -3532,6 +3559,7 @@ void InstanceKlass::collect_statistics(KlassSizeStats *sz) const {
   n += (sz->_fields_bytes                = sz->count_array(fields()));
   n += (sz->_inner_classes_bytes         = sz->count_array(inner_classes()));
   n += (sz->_nest_members_bytes          = sz->count_array(nest_members()));
+  n += (sz->_record_components_bytes     = sz->count_array(record_components()));
   sz->_ro_bytes += n;
 
   const ConstantPool* cp = constants();
@@ -3554,6 +3582,17 @@ void InstanceKlass::collect_statistics(KlassSizeStats *sz) const {
       }
     }
   }
+
+  const Array<RecordComponent*>* components = record_components();
+  if (components != NULL) {
+    for (int i = 0; i < components->length(); i++) {
+      RecordComponent* component = components->at(i);
+      if (component != NULL) {
+        component->collect_statistics(sz);
+      }
+    }
+  }
+
 }
 #endif // INCLUDE_SERVICES
 
