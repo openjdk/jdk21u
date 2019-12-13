@@ -3980,14 +3980,9 @@ int os::get_core_path(char* buffer, size_t bufferSize) {
       n = jio_snprintf(buffer, bufferSize, "%s", coreinfo);
     }
   } else
-#endif
   {
     n = jio_snprintf(buffer, bufferSize, "/cores/core.%d", os::current_process_id());
   }
-  // Truncate if theoretical string was longer than bufferSize
-  n = MIN2(n, (int)bufferSize);
-
-  return n;
 #else
   const char *p = get_current_directory(buffer, bufferSize);
 
@@ -4003,11 +3998,15 @@ int os::get_core_path(char* buffer, size_t bufferSize) {
     return 0;
   }
 
-  const int n = strlen(buffer);
+  n = strlen(buffer);
 
   jio_snprintf(buffer + n, bufferSize - n, "/%s.core", q);
-  return strlen(buffer);
+  n = strlen(buffer);
 #endif
+  // Truncate if theoretical string was longer than bufferSize
+  n = MIN2(n, (int)bufferSize);
+
+  return n;
 }
 
 bool os::supports_map_sync() {
