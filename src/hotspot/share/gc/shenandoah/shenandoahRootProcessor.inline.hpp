@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2019, 2020, Red Hat, Inc. All rights reserved.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -250,6 +250,9 @@ void ShenandoahRootScanner<ITR>::roots_do(uint worker_id, OopClosure* oops, CLDC
   if (code != NULL && !ShenandoahConcurrentScanCodeRoots) {
     _code_roots.code_blobs_do(code, worker_id);
   }
+
+  AlwaysTrueClosure always_true;
+  _dedup_roots.oops_do(&always_true, oops, worker_id);
 }
 
 template <typename ITR>
@@ -278,7 +281,7 @@ void ShenandoahRootUpdater::roots_do(uint worker_id, IsAlive* is_alive, KeepAliv
   _vm_roots.oops_do(keep_alive, worker_id);
 
   _cld_roots.cld_do(&clds, worker_id);
-  _code_roots.code_blobs_do(&update_blobs, worker_id);
+  _code_roots.code_blobs_do(codes_cl, worker_id);
   _thread_roots.oops_do(keep_alive, NULL, worker_id);
 
   _serial_weak_roots.weak_oops_do(is_alive, keep_alive, worker_id);

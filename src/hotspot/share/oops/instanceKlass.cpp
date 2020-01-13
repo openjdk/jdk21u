@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -46,7 +46,6 @@
 #include "logging/logMessage.hpp"
 #include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
-#include "memory/heapInspection.hpp"
 #include "memory/iterator.inline.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceClosure.hpp"
@@ -1319,7 +1318,7 @@ Klass* InstanceKlass::array_klass_impl(bool or_null, int n, TRAPS) {
   if (array_klasses_acquire() == NULL) {
     if (or_null) return NULL;
 
-    ResourceMark rm;
+    ResourceMark rm(THREAD);
     JavaThread *jt = (JavaThread *)THREAD;
     {
       // Atomic creation of array_klasses
@@ -1368,7 +1367,7 @@ void InstanceKlass::call_class_initializer(TRAPS) {
   assert(!is_initialized(), "we cannot initialize twice");
   LogTarget(Info, class, init) lt;
   if (lt.is_enabled()) {
-    ResourceMark rm;
+    ResourceMark rm(THREAD);
     LogStream ls(lt);
     ls.print("%d Initializing ", call_class_initializer_counter++);
     name()->print_value_on(&ls);
@@ -2678,7 +2677,7 @@ Symbol* InstanceKlass::package_from_name(const Symbol* name, TRAPS) {
     if (name->utf8_length() <= 0) {
       return NULL;
     }
-    ResourceMark rm;
+    ResourceMark rm(THREAD);
     const char* package_name = ClassLoader::package_from_name((const char*) name->as_C_string());
     if (package_name == NULL) {
       return NULL;
@@ -2720,7 +2719,7 @@ void InstanceKlass::set_package(ClassLoaderData* loader_data, TRAPS) {
     // entry table, it is an indication that the package has not
     // been defined. Consider it defined within the unnamed module.
     if (_package_entry == NULL) {
-      ResourceMark rm;
+      ResourceMark rm(THREAD);
 
       if (!ModuleEntryTable::javabase_defined()) {
         // Before java.base is defined during bootstrapping, define all packages in
@@ -2741,7 +2740,7 @@ void InstanceKlass::set_package(ClassLoaderData* loader_data, TRAPS) {
     }
 
     if (log_is_enabled(Debug, module)) {
-      ResourceMark rm;
+      ResourceMark rm(THREAD);
       ModuleEntry* m = _package_entry->module();
       log_trace(module)("Setting package: class: %s, package: %s, loader: %s, module: %s",
                         external_name(),
@@ -2750,7 +2749,7 @@ void InstanceKlass::set_package(ClassLoaderData* loader_data, TRAPS) {
                         (m->is_named() ? m->name()->as_C_string() : UNNAMED_MODULE));
     }
   } else {
-    ResourceMark rm;
+    ResourceMark rm(THREAD);
     log_trace(module)("Setting package: class: %s, package: unnamed, loader: %s, module: %s",
                       external_name(),
                       (loader_data != NULL) ? loader_data->loader_name_and_id() : "NULL",
@@ -3540,61 +3539,6 @@ void InstanceKlass::print_class_load_logging(ClassLoaderData* loader_data,
     msg.debug("%s", debug_stream.as_string());
   }
 }
-
-#if INCLUDE_SERVICES
-// Size Statistics
-void InstanceKlass::collect_statistics(KlassSizeStats *sz) const {
-  Klass::collect_statistics(sz);
-
-  sz->_inst_size  = wordSize * size_helper();
-  sz->_vtab_bytes = wordSize * vtable_length();
-  sz->_itab_bytes = wordSize * itable_length();
-  sz->_nonstatic_oopmap_bytes = wordSize * nonstatic_oop_map_size();
-
-  int n = 0;
-  n += (sz->_methods_array_bytes         = sz->count_array(methods()));
-  n += (sz->_method_ordering_bytes       = sz->count_array(method_ordering()));
-  n += (sz->_local_interfaces_bytes      = sz->count_array(local_interfaces()));
-  n += (sz->_transitive_interfaces_bytes = sz->count_array(transitive_interfaces()));
-  n += (sz->_fields_bytes                = sz->count_array(fields()));
-  n += (sz->_inner_classes_bytes         = sz->count_array(inner_classes()));
-  n += (sz->_nest_members_bytes          = sz->count_array(nest_members()));
-  n += (sz->_record_components_bytes     = sz->count_array(record_components()));
-  sz->_ro_bytes += n;
-
-  const ConstantPool* cp = constants();
-  if (cp) {
-    cp->collect_statistics(sz);
-  }
-
-  const Annotations* anno = annotations();
-  if (anno) {
-    anno->collect_statistics(sz);
-  }
-
-  const Array<Method*>* methods_array = methods();
-  if (methods()) {
-    for (int i = 0; i < methods_array->length(); i++) {
-      Method* method = methods_array->at(i);
-      if (method) {
-        sz->_method_count ++;
-        method->collect_statistics(sz);
-      }
-    }
-  }
-
-  const Array<RecordComponent*>* components = record_components();
-  if (components != NULL) {
-    for (int i = 0; i < components->length(); i++) {
-      RecordComponent* component = components->at(i);
-      if (component != NULL) {
-        component->collect_statistics(sz);
-      }
-    }
-  }
-
-}
-#endif // INCLUDE_SERVICES
 
 // Verification
 

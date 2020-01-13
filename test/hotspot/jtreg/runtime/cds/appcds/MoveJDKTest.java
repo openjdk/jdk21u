@@ -28,7 +28,6 @@
  * @requires vm.cds
  * @requires os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd"
  * @library /test/lib
- * @modules jdk.jartool/sun.tools.jar
  * @compile test-classes/Hello.java
  * @run driver MoveJDKTest
  */
