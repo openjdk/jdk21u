@@ -3422,10 +3422,10 @@ void os::set_native_thread_name(const char *name) {
     char buf[MAXTHREADNAMESIZE];
     snprintf(buf, sizeof(buf), "Java: %s", name);
     pthread_setname_np(buf);
-#elif defined(__FreeBSD__)
-    char buf[MAXCOMLEN+1];
-    strlcpy(buf, name, sizeof(buf));
-    pthread_set_name_np(pthread_self(), buf);
+#elif defined(__FreeBSD__) || defined(__OpenBSD__)
+    pthread_set_name_np(pthread_self(), name);
+#elif defined(__NetBSD__)
+    pthread_setname_np(pthread_self(), "%s", name);
 #endif
   }
 }
