@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2013, 2019, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2013, 2020, Red Hat, Inc. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -167,7 +168,7 @@ oop ShenandoahBarrierSet::load_reference_barrier_mutator_work(oop obj, T* load_a
       ShenandoahHeapRegion* r = _heap->heap_region_containing(obj);
       assert(r->is_cset(), "sanity");
 
-      HeapWord* cur = (HeapWord*)obj + obj->size();
+      HeapWord* cur = cast_from_oop<HeapWord*>(obj) + obj->size();
 
       size_t count = 0;
       while ((cur < r->top()) && ctx->is_marked(oop(cur)) && (count++ < max)) {
@@ -259,12 +260,7 @@ oop ShenandoahBarrierSet::load_reference_barrier_native_impl(oop obj, T* load_ad
 
   ShenandoahMarkingContext* const marking_context = _heap->marking_context();
   if (_heap->is_concurrent_root_in_progress() && !marking_context->is_marked(obj)) {
-    Thread* thr = Thread::current();
-    if (thr->is_Java_thread()) {
-      return NULL;
-    } else {
-      return obj;
-    }
+    return NULL;
   }
 
   oop fwd = load_reference_barrier_not_null(obj);
@@ -281,4 +277,3 @@ void ShenandoahBarrierSet::clone_barrier_runtime(oop src) {
     clone_barrier(src);
   }
 }
-

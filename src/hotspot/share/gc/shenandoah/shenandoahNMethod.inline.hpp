@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019, 2020, Red Hat, Inc. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -89,7 +90,7 @@ void ShenandoahNMethodTableSnapshot::parallel_blobs_do(CodeBlobClosure *f) {
 
   size_t max = (size_t)_length;
   while (_claimed < max) {
-    size_t cur = Atomic::add(&_claimed, stride) - stride;
+    size_t cur = Atomic::fetch_and_add(&_claimed, stride);
     size_t start = cur;
     size_t end = MIN2(cur + stride, max);
     if (start >= max) break;

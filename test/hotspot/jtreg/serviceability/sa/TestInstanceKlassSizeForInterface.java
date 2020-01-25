@@ -21,7 +21,6 @@
  * questions.
  */
 
-import java.util.ArrayList;
 import java.util.List;
 
 import sun.jvm.hotspot.HotSpotAgent;
@@ -49,7 +48,7 @@ import jdk.test.lib.Asserts;
  *          jdk.hotspot.agent/sun.jvm.hotspot.debugger
  * @build sun.hotspot.WhiteBox
  * @run driver ClassFileInstaller sun.hotspot.WhiteBox sun.hotspot.WhiteBox$WhiteBoxPermission
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+WhiteBoxAPI -Xbootclasspath/a:. TestInstanceKlassSize
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+WhiteBoxAPI -Xbootclasspath/a:. TestInstanceKlassSizeForInterface
  */
 
 import sun.hotspot.WhiteBox;
@@ -116,7 +115,7 @@ public class TestInstanceKlassSizeForInterface {
             Integer.toString(lingeredAppPid)
         };
 
-        // Start a new process to attach to the LingeredApp process
+        // Start a new process to attach to the LingeredApp process to get SA info
         ProcessBuilder processBuilder = ProcessTools
                   .createJavaProcessBuilder(toolArgs);
         OutputAnalyzer SAOutput = ProcessTools.executeProcess(processBuilder);
@@ -150,11 +149,8 @@ public class TestInstanceKlassSizeForInterface {
 
         if (args == null || args.length == 0) {
             try {
-                List<String> vmArgs = new ArrayList<String>();
-                vmArgs.addAll(Utils.getVmOptions());
-
                 theApp = new LingeredAppWithInterface();
-                LingeredApp.startApp(vmArgs, theApp);
+                LingeredApp.startApp(theApp);
                 createAnotherToAttach(instanceKlassNames,
                                       (int)theApp.getPid());
             } finally {

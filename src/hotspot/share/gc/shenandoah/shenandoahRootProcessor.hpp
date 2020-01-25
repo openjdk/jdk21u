@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015, 2020, Red Hat, Inc. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -183,6 +184,14 @@ class ShenandoahStringDedupRoots {
 public:
   ShenandoahStringDedupRoots();
   ~ShenandoahStringDedupRoots();
+
+  void oops_do(BoolObjectClosure* is_alive, OopClosure* keep_alive, uint worker_id);
+};
+
+class ShenandoahConcurrentStringDedupRoots {
+public:
+  ShenandoahConcurrentStringDedupRoots();
+  ~ShenandoahConcurrentStringDedupRoots();
 
   void oops_do(BoolObjectClosure* is_alive, OopClosure* keep_alive, uint worker_id);
 };
