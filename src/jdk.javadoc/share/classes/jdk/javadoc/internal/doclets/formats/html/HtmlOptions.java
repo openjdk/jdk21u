@@ -28,22 +28,16 @@ package jdk.javadoc.internal.doclets.formats.html;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
 import com.sun.tools.doclint.DocLint;
-import jdk.javadoc.doclet.Doclet;
-import jdk.javadoc.doclet.Reporter;
 import jdk.javadoc.internal.doclets.toolkit.BaseOptions;
+import jdk.javadoc.internal.doclets.toolkit.Messages;
 import jdk.javadoc.internal.doclets.toolkit.Resources;
 import jdk.javadoc.internal.doclets.toolkit.util.DocFile;
 import jdk.javadoc.internal.doclets.toolkit.util.Utils;
-
-import static javax.tools.Diagnostic.Kind.ERROR;
-import static javax.tools.Diagnostic.Kind.WARNING;
 
 /**
  * Storage for all options supported by the
@@ -51,140 +45,146 @@ import static javax.tools.Diagnostic.Kind.WARNING;
  * including the format-independent options handled
  * by {@link BaseOptions}.
  *
+ * <p>Some of the methods used to access the values of options
+ * have names that begin with a verb, such as {@link #createOverview}
+ * or {@link #splitIndex}. Unless otherwise stated,
+ * these methods should all be taken as just accessing the value
+ * of the associated option.
+ *
  */
 public class HtmlOptions extends BaseOptions {
     //<editor-fold desc="Option values">
     /**
      * Argument for command-line option {@code --add-stylesheet}.
      */
-    public List<String> additionalStylesheets = new ArrayList<>();
+    private List<String> additionalStylesheets = new ArrayList<>();
 
     /**
      * Argument for command-line option {@code -bottom}.
      */
-    public String bottom = "";
+    private String bottom = "";
 
     /**
      * Argument for command-line option {@code -charset}.
      * The META charset tag used for cross-platform viewing.
      */
-    public String charset = null;
+    private String charset = null;
 
     /**
      * Argument for command-line option {@code -use}.
      * True if command-line option "-use" is used. Default value is false.
      */
-    public boolean classUse = false;
+    private boolean classUse = false;
 
     /**
      * Argument for command-line option {@code -noindex}.
      * False if command-line option "-noindex" is used. Default value is true.
      */
-    public boolean createIndex = true;
+    private boolean createIndex = true;
 
     /**
      * Argument for command-line option {@code -overview}.
      * This is true if option "-overview" is used or option "-overview" is not
      * used and number of packages is more than one.
      */
-    public boolean createOverview = false;
+    private boolean createOverview = false;
 
     /**
      * Argument for command-line option {@code -notree}.
      * False if command-line option "-notree" is used. Default value is true.
      */
-    public boolean createTree = true;
+    private boolean createTree = true;
 
     /**
      * Arguments for command-line option {@code -Xdoclint} and friends.
      * Collected set of doclint options.
      */
-    public Map<Doclet.Option, String> doclintOpts = new LinkedHashMap<>();
+    private List<String> doclintOpts = new ArrayList<>();
 
     /**
      * Argument for command-line option {@code -Xdocrootparent}.
      */
-    public String docrootParent = "";
+    private String docrootParent = "";
 
     /**
      * Argument for command-line option {@code -doctitle}.
      */
-    public String docTitle = "";
+    private String docTitle = "";
 
 
     /**
      * Argument for command-line option {@code -footer}.
      */
-    public String footer = "";
+    private String footer = "";
 
     /**
      * Argument for command-line option {@code -header}.
      */
-    public String header = "";
+    private String header = "";
 
     /**
      * Argument for command-line option {@code -helpfile}.
      */
-    public String helpFile = "";
+    private String helpFile = "";
 
     /**
      * Argument for command-line option {@code -nodeprecated}.
      * True if command-line option "-nodeprecated" is used. Default value is
      * false.
      */
-    public boolean noDeprecatedList = false;
+    private boolean noDeprecatedList = false;
 
     /**
      * Argument for command-line option {@code -nohelp}.
      * True if command-line option "-nohelp" is used. Default value is false.
      */
-    public boolean noHelp = false;
+    private boolean noHelp = false;
 
     /**
      * Argument for command-line option {@code -nonavbar}.
      * True if command-line option "-nonavbar" is used. Default value is false.
      */
-    public boolean noNavbar = false;
+    private boolean noNavbar = false;
 
     /**
      * Argument for command-line option {@code -nooverview}.
      * True if command-line option "-nooverview" is used. Default value is
      * false
      */
-    boolean noOverview = false;
+    private boolean noOverview = false;
 
     /**
      * Argument for command-line option {@code -overview}.
      * The overview path specified with "-overview" flag.
      */
-    public String overviewPath = null;
+    private String overviewPath = null;
 
     /**
      * Argument for command-line option {@code -packagesheader}.
      */
-    public String packagesHeader = "";
+    private String packagesHeader = "";
 
     /**
      * Argument for command-line option {@code -splitindex}.
      * True if command-line option "-splitindex" is used. Default value is
      * false.
      */
-    public boolean splitIndex = false;
+    private boolean splitIndex = false;
 
     /**
      * Argument for command-line option {@code -stylesheetfile}.
      */
-    public String stylesheetFile = "";
+    private String stylesheetFile = "";
 
     /**
      * Argument for command-line option {@code -top}.
      */
-    public String top = "";
+    private String top = "";
 
     /**
      * Argument for command-line option {@code -windowtitle}.
      */
-    public String windowTitle = "";
+    private String windowTitle = "";
     //</editor-fold>
 
     private HtmlConfiguration config;
@@ -196,8 +196,8 @@ public class HtmlOptions extends BaseOptions {
 
     @Override
     public Set<? extends Option> getSupportedOptions() {
-        Resources resources = config.getResources();
-        Reporter reporter = config.getReporter();
+        Messages messages = config.getMessages();
+        Resources resources = messages.getResources();
 
         List<Option> options = List.of(
                 new Option(resources, "--add-stylesheet", 1) {
@@ -252,13 +252,11 @@ public class HtmlOptions extends BaseOptions {
                     @Override
                     public boolean process(String opt,  List<String> args) {
                         if (noHelp) {
-                            reporter.print(ERROR, resources.getText("doclet.Option_conflict",
-                                    "-helpfile", "-nohelp"));
+                            messages.error("doclet.Option_conflict", "-helpfile", "-nohelp");
                             return false;
                         }
                         if (!helpFile.isEmpty()) {
-                            reporter.print(ERROR, resources.getText("doclet.Option_reuse",
-                                    "-helpfile"));
+                            messages.error("doclet.Option_reuse", "-helpfile");
                             return false;
                         }
                         helpFile = args.get(0);
@@ -278,8 +276,7 @@ public class HtmlOptions extends BaseOptions {
                     public boolean process(String opt, List<String> args) {
                         noHelp = true;
                         if (!helpFile.isEmpty()) {
-                            reporter.print(ERROR, resources.getText("doclet.Option_conflict",
-                                    "-nohelp", "-helpfile"));
+                            messages.error("doclet.Option_conflict", "-nohelp", "-helpfile");
                             return false;
                         }
                         return true;
@@ -299,8 +296,7 @@ public class HtmlOptions extends BaseOptions {
                     public boolean process(String opt,  List<String> args) {
                         createIndex = false;
                         if (splitIndex) {
-                            reporter.print(ERROR, resources.getText("doclet.Option_conflict",
-                                    "-noindex", "-splitindex"));
+                            messages.error("doclet.Option_conflict", "-noindex", "-splitindex");
                             return false;
                         }
                         return true;
@@ -320,8 +316,7 @@ public class HtmlOptions extends BaseOptions {
                     public boolean process(String opt,  List<String> args) {
                         noOverview = true;
                         if (overviewPath != null) {
-                            reporter.print(ERROR, resources.getText("doclet.Option_conflict",
-                                    "-nooverview", "-overview"));
+                            messages.error("doclet.Option_conflict", "-nooverview", "-overview");
                             return false;
                         }
                         return true;
@@ -341,8 +336,7 @@ public class HtmlOptions extends BaseOptions {
                     public boolean process(String opt,  List<String> args) {
                         overviewPath = args.get(0);
                         if (noOverview) {
-                            reporter.print(ERROR, resources.getText("doclet.Option_conflict",
-                                    "-overview", "-nooverview"));
+                            messages.error("doclet.Option_conflict", "-overview", "-nooverview");
                             return false;
                         }
                         return true;
@@ -362,8 +356,7 @@ public class HtmlOptions extends BaseOptions {
                     public boolean process(String opt, List<String> args) {
                         splitIndex = true;
                         if (!createIndex) {
-                            reporter.print(ERROR, resources.getText("doclet.Option_conflict",
-                                    "-splitindex", "-noindex"));
+                            messages.error("doclet.Option_conflict", "-splitindex", "-noindex");
                             return false;
                         }
                         return true;
@@ -405,7 +398,37 @@ public class HtmlOptions extends BaseOptions {
                 new XOption(resources, "-Xdoclint") {
                     @Override
                     public boolean process(String opt,  List<String> args) {
-                        doclintOpts.put(this, DocLint.XMSGS_OPTION);
+                        doclintOpts.add(DocLint.XMSGS_OPTION);
+                        return true;
+                    }
+                },
+
+                new XOption(resources, "doclet.usage.xdoclint-extended", "-Xdoclint:", 0) {
+                    @Override
+                    public boolean process(String opt,  List<String> args) {
+                        String dopt = opt.replace("-Xdoclint:", DocLint.XMSGS_CUSTOM_PREFIX);
+                        if (dopt.contains("/")) {
+                            messages.error("doclet.Option_doclint_no_qualifiers");
+                            return false;
+                        }
+                        if (!DocLint.isValidOption(dopt)) {
+                            messages.error("doclet.Option_doclint_invalid_arg");
+                            return false;
+                        }
+                        doclintOpts.add(dopt);
+                        return true;
+                    }
+                },
+
+                new XOption(resources, "doclet.usage.xdoclint-package", "-Xdoclint/package:", 0) {
+                    @Override
+                    public boolean process(String opt,  List<String> args) {
+                        String dopt = opt.replace("-Xdoclint/package:", DocLint.XCHECK_PACKAGE);
+                        if (!DocLint.isValidOption(dopt)) {
+                            messages.error("doclet.Option_doclint_package_invalid_arg");
+                            return false;
+                        }
+                        doclintOpts.add(dopt);
                         return true;
                     }
                 },
@@ -417,37 +440,7 @@ public class HtmlOptions extends BaseOptions {
                         try {
                             new URL(docrootParent);
                         } catch (MalformedURLException e) {
-                            reporter.print(ERROR, resources.getText("doclet.MalformedURL", docrootParent));
-                            return false;
-                        }
-                        return true;
-                    }
-                },
-
-                new XOption(resources, "doclet.usage.xdoclint-extended", "-Xdoclint:", 0) {
-                    @Override
-                    public boolean process(String opt,  List<String> args) {
-                        String dopt = opt.replace("-Xdoclint:", DocLint.XMSGS_CUSTOM_PREFIX);
-                        doclintOpts.put(this, dopt);
-                        if (dopt.contains("/")) {
-                            reporter.print(ERROR, resources.getText("doclet.Option_doclint_no_qualifiers"));
-                            return false;
-                        }
-                        if (!DocLint.isValidOption(dopt)) {
-                            reporter.print(ERROR, resources.getText("doclet.Option_doclint_invalid_arg"));
-                            return false;
-                        }
-                        return true;
-                    }
-                },
-
-                new XOption(resources, "doclet.usage.xdoclint-package", "-Xdoclint/package:", 0) {
-                    @Override
-                    public boolean process(String opt,  List<String> args) {
-                        String dopt = opt.replace("-Xdoclint/package:", DocLint.XCHECK_PACKAGE);
-                        doclintOpts.put(this, dopt);
-                        if (!DocLint.isValidOption(dopt)) {
-                            reporter.print(ERROR, resources.getText("doclet.Option_doclint_package_invalid_arg"));
+                            messages.error("doclet.MalformedURL", docrootParent);
                             return false;
                         }
                         return true;
@@ -457,7 +450,7 @@ public class HtmlOptions extends BaseOptions {
                 new XOption(resources, "--no-frames") {
                     @Override
                     public boolean process(String opt, List<String> args) {
-                        reporter.print(WARNING, resources.getText("doclet.NoFrames_specified"));
+                        messages.warning("doclet.NoFrames_specified");
                         return true;
                     }
                 }
@@ -474,14 +467,13 @@ public class HtmlOptions extends BaseOptions {
             return false;
         }
 
-        Resources resources = config.getResources();
-        Reporter reporter = config.getReporter();
+        Messages messages = config.getMessages();
 
         // check if helpfile exists
         if (!helpFile.isEmpty()) {
             DocFile help = DocFile.createFileForInput(config, helpFile);
             if (!help.exists()) {
-                reporter.print(ERROR, resources.getText("doclet.File_not_found", helpFile));
+                messages.error("doclet.File_not_found", helpFile);
                 return false;
             }
         }
@@ -489,7 +481,7 @@ public class HtmlOptions extends BaseOptions {
         if (!stylesheetFile.isEmpty()) {
             DocFile stylesheet = DocFile.createFileForInput(config, stylesheetFile);
             if (!stylesheet.exists()) {
-                reporter.print(ERROR, resources.getText("doclet.File_not_found", stylesheetFile));
+                messages.error("doclet.File_not_found", stylesheetFile);
                 return false;
             }
         }
@@ -497,7 +489,7 @@ public class HtmlOptions extends BaseOptions {
         for (String ssheet : additionalStylesheets) {
             DocFile ssfile = DocFile.createFileForInput(config, ssheet);
             if (!ssfile.exists()) {
-                reporter.print(ERROR, resources.getText("doclet.File_not_found", ssheet));
+                messages.error("doclet.File_not_found", ssheet);
                 return false;
             }
         }
@@ -516,4 +508,188 @@ public class HtmlOptions extends BaseOptions {
         return true;
     }
 
+    /**
+     * Argument for command-line option {@code --add-stylesheet}.
+     */
+    List<String> additionalStylesheets() {
+        return additionalStylesheets;
+    }
+
+    /**
+     * Argument for command-line option {@code -bottom}.
+     */
+    String bottom() {
+        return bottom;
+    }
+
+    /**
+     * Argument for command-line option {@code -charset}.
+     * The META charset tag used for cross-platform viewing.
+     */
+    String charset() {
+        return charset;
+    }
+
+    void setCharset(String charset) {
+        this.charset = charset;
+    }
+
+    /**
+     * Argument for command-line option {@code -use}.
+     * True if command-line option "-use" is used. Default value is false.
+     */
+    public boolean classUse() {
+        return classUse;
+    }
+
+    /**
+     * Argument for command-line option {@code -noindex}.
+     * False if command-line option "-noindex" is used. Default value is true.
+     */
+    public boolean createIndex() {
+        return createIndex;
+    }
+
+    /**
+     * Argument for command-line option {@code -overview}.
+     * This is true if option "-overview" is used or option "-overview" is not
+     * used and number of packages is more than one.
+     */
+    public boolean createOverview() {
+        return createOverview;
+    }
+
+    public void setCreateOverview(boolean createOverview) {
+        this.createOverview = createOverview;
+    }
+
+    /**
+     * Argument for command-line option {@code -notree}.
+     * False if command-line option "-notree" is used. Default value is true.
+     */
+    public boolean createTree() {
+        return createTree;
+    }
+
+    /**
+     * Arguments for command-line option {@code -Xdoclint} and friends.
+     * Collected set of doclint options.
+     */
+    List<String> doclintOpts() {
+        return doclintOpts;
+    }
+
+    /**
+     * Argument for command-line option {@code -Xdocrootparent}.
+     */
+    String docrootParent() {
+        return docrootParent;
+    }
+
+    /**
+     * Argument for command-line option {@code -doctitle}.
+     */
+    String docTitle() {
+        return docTitle;
+    }
+
+    /**
+     * Argument for command-line option {@code -footer}.
+     */
+    String footer() {
+        return footer;
+    }
+
+    /**
+     * Argument for command-line option {@code -header}.
+     */
+    String header() {
+        return header;
+    }
+
+    /**
+     * Argument for command-line option {@code -helpfile}.
+     */
+    public String helpFile() {
+        return helpFile;
+    }
+
+    /**
+     * Argument for command-line option {@code -nodeprecated}.
+     * True if command-line option "-nodeprecated" is used. Default value is
+     * false.
+     */
+    public boolean noDeprecatedList() {
+        return noDeprecatedList;
+    }
+
+    /**
+     * Argument for command-line option {@code -nohelp}.
+     * True if command-line option "-nohelp" is used. Default value is false.
+     */
+    public boolean noHelp() {
+        return noHelp;
+    }
+
+    /**
+     * Argument for command-line option {@code -nonavbar}.
+     * True if command-line option "-nonavbar" is used. Default value is false.
+     */
+    public boolean noNavbar() {
+        return noNavbar;
+    }
+
+    /**
+     * Argument for command-line option {@code -nooverview}.
+     * True if command-line option "-nooverview" is used. Default value is
+     * false
+     */
+    boolean noOverview() {
+        return noOverview;
+    }
+
+    /**
+     * Argument for command-line option {@code -overview}.
+     * The overview path specified with "-overview" flag.
+     */
+    String overviewPath() {
+        return overviewPath;
+    }
+
+    /**
+     * Argument for command-line option {@code -packagesheader}.
+     */
+    String packagesHeader() {
+        return packagesHeader;
+    }
+
+    /**
+     * Argument for command-line option {@code -splitindex}.
+     * True if command-line option "-splitindex" is used. Default value is
+     * false.
+     */
+    public boolean splitIndex() {
+        return splitIndex;
+    }
+
+    /**
+     * Argument for command-line option {@code -stylesheetfile}.
+     */
+    String stylesheetFile() {
+        return stylesheetFile;
+    }
+
+    /**
+     * Argument for command-line option {@code -top}.
+     */
+    String top() {
+        return top;
+    }
+
+    /**
+     * Argument for command-line option {@code -windowtitle}.
+     */
+    String windowTitle() {
+        return windowTitle;
+    }
 }

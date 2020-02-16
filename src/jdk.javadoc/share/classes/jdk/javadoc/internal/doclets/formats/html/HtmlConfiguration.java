@@ -39,6 +39,9 @@ import com.sun.source.util.DocTreePath;
 
 import jdk.javadoc.doclet.Doclet;
 import jdk.javadoc.doclet.DocletEnvironment;
+import jdk.javadoc.doclet.Reporter;
+import jdk.javadoc.doclet.StandardDoclet;
+import jdk.javadoc.doclet.Taglet;
 import jdk.javadoc.internal.doclets.toolkit.BaseConfiguration;
 import jdk.javadoc.internal.doclets.toolkit.DocletException;
 import jdk.javadoc.internal.doclets.toolkit.Messages;
@@ -75,7 +78,7 @@ public class HtmlConfiguration extends BaseConfiguration {
      */
     public static final String HTML_DEFAULT_CHARSET = "utf-8";
 
-    public final Resources resources;
+    public final Resources docResources;
 
     /**
      * First file to appear in the right-hand frame in the generated
@@ -113,23 +116,48 @@ public class HtmlConfiguration extends BaseConfiguration {
     private final HtmlOptions options;
 
     /**
-     * Creates an object to hold the configuration for a doclet.
+     * Constructs the full configuration needed by the doclet, including
+     * the format-specific part, defined in this class, and the format-independent
+     * part, defined in the supertype.
      *
-     * @param doclet the doclet
+     * @apiNote The {@code doclet} parameter is used when
+     * {@link Taglet#init(DocletEnvironment, Doclet) initializing tags}.
+     * Some doclets (such as the {@link StandardDoclet}), may delegate to another
+     * (such as the {@link HtmlDoclet}).  In such cases, the primary doclet (i.e
+     * {@code StandardDoclet}) should be provided here, and not any internal
+     * class like {@code HtmlDoclet}.
+     *
+     * @param doclet   the doclet for this run of javadoc
+     * @param locale   the locale for the generated documentation
+     * @param reporter the reporter to use for console messages
      */
-    public HtmlConfiguration(Doclet doclet) {
-        super(doclet);
-        resources = new Resources(this,
+    public HtmlConfiguration(Doclet doclet, Locale locale, Reporter reporter) {
+        super(doclet, locale, reporter);
+
+        // Use the default locale for console messages.
+        Resources msgResources = new Resources(Locale.getDefault(),
                 BaseConfiguration.sharedResourceBundleName,
                 "jdk.javadoc.internal.doclets.formats.html.resources.standard");
 
-        messages = new Messages(this);
+        // Use the provided locale for generated docs
+        // Ideally, the doc resources would be in different resource files than the
+        // message resources, so that we do not have different copies of the same resources.
+        if (locale.equals(Locale.getDefault())) {
+            docResources = msgResources;
+        } else {
+            docResources = new Resources(locale,
+                    BaseConfiguration.sharedResourceBundleName,
+                    "jdk.javadoc.internal.doclets.formats.html.resources.standard");
+        }
+
+        messages = new Messages(this, msgResources);
         contents = new Contents(this);
         options = new HtmlOptions(this);
 
         String v;
         try {
-            ResourceBundle rb = ResourceBundle.getBundle(versionBundleName, getLocale());
+            // the version bundle is not localized
+            ResourceBundle rb = ResourceBundle.getBundle(versionBundleName, Locale.getDefault());
             try {
                 v = rb.getString("release");
             } catch (MissingResourceException e) {
@@ -152,10 +180,15 @@ public class HtmlConfiguration extends BaseConfiguration {
     }
 
     @Override
-    public Resources getResources() {
-        return resources;
+    public Resources getDocResources() {
+        return docResources;
     }
 
+    /**
+     * Returns a utility object providing commonly used fragments of content.
+     *
+     * @return a utility object providing commonly used fragments of content
+     */
     public Contents getContents() {
         return contents;
     }
@@ -188,7 +221,7 @@ public class HtmlConfiguration extends BaseConfiguration {
         docPaths = new DocPaths(utils);
         setCreateOverview();
         setTopFile(docEnv);
-        workArounds.initDocLint(options.doclintOpts.values(), tagletManager.getAllTagletNames());
+        workArounds.initDocLint(options.doclintOpts(), tagletManager.getAllTagletNames());
         return true;
     }
 
@@ -206,7 +239,7 @@ public class HtmlConfiguration extends BaseConfiguration {
         if (!checkForDeprecation(docEnv)) {
             return;
         }
-        if (options.createOverview) {
+        if (options.createOverview()) {
             topFile = DocPaths.INDEX;
         } else {
             if (showModules) {
@@ -224,7 +257,7 @@ public class HtmlConfiguration extends BaseConfiguration {
     }
 
     protected TypeElement getValidClass(List<TypeElement> classes) {
-        if (!options.noDeprecated) {
+        if (!options.noDeprecated()) {
             return classes.get(0);
         }
         for (TypeElement te : classes) {
@@ -246,29 +279,23 @@ public class HtmlConfiguration extends BaseConfiguration {
 
     /**
      * Generate "overview.html" page if option "-overview" is used or number of
-     * packages is more than one. Sets {@link HtmlOptions#createOverview} field to true.
+     * packages is more than one. Sets {@code HtmlOptions.createOverview} field to true.
      */
     protected void setCreateOverview() {
-        if (!options.noOverview) {
-            if (options.overviewPath != null
+        if (!options.noOverview()) {
+            if (options.overviewPath() != null
                     || modules.size() > 1
                     || (modules.isEmpty() && packages.size() > 1)) {
-                options.createOverview = true;
+                options.setCreateOverview(true);
             }
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public WriterFactory getWriterFactory() {
         return new WriterFactoryImpl(this);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Locale getLocale() {
         if (locale == null)
@@ -283,7 +310,7 @@ public class HtmlConfiguration extends BaseConfiguration {
      */
     @Override
     public JavaFileObject getOverviewPath() {
-        String overviewpath = options.overviewPath;
+        String overviewpath = options.overviewPath();
         if (overviewpath != null && getFileManager() instanceof StandardJavaFileManager) {
             StandardJavaFileManager fm = (StandardJavaFileManager) getFileManager();
             return fm.getJavaFileObjects(overviewpath).iterator().next();
@@ -292,7 +319,7 @@ public class HtmlConfiguration extends BaseConfiguration {
     }
 
     public DocPath getMainStylesheet() {
-        String stylesheetfile = options.stylesheetFile;
+        String stylesheetfile = options.stylesheetFile();
         if(!stylesheetfile.isEmpty()){
             DocFile docFile = DocFile.createFileForInput(this, stylesheetfile);
             return DocPath.create(docFile.getName());
@@ -301,14 +328,11 @@ public class HtmlConfiguration extends BaseConfiguration {
     }
 
     public List<DocPath> getAdditionalStylesheets() {
-        return options.additionalStylesheets.stream()
+        return options.additionalStylesheets().stream()
                 .map(ssf -> DocFile.createFileForInput(this, ssf)).map(file -> DocPath.create(file.getName()))
                 .collect(Collectors.toList());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public JavaFileManager getFileManager() {
         return docEnv.getJavaFileManager();
@@ -330,29 +354,26 @@ public class HtmlConfiguration extends BaseConfiguration {
             Character unicode = (tagLabel.length() == 0)
                     ? '*'
                     : Character.toUpperCase(tagLabel.charAt(0));
-            List<SearchIndexItem> list = tagSearchIndexMap.get(unicode);
-            if (list == null) {
-                list = new ArrayList<>();
-                tagSearchIndexMap.put(unicode, list);
-            }
-            list.add(sii);
+            tagSearchIndexMap.computeIfAbsent(unicode, k -> new ArrayList<>()).add(sii);
         }
         tagSearchIndexKeys = tagSearchIndexMap.keySet();
     }
 
     @Override
     protected boolean finishOptionSettings0() throws DocletException {
-        if (options.docEncoding == null) {
-            if (options.charset == null) {
-                options.docEncoding = options.charset = (options.encoding == null) ? HTML_DEFAULT_CHARSET : options.encoding;
+        if (options.docEncoding() == null) {
+            if (options.charset() == null) {
+                String charset = (options.encoding() == null) ? HTML_DEFAULT_CHARSET : options.encoding();
+                options.setCharset(charset);
+                options.setDocEncoding((options.charset()));
             } else {
-                options.docEncoding = options.charset;
+                options.setDocEncoding(options.charset());
             }
         } else {
-            if (options.charset == null) {
-                options.charset = options.docEncoding;
-            } else if (!options.charset.equals(options.docEncoding)) {
-                reporter.print(ERROR, resources.getText("doclet.Option_conflict", "-charset", "-docencoding"));
+            if (options.charset() == null) {
+                options.setCharset(options.docEncoding());
+            } else if (!options.charset().equals(options.docEncoding())) {
+                messages.error("doclet.Option_conflict", "-charset", "-docencoding");
                 return false;
             }
         }

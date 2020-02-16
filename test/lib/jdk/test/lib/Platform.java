@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,8 +24,12 @@
 package jdk.test.lib;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -45,6 +49,7 @@ public class Platform {
     private static final String osArch      = privilegedGetProperty("os.arch");
     private static final String userName    = privilegedGetProperty("user.name");
     private static final String compiler    = privilegedGetProperty("sun.management.compiler");
+    private static final String testJdk     = privilegedGetProperty("test.jdk");
 
     private static String privilegedGetProperty(String key) {
         return AccessController.doPrivileged((
@@ -233,6 +238,59 @@ public class Platform {
     }
 
     /**
+     * Return true if the test JDK is signed, otherwise false. Only valid on OSX.
+     */
+    public static boolean isSignedOSX() throws IOException {
+        // We only care about signed binaries for 10.14 and later (actually 10.14.5, but
+        // for simplicity we'll also include earlier 10.14 versions).
+        if (getOsVersionMajor() == 10 && getOsVersionMinor() < 14) {
+            return false; // assume not signed
+        }
+
+        // Find the path to the java binary.
+        String jdkPath = System.getProperty("java.home");
+        Path javaPath = Paths.get(jdkPath + "/bin/java");
+        String javaFileName = javaPath.toAbsolutePath().toString();
+        if (!javaPath.toFile().exists()) {
+            throw new FileNotFoundException("Could not find file " + javaFileName);
+        }
+
+        // Run codesign on the java binary.
+        ProcessBuilder pb = new ProcessBuilder("codesign", "-d", "-v", javaFileName);
+        pb.redirectError(ProcessBuilder.Redirect.DISCARD);
+        pb.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+        Process codesignProcess = pb.start();
+        try {
+            if (codesignProcess.waitFor(10, TimeUnit.SECONDS) == false) {
+                System.err.println("Timed out waiting for the codesign process to complete. Assuming not signed.");
+                codesignProcess.destroyForcibly();
+                return false; // assume not signed
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Check codesign result to see if java binary is signed. Here are the
+        // exit code meanings:
+        //    0: signed
+        //    1: not signed
+        //    2: invalid arguments
+        //    3: only has meaning with the -R argument.
+        // So we should always get 0 or 1 as an exit value.
+        if (codesignProcess.exitValue() == 0) {
+            System.out.println("Target JDK is signed. Some tests may be skipped.");
+            return true; // signed
+        } else if (codesignProcess.exitValue() == 1) {
+            System.out.println("Target JDK is not signed.");
+            return false; // not signed
+        } else {
+            System.err.println("Executing codesign failed. Assuming unsigned: " +
+                               codesignProcess.exitValue());
+            return false; // not signed
+        }
+    }
+
+    /**
      * Return a boolean for whether we expect to be able to attach
      * the SA to our own processes on this system.  This requires
      * that SA is ported/available on this platform.
@@ -242,7 +300,7 @@ public class Platform {
         if (isLinux()) {
             return canPtraceAttachLinux();
         } else if (isOSX()) {
-            return canAttachOSX();
+            return canAttachOSX() && !isSignedOSX();
         } else {
             // Other platforms expected to work:
             return true;
@@ -337,6 +395,35 @@ public class Platform {
             return "LD_LIBRARY_PATH";
         }
     }
+
+    /**
+     * Returns absolute path to directory containing JVM shared library.
+     */
+    public static Path jvmLibDir() {
+        Path dir = Paths.get(testJdk);
+        if (Platform.isWindows()) {
+            return dir.resolve("bin")
+                .resolve(variant())
+                .toAbsolutePath();
+        } else {
+            return dir.resolve("lib")
+                .resolve(variant())
+                .toAbsolutePath();
+        }
+    }
+
+    private static String variant() {
+        if (Platform.isServer()) {
+            return "server";
+        } else if (Platform.isClient()) {
+            return "client";
+        } else if (Platform.isMinimal()) {
+            return "minimal";
+        } else {
+            throw new Error("TESTBUG: unsupported vm variant");
+        }
+    }
+
 
     public static boolean isDefaultCDSArchiveSupported() {
         return (is64bit()  &&

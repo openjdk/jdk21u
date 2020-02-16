@@ -60,8 +60,6 @@ import jdk.javadoc.internal.doclets.toolkit.util.Utils.Pair;
 import jdk.javadoc.internal.doclets.toolkit.util.VisibleMemberCache;
 import jdk.javadoc.internal.doclets.toolkit.util.VisibleMemberTable;
 
-import static javax.tools.Diagnostic.Kind.*;
-
 /**
  * Configure the output based on the options. Doclets should sub-class
  * BaseConfiguration, to configure and add their own options. This class contains
@@ -148,13 +146,13 @@ public abstract class BaseConfiguration {
      */
     public Extern extern;
 
-    public Reporter reporter;
+    public final Reporter reporter;
 
-    public Locale locale;
+    public final Locale locale;
 
     public abstract Messages getMessages();
 
-    public abstract Resources getResources();
+    public abstract Resources getDocResources();
 
     /**
      * Returns a string identifying the version of the doclet.
@@ -202,20 +200,23 @@ public abstract class BaseConfiguration {
     public PropertyUtils propertyUtils = null;
 
     /**
-     * Constructs the configurations needed by the doclet.
+     * Constructs the format-independent configuration needed by the doclet.
      *
-     * @apiNote
-     * The {@code doclet} parameter is used when {@link Taglet#init(DocletEnvironment, Doclet)
-     * initializing tags}.
-     * Some doclets (such as the {@link StandardDoclet), may delegate to another
+     * @apiNote The {@code doclet} parameter is used when
+     * {@link Taglet#init(DocletEnvironment, Doclet) initializing tags}.
+     * Some doclets (such as the {@link StandardDoclet}), may delegate to another
      * (such as the {@link HtmlDoclet}).  In such cases, the primary doclet (i.e
      * {@code StandardDoclet}) should be provided here, and not any internal
      * class like {@code HtmlDoclet}.
      *
-     * @param doclet the doclet for this run of javadoc
+     * @param doclet   the doclet for this run of javadoc
+     * @param locale   the locale for the generated documentation
+     * @param reporter the reporter to use for console messages
      */
-    public BaseConfiguration(Doclet doclet) {
+    public BaseConfiguration(Doclet doclet, Locale locale, Reporter reporter) {
         this.doclet = doclet;
+        this.locale = locale;
+        this.reporter = reporter;
     }
 
     public abstract BaseOptions getOptions();
@@ -232,8 +233,8 @@ public abstract class BaseConfiguration {
         utils = new Utils(this);
 
         BaseOptions options = getOptions();
-        if (!options.javafx) {
-            options.javafx = isJavaFXMode();
+        if (!options.javafx()) {
+            options.setJavaFX(isJavaFXMode());
         }
 
         // Once docEnv and Utils have been initialized, others should be safe.
@@ -331,9 +332,7 @@ public abstract class BaseConfiguration {
         }
 
         // add entries for modules which may not have exported packages
-        modules.forEach((ModuleElement mdle) -> {
-            modulePackages.computeIfAbsent(mdle, m -> Collections.emptySet());
-        });
+        modules.forEach(mdle -> modulePackages.computeIfAbsent(mdle, m -> Collections.emptySet()));
 
         modules.addAll(modulePackages.keySet());
         showModules = !modules.isEmpty();
@@ -356,15 +355,15 @@ public abstract class BaseConfiguration {
         BaseOptions options = getOptions();
         extern = new Extern(this);
         initDestDirectory();
-        for (String link : options.linkList) {
+        for (String link : options.linkList()) {
             extern.link(link, reporter);
         }
-        for (Pair<String, String> linkOfflinePair : options.linkOfflineList) {
+        for (Pair<String, String> linkOfflinePair : options.linkOfflineList()) {
             extern.link(linkOfflinePair.first, linkOfflinePair.second, reporter);
         }
         typeElementCatalog = new TypeElementCatalog(includedTypeElements, this);
-        initTagletManager(options.customTagStrs);
-        options.groupPairs.stream().forEach((grp) -> {
+        initTagletManager(options.customTagStrs());
+        options.groupPairs().stream().forEach((grp) -> {
             if (showModules) {
                 group.checkModuleGroups(grp.first, grp.second);
             } else {
@@ -391,20 +390,20 @@ public abstract class BaseConfiguration {
     }
 
     private void initDestDirectory() throws DocletException {
-        String destDirName = getOptions().destDirName;
+        String destDirName = getOptions().destDirName();
         if (!destDirName.isEmpty()) {
-            Resources resources = getResources();
+            Messages messages = getMessages();
             DocFile destDir = DocFile.createFileForDirectory(this, destDirName);
             if (!destDir.exists()) {
                 //Create the output directory (in case it doesn't exist yet)
-                reporter.print(NOTE, resources.getText("doclet.dest_dir_create", destDirName));
+                messages.notice("doclet.dest_dir_create", destDirName);
                 destDir.mkdirs();
             } else if (!destDir.isDirectory()) {
-                throw new SimpleDocletException(resources.getText(
+                throw new SimpleDocletException(messages.getResources().getText(
                         "doclet.destination_directory_not_directory_0",
                         destDir.getPath()));
             } else if (!destDir.canWrite()) {
-                throw new SimpleDocletException(resources.getText(
+                throw new SimpleDocletException(messages.getResources().getText(
                         "doclet.destination_directory_not_writable_0",
                         destDir.getPath()));
             }
@@ -513,7 +512,7 @@ public abstract class BaseConfiguration {
      * @return true if the directory is excluded.
      */
     public boolean shouldExcludeDocFileDir(String docfilesubdir) {
-        Set<String> excludedDocFileDirs = getOptions().excludedDocFileDirs;
+        Set<String> excludedDocFileDirs = getOptions().excludedDocFileDirs();
         return excludedDocFileDirs.contains(docfilesubdir);
     }
 
@@ -524,7 +523,7 @@ public abstract class BaseConfiguration {
      * @return true if the qualifier should be excluded
      */
     public boolean shouldExcludeQualifier(String qualifier) {
-        Set<String> excludedQualifiers = getOptions().excludedQualifiers;
+        Set<String> excludedQualifiers = getOptions().excludedQualifiers();
         if (excludedQualifiers.contains("all") ||
                 excludedQualifiers.contains(qualifier) ||
                 excludedQualifiers.contains(qualifier + ".*")) {
@@ -564,7 +563,7 @@ public abstract class BaseConfiguration {
      * @return true if it is a generated doc.
      */
     public boolean isGeneratedDoc(TypeElement te) {
-        boolean nodeprecated = getOptions().noDeprecated;
+        boolean nodeprecated = getOptions().noDeprecated();
         if (!nodeprecated) {
             return true;
         }
@@ -673,7 +672,7 @@ public abstract class BaseConfiguration {
      * @return the allowScriptInComments
      */
     public boolean isAllowScriptInComments() {
-        return getOptions().allowScriptInComments;
+        return getOptions().allowScriptInComments();
     }
 
     public synchronized VisibleMemberTable getVisibleMemberTable(TypeElement te) {
@@ -686,12 +685,12 @@ public abstract class BaseConfiguration {
      */
     public boolean isJavaFXMode() {
         TypeElement observable = utils.elementUtils.getTypeElement("javafx.beans.Observable");
-        if (observable != null) {
-            ModuleElement javafxModule = utils.elementUtils.getModuleOf(observable);
-            if (javafxModule == null || javafxModule.isUnnamed() || javafxModule.getQualifiedName().contentEquals("javafx.base")) {
-                return true;
-            }
+        if (observable == null) {
+            return false;
         }
-        return false;
+        ModuleElement javafxModule = utils.elementUtils.getModuleOf(observable);
+        return javafxModule == null
+                || javafxModule.isUnnamed()
+                || javafxModule.getQualifiedName().contentEquals("javafx.base");
     }
 }

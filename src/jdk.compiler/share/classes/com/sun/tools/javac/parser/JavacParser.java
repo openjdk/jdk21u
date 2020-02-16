@@ -4023,7 +4023,7 @@ public class JavacParser implements Parser {
             int pos = token.pos;
             JCModifiers mods = modifiersOpt();
             if (token.kind == CLASS ||
-                isRecordStart() ||
+                allowRecords && isRecordStart() ||
                 token.kind == INTERFACE ||
                 token.kind == ENUM) {
                 return List.of(classOrRecordOrInterfaceOrEnumDeclaration(mods, dc));
@@ -4077,6 +4077,17 @@ public class JavacParser implements Parser {
                     return List.of(methodDeclaratorRest(
                         pos, mods, null, names.init, typarams,
                         isInterface, true, isRecord, dc));
+                } else if (isRecord && type.hasTag(IDENT) && token.kind == THROWS) {
+                    // trying to define a compact constructor with a throws clause
+                    log.error(DiagnosticFlag.SYNTAX, token.pos,
+                            Errors.InvalidCanonicalConstructorInRecord(
+                                    Fragments.Compact,
+                                    className,
+                                    Fragments.ThrowsClauseNotAllowedForCanonicalConstructor(Fragments.Compact)));
+                    skip(false, true, false, false);
+                    return List.of(methodDeclaratorRest(
+                            pos, mods, null, names.init, typarams,
+                            isInterface, true, isRecord, dc));
                 } else {
                     pos = token.pos;
                     Name name = ident();

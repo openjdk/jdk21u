@@ -309,15 +309,25 @@ public class RecordCompilationTests extends CompilationTestCase {
                         "record R(List<String> list) { # }",
                 "R(List list) { this.list = list; }");
 
-        // ctor should not add checked exceptions
+        // canonical ctor should not throw checked exceptions
         assertFail("compiler.err.invalid.canonical.constructor.in.record",
                    "record R() { # }",
                    "public R() throws Exception { }");
 
-        // not even checked exceptions
+        // same for compact
+        assertFail("compiler.err.invalid.canonical.constructor.in.record",
+                "record R() { # }",
+                "public R throws Exception { }");
+
+        // not even unchecked exceptions
         assertFail("compiler.err.invalid.canonical.constructor.in.record",
                 "record R() { # }",
                  "public R() throws IllegalArgumentException { }");
+
+        // ditto
+        assertFail("compiler.err.invalid.canonical.constructor.in.record",
+                "record R() { # }",
+                "public R throws IllegalArgumentException { }");
 
         // If types match, names must match
         assertFail("compiler.err.invalid.canonical.constructor.in.record",
@@ -625,6 +635,19 @@ public class RecordCompilationTests extends CompilationTestCase {
         Assert.check(numberOfFieldRefs == 1);
     }
 
+    public void testAcceptRecordId() {
+        String[] testOptions = {/* no options */};
+        setCompileOptions(testOptions);
+        assertOKWithWarning("compiler.warn.restricted.type.not.allowed.preview",
+                "class R {\n" +
+                "    record RR(int i) {\n" +
+                "        return null;\n" +
+                "    }\n" +
+                "    class record {}\n" +
+                "}");
+        setCompileOptions(PREVIEW_OPTIONS);
+    }
+
     public void testAnnos() throws Exception {
         String srcTemplate =
                 """
@@ -861,14 +884,12 @@ public class RecordCompilationTests extends CompilationTestCase {
         @Override
         public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
             targets = processingEnv.getOptions().get("targets");
-            System.out.println("targets------------------------------------------------- " + targets);
             for (TypeElement te : annotations) {
                 if (te.toString().equals("Anno")) {
                     checkElements(te, roundEnv, targets);
                     if (targets.contains("TYPE_USE")) {
                         Element element = processingEnv.getElementUtils().getTypeElement("R");
                         numberOfTypeAnnotations = 0;
-                        System.out.println("element found --------------------------------- " + element);
                         checkTypeAnnotations(element);
                         Assert.check(numberOfTypeAnnotations == 4);
                     }

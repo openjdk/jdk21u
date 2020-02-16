@@ -86,7 +86,7 @@ class StandardDocFileFactory extends DocFileFactory {
                 fileManager.setLocationFromPaths(DocumentationTool.Location.DOCUMENTATION_OUTPUT, Arrays.asList(dir));
             } catch (IOException e) {
                 // generic IOException from file manager, setting location, e.g. file not a directory
-                String message = configuration.getResources().getText("doclet.error.initializing.dest.dir", e);
+                String message = configuration.getDocResources().getText("doclet.error.initializing.dest.dir", e);
                 throw new SimpleDocletException(message, e);
             }
         }
@@ -207,7 +207,7 @@ class StandardDocFileFactory extends DocFileFactory {
 
             try {
                 OutputStream out = getFileObjectForOutput(path).openOutputStream();
-                String docencoding = configuration.getOptions().docEncoding;
+                String docencoding = configuration.getOptions().docEncoding();
                 return new BufferedWriter(new OutputStreamWriter(out, docencoding));
             } catch (IOException e) {
                 throw new DocFileIOException(this, DocFileIOException.Mode.WRITE, e);
