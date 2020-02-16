@@ -301,6 +301,8 @@ public class Platform {
             return canPtraceAttachLinux();
         } else if (isOSX()) {
             return canAttachOSX() && !isSignedOSX();
+        } else if (isBSD()) {
+            return true;
         } else {
             // Other platforms expected to work:
             return true;
