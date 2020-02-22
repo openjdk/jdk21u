@@ -328,7 +328,7 @@ void delete_thread_info(struct ps_prochandle* ph, sa_thread_info* thr_to_be_remo
     if (thr_to_be_removed == ph->threads) {
       ph->threads = ph->threads->next;
     } else {
-      sa_thread_info* previous_thr;
+      sa_thread_info* previous_thr = NULL;
       while (current_thr && current_thr != thr_to_be_removed) {
         previous_thr = current_thr;
         current_thr = current_thr->next;
