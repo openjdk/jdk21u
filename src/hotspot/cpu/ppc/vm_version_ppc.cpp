@@ -36,6 +36,7 @@
 #include "utilities/align.hpp"
 #include "utilities/defaultStream.hpp"
 #include "utilities/globalDefinitions.hpp"
+#include "utilities/powerOfTwo.hpp"
 
 #ifndef _ALLBSD_SOURCE
 #include <sys/sysinfo.h>
@@ -226,6 +227,10 @@ void VM_Version::initialize() {
   }
 
   assert(AllocatePrefetchStyle >= 0, "AllocatePrefetchStyle should be positive");
+
+  if (FLAG_IS_DEFAULT(ContendedPaddingWidth) && (cache_line_size > ContendedPaddingWidth)) {
+    ContendedPaddingWidth = cache_line_size;
+  }
 
   // If running on Power8 or newer hardware, the implementation uses the available vector instructions.
   // In all other cases, the implementation uses only generally available instructions.
@@ -538,6 +543,13 @@ bool VM_Version::use_biased_locking() {
 
 void VM_Version::print_features() {
   tty->print_cr("Version: %s L1_data_cache_line_size=%d", features_string(), L1_data_cache_line_size());
+
+  if (Verbose) {
+    if (ContendedPaddingWidth > 0) {
+      tty->cr();
+      tty->print_cr("ContendedPaddingWidth " INTX_FORMAT, ContendedPaddingWidth);
+    }
+  }
 }
 
 #ifdef COMPILER2
