@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -53,6 +53,28 @@
 #ifdef aarch64
 #include "sun_jvm_hotspot_debugger_aarch64_AARCH64ThreadContext.h"
 #endif
+
+class AutoJavaString {
+  JNIEnv* m_env;
+  jstring m_str;
+  const char* m_buf;
+
+public:
+  // check env->ExceptionOccurred() after ctor
+  AutoJavaString(JNIEnv* env, jstring str)
+    : m_env(env), m_str(str), m_buf(env->GetStringUTFChars(str, NULL)) {
+  }
+
+  ~AutoJavaString() {
+    if (m_buf) {
+      m_env->ReleaseStringUTFChars(m_str, m_buf);
+    }
+  }
+
+  operator const char* () const {
+    return m_buf;
+  }
+};
 
 static jfieldID p_ps_prochandle_ID = 0;
 static jfieldID threadList_ID = 0;
@@ -202,24 +224,16 @@ JNIEXPORT void JNICALL Java_sun_jvm_hotspot_debugger_bsd_BsdDebuggerLocal_attach
 extern "C"
 JNIEXPORT void JNICALL Java_sun_jvm_hotspot_debugger_bsd_BsdDebuggerLocal_attach0__Ljava_lang_String_2Ljava_lang_String_2
   (JNIEnv *env, jobject this_obj, jstring execName, jstring coreName) {
-  const char *execName_cstr;
-  const char *coreName_cstr;
-  jboolean isCopy;
   struct ps_prochandle* ph;
-
-  execName_cstr = env->GetStringUTFChars(execName, &isCopy);
+  AutoJavaString execName_cstr(env, execName);
   CHECK_EXCEPTION;
-  coreName_cstr = env->GetStringUTFChars(coreName, &isCopy);
+  AutoJavaString coreName_cstr(env, coreName);
   CHECK_EXCEPTION;
 
   if ( (ph = Pgrab_core(execName_cstr, coreName_cstr)) == NULL) {
-    env->ReleaseStringUTFChars(execName, execName_cstr);
-    env->ReleaseStringUTFChars(coreName, coreName_cstr);
     THROW_NEW_DEBUGGER_EXCEPTION("Can't attach to the core file");
   }
   env->SetLongField(this_obj, p_ps_prochandle_ID, (jlong)(intptr_t)ph);
-  env->ReleaseStringUTFChars(execName, execName_cstr);
-  env->ReleaseStringUTFChars(coreName, coreName_cstr);
   fillThreadsAndLoadObjects(env, this_obj, ph);
 }
 
@@ -245,25 +259,15 @@ JNIEXPORT void JNICALL Java_sun_jvm_hotspot_debugger_bsd_BsdDebuggerLocal_detach
 extern "C"
 JNIEXPORT jlong JNICALL Java_sun_jvm_hotspot_debugger_bsd_BsdDebuggerLocal_lookupByName0
   (JNIEnv *env, jobject this_obj, jstring objectName, jstring symbolName) {
-  const char *objectName_cstr, *symbolName_cstr;
   jlong addr;
   jboolean isCopy;
   struct ps_prochandle* ph = get_proc_handle(env, this_obj);
-
-  objectName_cstr = NULL;
-  if (objectName != NULL) {
-    objectName_cstr = env->GetStringUTFChars(objectName, &isCopy);
-    CHECK_EXCEPTION_(0);
-  }
-  symbolName_cstr = env->GetStringUTFChars(symbolName, &isCopy);
+  AutoJavaString objectName_cstr(env, objectName);
+  CHECK_EXCEPTION_(0);
+  AutoJavaString symbolName_cstr(env, symbolName);
   CHECK_EXCEPTION_(0);
 
   addr = (jlong) lookup_symbol(ph, objectName_cstr, symbolName_cstr);
-
-  if (objectName_cstr != NULL) {
-    env->ReleaseStringUTFChars(objectName, objectName_cstr);
-  }
-  env->ReleaseStringUTFChars(symbolName, symbolName_cstr);
   return addr;
 }
 
@@ -509,7 +513,10 @@ JNIEXPORT jstring JNICALL Java_sun_jvm_hotspot_debugger_bsd_BsdDebuggerLocal_dem
   int status;
   jstring result = NULL;
 
-  const char *sym = env->GetStringUTFChars(jsym, JNI_FALSE);
+  const char *sym = env->GetStringUTFChars(jsym, NULL);
+  if (sym == NULL) {
+    THROW_NEW_DEBUGGER_EXCEPTION_("Error getting symbol string", NULL);
+  }
   char *demangled = abi::__cxa_demangle(sym, NULL, 0, &status);
   env->ReleaseStringUTFChars(jsym, sym);
   if ((demangled != NULL) && (status == 0)) {
