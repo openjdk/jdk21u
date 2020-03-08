@@ -155,7 +155,7 @@ java/awt/KeyboardFocusmanager/TypeAhead/TestDialogTypeAhead.java 8198626 macosx-
 java/awt/Mixing/AWT_Mixing/HierarchyBoundsListenerMixingTest.java 8049405 macosx-all
 java/awt/Mixing/AWT_Mixing/OpaqueOverlappingChoice.java 8048171 generic-all
 java/awt/Mixing/AWT_Mixing/JMenuBarOverlapping.java 8159451 linux-all,windows-all,macosx-all
-java/awt/Mixing/AWT_Mixing/JSplitPaneOverlapping.java 8194765 generic-all
+java/awt/Mixing/AWT_Mixing/JSplitPaneOverlapping.java 6986109 generic-all
 java/awt/Mixing/AWT_Mixing/JInternalFrameMoveOverlapping.java 6986109 windows-all
 java/awt/Mixing/AWT_Mixing/MixingPanelsResizing.java 8049405 generic-all
 java/awt/Mixing/AWT_Mixing/JComboBoxOverlapping.java 8049405 macosx-all
@@ -551,8 +551,6 @@ com/apple/eawt/DefaultMenuBar/DefaultMenuBarTest.java 8233648 macosx-all
 java/awt/Choice/ChoiceKeyEventReaction/ChoiceKeyEventReaction.java 7185258 macosx-all
 java/awt/TrayIcon/RightClickWhenBalloonDisplayed/RightClickWhenBalloonDisplayed.java 8238720 windows-all
 java/awt/PopupMenu/PopupMenuLocation.java 8238720 windows-all
-java/awt/Mixing/AWT_Mixing/MixingFrameResizing.java 8238720 windows-all
-java/awt/Mixing/AWT_Mixing/HierarchyBoundsListenerMixingTest.java 8238720 windows-all
 java/awt/GridLayout/ComponentPreferredSize/ComponentPreferredSize.java 8238720 windows-all
 java/awt/GridLayout/ChangeGridSize/ChangeGridSize.java   8238720 windows-all
 java/awt/event/MouseEvent/FrameMouseEventAbsoluteCoordsTest/FrameMouseEventAbsoluteCoordsTest.java
@@ -566,7 +564,6 @@ java/beans/Introspector/8132566/OverridePropertyInfoTest.java   8132565 generic-
 java/beans/Introspector/8132566/OverrideUserDefPropertyInfoTest.java 8132565 generic-all
 
 java/beans/XMLEncoder/Test6570354.java 8015593 macosx-all
-java/beans/XMLEncoder/Test4625418.java 8239965 generic-all
 
 ############################################################################
 
@@ -723,6 +720,77 @@ javax/security/auth/kerberos/KerberosTixDateTest.java           8039280 generic-
 sun/security/provider/PolicyFile/GrantAllPermToExtWhenNoPolicy.java 8039280 generic-all
 sun/security/provider/PolicyParser/ExtDirsChange.java           8039280 generic-all
 sun/security/provider/PolicyParser/PrincipalExpansionError.java 8039280 generic-all
+
+sun/security/tools/keytool/NssTest.java                         8240686 windows-all
+sun/security/pkcs11/SampleTest.java                             8240686 windows-all
+sun/security/pkcs11/tls/TestPRF.java                            8240686 windows-all
+sun/security/pkcs11/tls/TestPremaster.java                      8240686 windows-all
+sun/security/pkcs11/tls/TestLeadingZeroesP11.java               8240686 windows-all
+sun/security/pkcs11/tls/TestMasterSecret.java                   8240686 windows-all
+sun/security/pkcs11/tls/TestKeyMaterial.java                    8240686 windows-all
+sun/security/pkcs11/Signature/TestDSAKeyLength.java             8240686 windows-all
+sun/security/pkcs11/Signature/TestRSAKeyLength.java             8240686 windows-all
+sun/security/pkcs11/Signature/TestDSA2.java                     8240686 windows-all
+sun/security/pkcs11/Signature/TestDSA.java                      8240686 windows-all
+sun/security/pkcs11/Signature/SignatureTestPSS.java             8240686 windows-all
+sun/security/pkcs11/Signature/SigInteropPSS.java                8240686 windows-all
+sun/security/pkcs11/Signature/ReinitSignature.java              8240686 windows-all
+sun/security/pkcs11/Signature/KeyAndParamCheckForPSS.java       8240686 windows-all
+sun/security/pkcs11/Signature/InitAgainPSS.java                 8240686 windows-all
+sun/security/pkcs11/Signature/ByteBuffers.java                  8240686 windows-all
+sun/security/pkcs11/Serialize/SerializeProvider.java            8240686 windows-all
+sun/security/pkcs11/SecureRandom/TestDeserialization.java       8240686 windows-all
+sun/security/pkcs11/SecureRandom/Basic.java                     8240686 windows-all
+sun/security/pkcs11/Secmod/TrustAnchors.java                    8240686 windows-all
+sun/security/pkcs11/Secmod/GetPrivateKey.java                   8240686 windows-all
+sun/security/pkcs11/Secmod/LoadKeystore.java                    8240686 windows-all
+sun/security/pkcs11/Secmod/TestNssDbSqlite.java                 8240686 windows-all
+sun/security/pkcs11/Secmod/JksSetPrivateKey.java                8240686 windows-all
+sun/security/pkcs11/Secmod/Crypto.java                          8240686 windows-all
+sun/security/pkcs11/Secmod/AddTrustedCert.java                  8240686 windows-all
+sun/security/pkcs11/Secmod/AddPrivateKey.java                   8240686 windows-all
+sun/security/pkcs11/rsa/TestSignatures.java                     8240686 windows-all
+sun/security/pkcs11/rsa/TestKeyPairGenerator.java               8240686 windows-all
+sun/security/pkcs11/rsa/TestKeyFactory.java                     8240686 windows-all
+sun/security/pkcs11/rsa/TestCACerts.java                        8240686 windows-all
+sun/security/pkcs11/rsa/KeyWrap.java                            8240686 windows-all
+sun/security/pkcs11/Provider/Login.sh                           8240686 windows-all
+sun/security/pkcs11/Provider/ConfigQuotedString.sh              8240686 windows-all
+sun/security/pkcs11/MessageDigest/TestCloning.java              8240686 windows-all
+sun/security/pkcs11/MessageDigest/ReinitDigest.java             8240686 windows-all
+sun/security/pkcs11/MessageDigest/DigestKAT.java                8240686 windows-all
+sun/security/pkcs11/Mac/MacKAT.java                             8240686 windows-all
+sun/security/pkcs11/Mac/MacSameTest.java                        8240686 windows-all
+sun/security/pkcs11/Mac/ReinitMac.java                          8240686 windows-all
+sun/security/pkcs11/MessageDigest/ByteBuffers.java              8240686 windows-all
+sun/security/pkcs11/KeyPairGenerator/TestDH2048.java            8240686 windows-all
+sun/security/pkcs11/KeyGenerator/TestKeyGenerator.java          8240686 windows-all
+sun/security/pkcs11/KeyGenerator/DESParity.java                 8240686 windows-all
+sun/security/pkcs11/KeyAgreement/UnsupportedDHKeys.java         8240686 windows-all
+sun/security/pkcs11/KeyAgreement/TestInterop.java               8240686 windows-all
+sun/security/pkcs11/KeyAgreement/TestDH.java                    8240686 windows-all
+sun/security/pkcs11/KeyAgreement/TestShort.java                 8240686 windows-all
+sun/security/pkcs11/KeyAgreement/SupportedDHKeys.java           8240686 windows-all
+sun/security/pkcs11/ec/TestECGenSpec.java                       8240686 windows-all
+sun/security/pkcs11/ec/TestECDSA2.java                          8240686 windows-all
+sun/security/pkcs11/ec/TestECDSA.java                           8240686 windows-all
+sun/security/pkcs11/ec/TestECDH2.java                           8240686 windows-all
+sun/security/pkcs11/ec/TestECDH.java                            8240686 windows-all
+sun/security/pkcs11/ec/TestCurves.java                          8240686 windows-all
+sun/security/pkcs11/ec/ReadPKCS12.java                          8240686 windows-all
+sun/security/pkcs11/Cipher/TestSymmCiphers.java                 8240686 windows-all
+sun/security/pkcs11/ec/ReadCertificates.java                    8240686 windows-all
+sun/security/pkcs11/Cipher/TestSymmCiphersNoPad.java            8240686 windows-all
+sun/security/pkcs11/Cipher/TestRSACipherWrap.java               8240686 windows-all
+sun/security/pkcs11/Cipher/TestRSACipher.java                   8240686 windows-all
+sun/security/pkcs11/Cipher/TestRawRSACipher.java                8240686 windows-all
+sun/security/pkcs11/Cipher/TestPKCS5PaddingError.java           8240686 windows-all
+sun/security/pkcs11/Cipher/TestKATForGCM.java                   8240686 windows-all
+sun/security/pkcs11/Cipher/TestGCMKeyAndIvCheck.java            8240686 windows-all
+sun/security/pkcs11/Cipher/TestCICOWithGCMAndAAD.java           8240686 windows-all
+sun/security/pkcs11/Cipher/TestCICOWithGCM.java                 8240686 windows-all
+sun/security/pkcs11/Cipher/Test4512704.java                     8240686 windows-all
+sun/security/pkcs11/Cipher/ReinitCipher.java                    8240686 windows-all
 
 ############################################################################
 

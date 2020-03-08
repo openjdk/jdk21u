@@ -361,10 +361,6 @@ jint ShenandoahHeap::initialize() {
   ShenandoahStringDedup::initialize();
   ShenandoahCodeRoots::initialize();
 
-  if (ShenandoahAllocationTrace) {
-    _alloc_tracker = new ShenandoahAllocTracker();
-  }
-
   if (ShenandoahPacing) {
     _pacer = new ShenandoahPacer(this);
     _pacer->setup_for_idle();
@@ -449,7 +445,6 @@ ShenandoahHeap::ShenandoahHeap(ShenandoahCollectorPolicy* policy) :
   _full_gc(new ShenandoahMarkCompact()),
   _pacer(NULL),
   _verifier(NULL),
-  _alloc_tracker(NULL),
   _phase_timings(NULL),
   _monitoring_support(NULL),
   _memory_pool(NULL),
@@ -483,9 +478,9 @@ ShenandoahHeap::ShenandoahHeap(ShenandoahCollectorPolicy* policy) :
     _workers->initialize_workers();
   }
 
-  if (ShenandoahParallelSafepointThreads > 1) {
+  if (ParallelGCThreads > 1) {
     _safepoint_workers = new ShenandoahWorkGang("Safepoint Cleanup Thread",
-                                                ShenandoahParallelSafepointThreads,
+                                                ParallelGCThreads,
                       /* are_GC_task_threads */ false,
                  /* are_ConcurrentGC_threads */ false);
     _safepoint_workers->initialize_workers();
@@ -797,8 +792,6 @@ ShenandoahHeap* ShenandoahHeap::heap_no_check() {
 }
 
 HeapWord* ShenandoahHeap::allocate_memory(ShenandoahAllocRequest& req) {
-  ShenandoahAllocTrace trace_alloc(req.size(), req.type());
-
   intptr_t pacer_epoch = 0;
   bool in_new_region = false;
   HeapWord* result = NULL;
@@ -1202,13 +1195,6 @@ void ShenandoahHeap::print_tracing_info() const {
 
     ls.cr();
     ls.cr();
-
-    if (ShenandoahAllocationTrace) {
-      assert(alloc_tracker() != NULL, "Must be");
-      alloc_tracker()->print_on(&ls);
-    } else {
-      ls.print_cr("  Allocation tracing is disabled, use -XX:+ShenandoahAllocationTrace to enable.");
-    }
   }
 }
 
@@ -2194,19 +2180,11 @@ void ShenandoahHeap::stw_process_weak_roots(bool full_gc) {
   ShenandoahGCPhase phase(timing_phase);
   phase_timings()->record_workers_start(timing_phase);
   if (has_forwarded_objects()) {
-    if (is_traversal_mode()) {
-      ShenandoahForwardedIsAliveClosure is_alive;
-      ShenandoahTraversalUpdateRefsClosure keep_alive;
-      ShenandoahParallelWeakRootsCleaningTask<ShenandoahForwardedIsAliveClosure, ShenandoahTraversalUpdateRefsClosure>
-        cleaning_task(&is_alive, &keep_alive, num_workers, !ShenandoahConcurrentRoots::should_do_concurrent_class_unloading());
-      _workers->run_task(&cleaning_task);
-    } else {
-      ShenandoahForwardedIsAliveClosure is_alive;
-      ShenandoahUpdateRefsClosure keep_alive;
-      ShenandoahParallelWeakRootsCleaningTask<ShenandoahForwardedIsAliveClosure, ShenandoahUpdateRefsClosure>
-        cleaning_task(&is_alive, &keep_alive, num_workers, !ShenandoahConcurrentRoots::should_do_concurrent_class_unloading());
-      _workers->run_task(&cleaning_task);
-    }
+    ShenandoahForwardedIsAliveClosure is_alive;
+    ShenandoahUpdateRefsClosure keep_alive;
+    ShenandoahParallelWeakRootsCleaningTask<ShenandoahForwardedIsAliveClosure, ShenandoahUpdateRefsClosure>
+      cleaning_task(&is_alive, &keep_alive, num_workers, !ShenandoahConcurrentRoots::should_do_concurrent_class_unloading());
+    _workers->run_task(&cleaning_task);
   } else {
     ShenandoahIsAliveClosure is_alive;
 #ifdef ASSERT

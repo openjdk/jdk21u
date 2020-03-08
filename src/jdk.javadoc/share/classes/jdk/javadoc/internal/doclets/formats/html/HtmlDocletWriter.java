@@ -348,7 +348,7 @@ public class HtmlDocletWriter {
         if (options.noComment()) {
             return;
         }
-        Content dl = new HtmlTree(HtmlTag.DL).setStyle(HtmlStyle.notes);
+        HtmlTree dl = HtmlTree.DL(HtmlStyle.notes);
         if (utils.isExecutableElement(e) && !utils.isConstructor(e)) {
             addMethodInfo((ExecutableElement)e, dl);
         }
@@ -1357,8 +1357,8 @@ public class HtmlDocletWriter {
     {
         final Content result = new ContentBuilder() {
             @Override
-            public void add(CharSequence text) {
-                super.add(utils.normalizeNewlines(text));
+            public ContentBuilder add(CharSequence text) {
+                return super.add(utils.normalizeNewlines(text));
             }
         };
         CommentHelper ch = utils.getCommentHelper(element);

@@ -62,6 +62,8 @@ private:
   ShenandoahHeap* const _heap;
   const ShenandoahPhaseTimings::Phase   _phase;
   ShenandoahPhaseTimings::Phase         _parent_phase;
+  double _start;
+
 public:
   ShenandoahGCPhase(ShenandoahPhaseTimings::Phase phase);
   ~ShenandoahGCPhase();
@@ -85,16 +87,6 @@ private:
 public:
   ShenandoahGCPauseMark(uint gc_id, SvcGCMarker::reason_type type);
   ~ShenandoahGCPauseMark();
-};
-
-class ShenandoahAllocTrace : public StackObj {
-private:
-  double _start;
-  size_t _size;
-  ShenandoahAllocRequest::Type _alloc_type;
-public:
-  ShenandoahAllocTrace(size_t words_size, ShenandoahAllocRequest::Type alloc_type);
-  ~ShenandoahAllocTrace();
 };
 
 class ShenandoahSafepoint : public AllStatic {
