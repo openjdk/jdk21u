@@ -86,10 +86,6 @@ class outputStream;
   f(init_evac,                                      "  Initial Evacuation")            \
   SHENANDOAH_GC_PAR_PHASE_DO(evac_,                 "    E: ", f)                      \
                                                                                        \
-  f(final_evac_gross,                               "Pause Final Evac (G)")            \
-  f(final_evac,                                     "Pause Final Evac (N)")            \
-  f(final_evac_retire_gclabs,                       "  Retire GCLABs")                 \
-                                                                                       \
   f(init_update_refs_gross,                         "Pause Init  Update Refs (G)")     \
   f(init_update_refs,                               "Pause Init  Update Refs (N)")     \
   f(init_update_refs_retire_gclabs,                 "  Retire GCLABs")                 \
@@ -174,7 +170,8 @@ public:
 
   enum Phase {
     SHENANDOAH_GC_PHASE_DO(GC_PHASE_DECLARE_ENUM)
-    _num_phases
+    _num_phases,
+    _invalid_phase = _num_phases
   };
 
   enum GCParPhases {

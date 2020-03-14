@@ -23,30 +23,23 @@
 
 /**
  * @test
- * @bug 8238384
- * @summary CTW: C2 compilation fails with "assert(store != load->find_exact_control(load->in(0))) failed: dependence cycle found"
+ * @bug 8239335
+ * @summary C2: assert((Value(phase) == t) || (t != TypeInt::CC_GT && t != TypeInt::CC_EQ)) failed: missing Value() optimization
+ * @requires vm.compiler2.enabled
  *
- * @run main/othervm -XX:-BackgroundCompilation TestCopyOfBrokenAntiDependency
+ * @run main/othervm -XX:-BackgroundCompilation TestIntArraySubTypeOfCloneableDoesnotFold
  *
  */
 
-import java.util.Arrays;
 
-public class TestCopyOfBrokenAntiDependency {
-
+public class TestIntArraySubTypeOfCloneableDoesnotFold {
     public static void main(String[] args) {
         for (int i = 0; i < 20_000; i++) {
-            test(100);
+            test();
         }
     }
 
-    private static Object test(int length) {
-        Object[] src  = new Object[length]; // non escaping
-        final Object[] dst = Arrays.copyOf(src, 10); // can't be removed
-        final Object[] dst2 = Arrays.copyOf(dst, 100);
-        // load is control dependent on membar from previous copyOf
-        // but has memory edge to first copyOf.
-        final Object v = dst[0];
-        return v;
+    private static boolean test() {
+        return int[].class.isAssignableFrom(Cloneable.class);
     }
 }
