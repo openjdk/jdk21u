@@ -349,6 +349,7 @@ void Thread::record_stack_base_and_size() {
   // If possible, refrain from doing anything which may crash or assert since
   // quite probably those crash dumps will be useless.
   set_stack_base(os::current_stack_base());
+  assert(_stack_base != NULL, "current_stack_base failed for %s", name());
   set_stack_size(os::current_stack_size());
 
 #ifdef SOLARIS
@@ -887,7 +888,9 @@ bool Thread::claim_par_threads_do(uintx claim_token) {
 }
 
 void Thread::oops_do(OopClosure* f, CodeBlobClosure* cf) {
-  active_handles()->oops_do(f);
+  if (active_handles() != NULL) {
+    active_handles()->oops_do(f);
+  }
   // Do oop for ThreadShadow
   f->do_oop((oop*)&_pending_exception);
   handle_area()->oops_do(f);
