@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2020, Oracle and/or its affiliates. All rights reserved.
  * Copyright (c) 2015, Red Hat Inc.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -88,11 +88,9 @@ class BsdCDebugger implements CDebugger {
        return new BsdX86CFrame(dbg, ebp, pc);
     } else if (cpu.equals("amd64") || cpu.equals("x86_64")) {
        AMD64ThreadContext context = (AMD64ThreadContext) thread.getContext();
-       Address rbp = context.getRegisterAsAddress(AMD64ThreadContext.RBP);
-       if (rbp == null) return null;
        Address pc  = context.getRegisterAsAddress(AMD64ThreadContext.RIP);
        if (pc == null) return null;
-       return new BsdAMD64CFrame(dbg, rbp, pc);
+       return BsdAMD64CFrame.getTopFrame(dbg, pc, context);
     }  else if (cpu.equals("ppc64")) {
         PPC64ThreadContext context = (PPC64ThreadContext) thread.getContext();
         Address sp = context.getRegisterAsAddress(PPC64ThreadContext.SP);

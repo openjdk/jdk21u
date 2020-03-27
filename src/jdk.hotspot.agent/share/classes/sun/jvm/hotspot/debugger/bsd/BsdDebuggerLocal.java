@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -113,6 +113,15 @@ public class BsdDebuggerLocal extends DebuggerBase implements BsdDebugger {
 
     @Override
     public native String demangle(String sym);
+
+    public native long findLibPtrByAddress0(long pc);
+
+    @Override
+    public Address findLibPtrByAddress(Address pc) {
+      long ptr = findLibPtrByAddress0(pc.asLongValue());
+      return (ptr == 0L) ? null
+                         : new BsdAddress(this, ptr);
+    }
 
     // Note on Bsd threads are really processes. When target process is
     // attached by a serviceability agent thread, only that thread can do

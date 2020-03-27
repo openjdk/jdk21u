@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -198,11 +198,6 @@ quit:
 }
 
 #else // __APPLE__
-
-struct elf_section {
-  ELF_SHDR   *c_shdr;
-  void       *c_data;
-};
 
 // read symbol table from given fd.
 struct symtab* build_symtab(int fd) {
