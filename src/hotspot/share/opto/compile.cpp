@@ -1009,6 +1009,9 @@ void Compile::Init(int aliaslevel) {
   _range_check_casts = new(comp_arena()) GrowableArray<Node*>(comp_arena(), 8,  0, NULL);
   _opaque4_nodes = new(comp_arena()) GrowableArray<Node*>(comp_arena(), 8,  0, NULL);
   register_library_intrinsics();
+#ifdef ASSERT
+  _type_verify_symmetry = true;
+#endif
 }
 
 //---------------------------init_start----------------------------------------
@@ -3034,6 +3037,9 @@ void Compile::final_graph_reshaping_main_switch(Node* n, Final_Reshape_Counts& f
   case Op_MulReductionVD:
   case Op_MinReductionV:
   case Op_MaxReductionV:
+  case Op_AndReductionV:
+  case Op_OrReductionV:
+  case Op_XorReductionV:
     break;
 
   case Op_PackB:
