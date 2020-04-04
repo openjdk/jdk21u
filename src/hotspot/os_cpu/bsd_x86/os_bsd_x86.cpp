@@ -282,18 +282,9 @@
 # endif
 #endif
 
-#if defined(__clang__) || defined(__llvm__)
-address os::current_stack_pointer() __attribute__ ((optnone)) {
-  intptr_t* esp;
-  __asm__ __volatile__ ("mov %%" SPELL_REG_SP ", %0":"=r"(esp):);
-  return (address) esp;
-}
-#else
 address os::current_stack_pointer() {
-  register void *esp __asm__ (SPELL_REG_SP);
-  return (address) esp;
+  return (address)__builtin_frame_address(0);
 }
-#endif
 
 char* os::non_memory_address_word() {
   // Must never look like an address returned by reserve_memory,
