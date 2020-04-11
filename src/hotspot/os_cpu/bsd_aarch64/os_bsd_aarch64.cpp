@@ -535,10 +535,6 @@ JVM_handle_bsd_signal(int sig,
 void os::Bsd::init_thread_fpu_state(void) {
 }
 
-bool os::supports_sse() {
-  return true;
-}
-
 bool os::is_allocatable(size_t bytes) {
   return true;
 }
