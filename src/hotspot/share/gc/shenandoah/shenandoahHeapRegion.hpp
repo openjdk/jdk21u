@@ -335,7 +335,7 @@ public:
   // Allocation (return NULL if full)
   inline HeapWord* allocate(size_t word_size, ShenandoahAllocRequest::Type type);
 
-  void clear_live_data();
+  inline void clear_live_data();
   void set_live_data(size_t s);
 
   // Increase live data for newly allocated region
@@ -344,13 +344,13 @@ public:
   // Increase live data for region scanned with GC
   inline void increase_live_data_gc_words(size_t s);
 
-  bool has_live() const;
-  size_t get_live_data_bytes() const;
-  size_t get_live_data_words() const;
+  inline bool has_live() const;
+  inline size_t get_live_data_bytes() const;
+  inline size_t get_live_data_words() const;
+
+  inline size_t garbage() const;
 
   void print_on(outputStream* st) const;
-
-  size_t garbage() const;
 
   void recycle();
 
@@ -377,7 +377,6 @@ public:
   size_t free() const           { return byte_size(top(),    end()); }
 
   inline void adjust_alloc_metadata(ShenandoahAllocRequest::Type type, size_t);
-  void reset_alloc_metadata_to_shared();
   void reset_alloc_metadata();
   size_t get_shared_allocs() const;
   size_t get_tlab_allocs() const;
