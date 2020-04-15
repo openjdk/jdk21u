@@ -145,7 +145,6 @@ define SetupBuildLauncherBody
           $$($1_CFLAGS), \
       CFLAGS_solaris := -KPIC, \
       CFLAGS_windows := $$($1_CFLAGS_windows), \
-      CFLAGS_bsd := -fPIC, \
       DISABLED_WARNINGS_gcc := unused-function, \
       LDFLAGS := $$(LDFLAGS_JDKEXE) \
           $$(call SET_EXECUTABLE_ORIGIN) \
