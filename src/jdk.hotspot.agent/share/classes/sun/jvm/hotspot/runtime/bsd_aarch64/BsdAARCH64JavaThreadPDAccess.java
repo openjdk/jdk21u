@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Red Hat Inc.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,21 +23,21 @@
  *
  */
 
-package sun.jvm.hotspot.runtime.bsd_ppc64;
+package sun.jvm.hotspot.runtime.bsd_aarch64;
 
 import java.io.*;
 import java.util.*;
-
 import sun.jvm.hotspot.debugger.*;
-import sun.jvm.hotspot.debugger.ppc64.*;
+import sun.jvm.hotspot.debugger.aarch64.*;
 import sun.jvm.hotspot.runtime.*;
-import sun.jvm.hotspot.runtime.ppc64.*;
+import sun.jvm.hotspot.runtime.aarch64.*;
 import sun.jvm.hotspot.types.*;
 import sun.jvm.hotspot.utilities.*;
 import sun.jvm.hotspot.utilities.Observable;
 import sun.jvm.hotspot.utilities.Observer;
 
-public class BsdPPC64JavaThreadPDAccess implements JavaThreadPDAccess {
+public class BsdAARCH64JavaThreadPDAccess implements JavaThreadPDAccess {
+  private static AddressField  lastJavaFPField;
   private static AddressField  osThreadField;
 
   // Field from OSThread
@@ -56,14 +57,17 @@ public class BsdPPC64JavaThreadPDAccess implements JavaThreadPDAccess {
 
   private static synchronized void initialize(TypeDataBase db) {
     Type type = db.lookupType("JavaThread");
-    osThreadField = type.getAddressField("_osthread");
+    osThreadField           = type.getAddressField("_osthread");
+
+    Type anchorType = db.lookupType("JavaFrameAnchor");
+    lastJavaFPField         = anchorType.getAddressField("_last_Java_fp");
 
     Type osThreadType = db.lookupType("OSThread");
-    osThreadThreadIDField = osThreadType.getCIntegerField("_thread_id");
+    osThreadThreadIDField   = osThreadType.getCIntegerField("_thread_id");
   }
 
   public Address getLastJavaFP(Address addr) {
-    return null;
+    return lastJavaFPField.getValue(addr.addOffsetTo(sun.jvm.hotspot.runtime.JavaThread.getAnchorField().getOffset()));
   }
 
   public Address getLastJavaPC(Address addr) {
@@ -79,24 +83,24 @@ public class BsdPPC64JavaThreadPDAccess implements JavaThreadPDAccess {
     if (fp == null) {
       return null; // no information
     }
-    return new PPC64Frame(thread.getLastJavaSP(), fp);
+    return new AARCH64Frame(thread.getLastJavaSP(), fp);
   }
 
   public RegisterMap newRegisterMap(JavaThread thread, boolean updateMap) {
-    return new PPC64RegisterMap(thread, updateMap);
+    return new AARCH64RegisterMap(thread, updateMap);
   }
 
   public Frame getCurrentFrameGuess(JavaThread thread, Address addr) {
     ThreadProxy t = getThreadProxy(addr);
-    PPC64ThreadContext context = (PPC64ThreadContext) t.getContext();
-    PPC64CurrentFrameGuess guesser = new PPC64CurrentFrameGuess(context, thread);
+    AARCH64ThreadContext context = (AARCH64ThreadContext) t.getContext();
+    AARCH64CurrentFrameGuess guesser = new AARCH64CurrentFrameGuess(context, thread);
     if (!guesser.run(GUESS_SCAN_RANGE)) {
       return null;
     }
     if (guesser.getPC() == null) {
-      return new PPC64Frame(guesser.getSP(), guesser.getFP());
+      return new AARCH64Frame(guesser.getSP(), guesser.getFP());
     } else {
-      return new PPC64Frame(guesser.getSP(), guesser.getFP(), guesser.getPC());
+      return new AARCH64Frame(guesser.getSP(), guesser.getFP(), guesser.getPC());
     }
   }
 
@@ -107,17 +111,13 @@ public class BsdPPC64JavaThreadPDAccess implements JavaThreadPDAccess {
   public void printInfoOn(Address threadAddr, PrintStream tty) {
     tty.print("Thread id: ");
     printThreadIDOn(threadAddr, tty);
-    // tty.println("\nPostJavaState: " + getPostJavaState(threadAddr));
+//    tty.println("\nPostJavaState: " + getPostJavaState(threadAddr));
   }
 
   public Address getLastSP(Address addr) {
     ThreadProxy t = getThreadProxy(addr);
-    PPC64ThreadContext context = (PPC64ThreadContext) t.getContext();
-    return context.getRegisterAsAddress(PPC64ThreadContext.SP);
-  }
-
-  public Address getLastFP(Address addr) {
-    return getLastSP(addr).getAddressAt(0);
+    AARCH64ThreadContext context = (AARCH64ThreadContext) t.getContext();
+    return context.getRegisterAsAddress(AARCH64ThreadContext.SP);
   }
 
   public ThreadProxy getThreadProxy(Address addr) {
