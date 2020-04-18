@@ -485,7 +485,7 @@ void os::Posix::print_rlimit_info(outputStream* st) {
   // maximum size of files that the process may create
   print_rlimit(st, ", FSIZE", RLIMIT_FSIZE, true);
 
-#if defined(LINUX) || defined(__APPLE__)
+#if defined(LINUX) || defined(__APPLE__) || defined(_ALLBSD_SOURCE)
   // maximum number of bytes of memory that may be locked into RAM
   // (rounded down to the nearest  multiple of system pagesize)
   print_rlimit(st, ", MEMLOCK", RLIMIT_MEMLOCK, true);
@@ -498,7 +498,7 @@ void os::Posix::print_rlimit_info(outputStream* st) {
 #endif
 
   // MacOS; The maximum size (in bytes) to which a process's resident set size may grow.
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(_ALLBSD_SOURCE)
   print_rlimit(st, ", RSS", RLIMIT_RSS, true);
 #endif
 
