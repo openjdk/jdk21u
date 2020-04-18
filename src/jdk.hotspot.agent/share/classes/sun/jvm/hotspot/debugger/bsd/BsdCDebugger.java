@@ -47,11 +47,11 @@ class BsdCDebugger implements CDebugger {
     this.dbg = dbg;
   }
 
-  public List getThreadList() throws DebuggerException {
+  public List<ThreadProxy> getThreadList() throws DebuggerException {
     return dbg.getThreadList();
   }
 
-  public List/*<LoadObject>*/ getLoadObjectList() throws DebuggerException {
+  public List<LoadObject> getLoadObjectList() throws DebuggerException {
     return dbg.getLoadObjectList();
   }
 
@@ -60,18 +60,29 @@ class BsdCDebugger implements CDebugger {
       return null;
     }
 
-    /* Typically we have about ten loaded objects here. So no reason to do
-      sort/binary search here. Linear search gives us acceptable performance.*/
+    List<LoadObject> objs = getLoadObjectList();
+    Object[] arr = objs.toArray();
+    // load objects are sorted by base address, do binary search
+    int mid  = -1;
+    int low  = 0;
+    int high = arr.length - 1;
 
-    List objs = getLoadObjectList();
-
-    for (int i = 0; i < objs.size(); i++) {
-      LoadObject ob = (LoadObject) objs.get(i);
-      Address base = ob.getBase();
-      long size = ob.getSize();
-      if ( pc.greaterThanOrEqual(base) && pc.lessThan(base.addOffsetTo(size))) {
-        return ob;
-      }
+    while (low <= high) {
+       mid = (low + high) >> 1;
+       LoadObject midVal = (LoadObject) arr[mid];
+       long cmp = pc.minus(midVal.getBase());
+       if (cmp < 0) {
+          high = mid - 1;
+       } else if (cmp > 0) {
+          long size = midVal.getSize();
+          if (cmp >= size) {
+             low = mid + 1;
+          } else {
+             return (LoadObject) arr[mid];
+          }
+       } else { // match found
+          return (LoadObject) arr[mid];
+       }
     }
 
     return null;
