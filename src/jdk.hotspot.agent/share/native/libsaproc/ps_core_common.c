@@ -41,6 +41,10 @@
 #include "sun_jvm_hotspot_debugger_amd64_AMD64ThreadContext.h"
 #endif
 
+#ifdef _ALLBSD_SOURCE
+#include <jni.h>
+#endif
+
 #ifdef LINUX
 // I have no idea why this function is called ps_pread() on macos but ps_pdread on linux.
 #define ps_pread ps_pdread
