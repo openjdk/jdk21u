@@ -46,9 +46,11 @@ ifeq ($(call isTargetOs, aix), false)
       -DX_PLATFORM=X_$(OPENJDK_TARGET_OS_UPPERCASE) \
       -DUSE_PORTS=TRUE \
       -DUSE_DAUDIO=TRUE \
+      -DUSE_PLATFORM_MIDI_OUT=TRUE \
+      -DUSE_PLATFORM_MIDI_IN=TRUE \
       #
 
-  ifeq ($(call isTargetOs, solaris bsd), false)
+  ifeq ($(call isTargetOs, bsd), false)
     LIBJSOUND_CFLAGS += \
         -DUSE_PLATFORM_MIDI_OUT=TRUE \
         -DUSE_PLATFORM_MIDI_IN=TRUE \

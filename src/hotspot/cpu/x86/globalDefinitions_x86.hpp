@@ -65,7 +65,7 @@ const bool CCallingConventionRequiresIntsAsLongs = false;
 #define INCLUDE_RTM_OPT 1
 #endif
 
-#if defined(LINUX) || defined(SOLARIS) || defined(_ALLBSD_SOURCE)
+#if defined(LINUX) || defined(_ALLBSD_SOURCE)
 #define SUPPORT_RESERVED_STACK_AREA
 #endif
 

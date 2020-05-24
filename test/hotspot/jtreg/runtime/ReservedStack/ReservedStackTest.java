@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,7 +29,7 @@
  * @modules java.base/jdk.internal.misc
  * @modules java.base/jdk.internal.vm.annotation
  *
- * @run main/othervm -XX:MaxInlineLevel=2 -XX:CompileCommand=exclude,java/util/concurrent/locks/AbstractOwnableSynchronizer.setExclusiveOwnerThread ReservedStackTest
+ * @run main/othervm -XX:+IgnoreUnrecognizedVMOptions -XX:MaxInlineLevel=2 -XX:C1MaxInlineLevel=2 -XX:CompileCommand=exclude,java/util/concurrent/locks/AbstractOwnableSynchronizer.setExclusiveOwnerThread ReservedStackTest
  */
 
 /* The exclusion of java.util.concurrent.locks.AbstractOwnableSynchronizer.setExclusiveOwnerThread()
@@ -238,8 +238,7 @@ public class ReservedStackTest {
              (Platform.isPPC() || Platform.isS390x() || Platform.isX64() ||
               Platform.isX86() || Platform.isAArch64())) ||
             Platform.isOSX() ||
-            Platform.isBSD() ||
-            Platform.isSolaris();
+            Platform.isBSD();
     }
 
     private static boolean isNeverSupportedPlatform() {
