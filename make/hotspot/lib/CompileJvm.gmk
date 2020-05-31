@@ -84,7 +84,8 @@ DISABLED_WARNINGS_gcc := parentheses comment unknown-pragmas address \
     delete-non-virtual-dtor char-subscripts array-bounds int-in-bool-context \
     ignored-qualifiers  missing-field-initializers implicit-fallthrough \
     empty-body strict-overflow sequence-point maybe-uninitialized \
-    misleading-indentation stringop-truncation cast-function-type
+    misleading-indentation stringop-truncation cast-function-type \
+    shift-negative-value
 
 ifeq ($(call check-jvm-feature, zero), true)
   DISABLED_WARNINGS_gcc += return-type switch clobbered
@@ -94,7 +95,7 @@ DISABLED_WARNINGS_clang := tautological-compare \
     undefined-var-template sometimes-uninitialized unknown-pragmas \
     delete-non-virtual-dtor missing-braces char-subscripts \
     ignored-qualifiers missing-field-initializers mismatched-tags \
-    unnamed-type-template-args
+    unnamed-type-template-args shift-negative-value
 
 ifneq (,$(filter 1%,$(CC_VERSION_NUMBER)))
   DISABLED_WARNINGS_clang += misleading-indentation

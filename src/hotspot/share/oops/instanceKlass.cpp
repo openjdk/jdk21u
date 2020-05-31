@@ -734,7 +734,7 @@ oop InstanceKlass::init_lock() const {
 void InstanceKlass::fence_and_clear_init_lock() {
   // make sure previous stores are all done, notably the init_state.
   OrderAccess::storestore();
-  java_lang_Class::set_init_lock(java_mirror(), NULL);
+  java_lang_Class::clear_init_lock(java_mirror());
   assert(!is_not_initialized(), "class must be initialized now");
 }
 
@@ -3087,9 +3087,9 @@ void InstanceKlass::add_osr_nmethod(nmethod* n) {
   assert_lock_strong(CompiledMethod_lock);
 #ifndef PRODUCT
   if (TieredCompilation) {
-      nmethod * prev = lookup_osr_nmethod(n->method(), n->osr_entry_bci(), n->comp_level(), true);
-      assert(prev == NULL || !prev->is_in_use(),
-      "redundunt OSR recompilation detected. memory leak in CodeCache!");
+    nmethod* prev = lookup_osr_nmethod(n->method(), n->osr_entry_bci(), n->comp_level(), true);
+    assert(prev == NULL || !prev->is_in_use() COMPILER2_PRESENT(|| StressRecompilation),
+           "redundant OSR recompilation detected. memory leak in CodeCache!");
   }
 #endif
   // only one compilation can be active

@@ -217,7 +217,7 @@ $(eval $(call DeclareRecipesForPhase, STATIC_LIBS, \
     TARGET_SUFFIX := static-libs, \
     FILE_PREFIX := Lib, \
     MAKE_SUBDIR := lib, \
-    CHECK_MODULES := $(STATIC_LIBS_MODULES), \
+    CHECK_MODULES := $(ALL_MODULES), \
     EXTRA_ARGS := STATIC_LIBS=true, \
 ))
 
@@ -652,7 +652,7 @@ $(eval $(call SetupTarget, test-image-hotspot-jtreg-graal, \
     DEPS := build-test-hotspot-jtreg-graal, \
 ))
 
-ifeq ($(BUILD_GTEST), true)
+ifneq ($GTEST_FRAMEWORK_SRC), )
   $(eval $(call SetupTarget, test-image-hotspot-gtest, \
       MAKEFILE := hotspot/test/GtestImage, \
       DEPS := hotspot, \
@@ -798,9 +798,13 @@ else
 
   # If not already set, set the JVM variant target so that the JVM will be built.
   JVM_MAIN_LIB_TARGETS ?= hotspot-$(JVM_VARIANT_MAIN)-libs
+  JVM_MAIN_GENSRC_TARGETS ?= hotspot-$(JVM_VARIANT_MAIN)-gensrc
 
   # Building one JVM variant is enough to start building the other libs
   $(LIBS_TARGETS): $(JVM_MAIN_LIB_TARGETS)
+
+  # Static libs depend on hotspot gensrc
+  $(STATIC_LIBS_TARGETS): $(JVM_MAIN_GENSRC_TARGETS)
 
   $(LAUNCHER_TARGETS): java.base-libs
 
@@ -1109,7 +1113,7 @@ ifneq ($(JVM_TEST_IMAGE_TARGETS), )
   test-image: $(JVM_TEST_IMAGE_TARGETS)
 else
   test-image: test-image-hotspot-jtreg-native
-  ifeq ($(BUILD_GTEST), true)
+  ifneq ($(GTEST_FRAMEWORK_SRC), )
     test-image: test-image-hotspot-gtest
   endif
 
