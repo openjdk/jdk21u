@@ -305,37 +305,28 @@ void ZCollectedHeap::print_on(outputStream* st) const {
 }
 
 void ZCollectedHeap::print_on_error(outputStream* st) const {
+  st->print_cr("ZGC Globals:");
+  st->print_cr(" GlobalPhase:       %u (%s)", ZGlobalPhase, ZGlobalPhaseToString());
+  st->print_cr(" GlobalSeqNum:      %u", ZGlobalSeqNum);
+  st->print_cr(" Offset Max:        " SIZE_FORMAT "%s (" PTR_FORMAT ")",
+               byte_size_in_exact_unit(ZAddressOffsetMax),
+               exact_unit_for_byte_size(ZAddressOffsetMax),
+               ZAddressOffsetMax);
+  st->print_cr(" Page Size Small:   " SIZE_FORMAT "M", ZPageSizeSmall / M);
+  st->print_cr(" Page Size Medium:  " SIZE_FORMAT "M", ZPageSizeMedium / M);
+  st->cr();
+  st->print_cr("ZGC Metadata Bits:");
+  st->print_cr(" Good:              " PTR_FORMAT, ZAddressGoodMask);
+  st->print_cr(" Bad:               " PTR_FORMAT, ZAddressBadMask);
+  st->print_cr(" WeakBad:           " PTR_FORMAT, ZAddressWeakBadMask);
+  st->print_cr(" Marked:            " PTR_FORMAT, ZAddressMetadataMarked);
+  st->print_cr(" Remapped:          " PTR_FORMAT, ZAddressMetadataRemapped);
+  st->cr();
   CollectedHeap::print_on_error(st);
-
-  st->print_cr( "Heap");
-  st->print_cr( "     GlobalPhase:       %u", ZGlobalPhase);
-  st->print_cr( "     GlobalSeqNum:      %u", ZGlobalSeqNum);
-  st->print_cr( "     Offset Max:        " SIZE_FORMAT_W(-15) " (" PTR_FORMAT ")", ZAddressOffsetMax, ZAddressOffsetMax);
-  st->print_cr( "     Page Size Small:   " SIZE_FORMAT_W(-15) " (" PTR_FORMAT ")", ZPageSizeSmall, ZPageSizeSmall);
-  st->print_cr( "     Page Size Medium:  " SIZE_FORMAT_W(-15) " (" PTR_FORMAT ")", ZPageSizeMedium, ZPageSizeMedium);
-  st->print_cr( "Metadata Bits");
-  st->print_cr( "     Good:              " PTR_FORMAT, ZAddressGoodMask);
-  st->print_cr( "     Bad:               " PTR_FORMAT, ZAddressBadMask);
-  st->print_cr( "     WeakBad:           " PTR_FORMAT, ZAddressWeakBadMask);
-  st->print_cr( "     Marked:            " PTR_FORMAT, ZAddressMetadataMarked);
-  st->print_cr( "     Remapped:          " PTR_FORMAT, ZAddressMetadataRemapped);
 }
 
 void ZCollectedHeap::print_extended_on(outputStream* st) const {
   _heap.print_extended_on(st);
-}
-
-void ZCollectedHeap::print_gc_threads_on(outputStream* st) const {
-  _director->print_on(st);
-  st->cr();
-  _driver->print_on(st);
-  st->cr();
-  _uncommitter->print_on(st);
-  st->cr();
-  _stat->print_on(st);
-  st->cr();
-  _heap.print_worker_threads_on(st);
-  _runtime_workers.print_threads_on(st);
 }
 
 void ZCollectedHeap::print_tracing_info() const {

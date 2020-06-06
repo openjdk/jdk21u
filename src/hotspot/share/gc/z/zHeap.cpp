@@ -202,10 +202,6 @@ void ZHeap::worker_threads_do(ThreadClosure* tc) const {
   _workers.threads_do(tc);
 }
 
-void ZHeap::print_worker_threads_on(outputStream* st) const {
-  _workers.print_threads_on(st);
-}
-
 void ZHeap::out_of_memory() {
   ResourceMark rm;
 
@@ -505,6 +501,7 @@ void ZHeap::print_extended_on(outputStream* st) const {
   _page_allocator.enable_deferred_delete();
 
   // Print all pages
+  st->print_cr("ZGC Page Table:");
   ZPageTableIterator iter(&_page_table);
   for (ZPage* page; iter.next(&page);) {
     page->print_on(st);
@@ -512,8 +509,6 @@ void ZHeap::print_extended_on(outputStream* st) const {
 
   // Allow pages to be deleted
   _page_allocator.enable_deferred_delete();
-
-  st->cr();
 }
 
 bool ZHeap::print_location(outputStream* st, uintptr_t addr) const {
