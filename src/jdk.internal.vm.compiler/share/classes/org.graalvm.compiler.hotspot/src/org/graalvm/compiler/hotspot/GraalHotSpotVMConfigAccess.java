@@ -73,6 +73,11 @@ public class GraalHotSpotVMConfigAccess {
             case "Mac OS X":
                 value = "darwin";
                 break;
+            case "FreeBSD":
+            case "NetBSD":
+            case "OpenBSD":
+                value = "bsd";
+                break;
             default:
                 // Of course Windows is different...
                 if (value.startsWith("Windows")) {
@@ -114,7 +119,7 @@ public class GraalHotSpotVMConfigAccess {
     }
 
     public static final Set<String> KNOWN_ARCHITECTURES = new HashSet<>(Arrays.asList("amd64", "sparc", "aarch64"));
-    public static final Set<String> KNOWN_OS_NAMES = new HashSet<>(Arrays.asList("windows", "linux", "darwin", "solaris"));
+    public static final Set<String> KNOWN_OS_NAMES = new HashSet<>(Arrays.asList("windows", "linux", "darwin", "bsd", "solaris"));
 
     /**
      * Name for current OS. Will be a value in {@value #KNOWN_OS_NAMES}.

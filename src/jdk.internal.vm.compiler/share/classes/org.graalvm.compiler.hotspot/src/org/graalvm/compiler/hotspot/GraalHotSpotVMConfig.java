@@ -424,7 +424,7 @@ public class GraalHotSpotVMConfig extends GraalHotSpotVMConfigAccess {
      * this field is {@value #INVALID_RTLD_DEFAULT_HANDLE}, then this capability is not supported on
      * the current platform.
      */
-    public final long rtldDefault = getAddress("RTLD_DEFAULT", INVALID_RTLD_DEFAULT_HANDLE, osName.equals("darwin") || osName.equals("linux"));
+    public final long rtldDefault = getAddress("RTLD_DEFAULT", INVALID_RTLD_DEFAULT_HANDLE, osName.equals("darwin") || osName.equals("linux") || osName.equals("bsd"));
 
     /**
      * This field is used to pass exception objects into and out of the runtime system during
