@@ -32,6 +32,10 @@
 
 #if USE_DAUDIO == TRUE
 
+#ifndef ESTRPIPE
+#    define ESTRPIPE EPIPE
+#endif
+
 // GetPosition method 1: based on how many bytes are passed to the kernel driver
 //                       + does not need much processor resources
 //                       - not very exact, "jumps"
