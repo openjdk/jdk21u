@@ -426,7 +426,10 @@ var getJibProfilesProfiles = function (input, common, data) {
             target_cpu: "x64",
             dependencies: ["devkit", "gtest", "pandoc", "graalunit_lib"],
             configure_args: concat(common.configure_args_64bit, "--with-zlib=system",
-                "--with-macosx-version-max=10.9.0"),
+                "--with-macosx-version-max=10.9.0",
+                // Use system SetFile instead of the one in the devkit as the
+                // devkit one may not work on Catalina.
+                "SETFILE=/usr/bin/SetFile"),
         },
 
         "windows-x64": {
@@ -684,7 +687,7 @@ var getJibProfilesProfiles = function (input, common, data) {
                     local: "bundles/\\(jdk.*doc-api-spec.tar.gz\\)",
                     remote: [
                         "bundles/common/jdk-" + data.version + "_doc-api-spec.tar.gz",
-                        "bundles/linux-x64/\\1"
+                        "bundles/common/\\1"
                     ],
                 },
             }
@@ -1042,10 +1045,10 @@ var getJibProfilesDependencies = function (input, common) {
         jtreg: {
             server: "jpg",
             product: "jtreg",
-            version: "5.0",
+            version: "5.1",
             build_number: "b01",
             checksum_file: "MD5_VALUES",
-            file: "bundles/jtreg_bin-5.0.zip",
+            file: "bundles/jtreg_bin-5.1.zip",
             environment_name: "JT_HOME",
             environment_path: input.get("jtreg", "home_path") + "/bin",
             configure_args: "--with-jtreg=" + input.get("jtreg", "home_path"),

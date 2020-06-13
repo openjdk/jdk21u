@@ -39,7 +39,7 @@ inline void JfrVersionSystem::Node::set(traceid version) {
   Atomic::release_store_fence(&_version, version);
 }
 
-inline JfrVersionSystem::JfrVersionSystem() : _tip(), _head(NULL) {
+inline JfrVersionSystem::JfrVersionSystem() : _tip(), _head(NULL), _spinlock(0) {
   _tip._value = 1;
 }
 
@@ -63,7 +63,13 @@ inline JfrVersionSystem::Type JfrVersionSystem::tip() const {
 }
 
 inline JfrVersionSystem::Type JfrVersionSystem::increment() {
-  return Atomic::add(&_tip._value, (traceid)1);
+  traceid cmp;
+  traceid xchg;
+  do {
+    cmp = _tip._value;
+    xchg = cmp + 1;
+  } while (Atomic::cmpxchg(&_tip._value, cmp, xchg) != cmp);
+  return xchg;
 }
 
 inline JfrVersionSystem::NodePtr JfrVersionSystem::acquire() {
