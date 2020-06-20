@@ -37,19 +37,11 @@
                          notproduct, \
                          range, \
                          constraint) \
-                                                                                \
-  product(bool, UseOprofile, false,                                             \
-        "enable support for Oprofile profiler")                                 \
-                                                                                \
-  /*  NB: The default value of UseBsdPosixThreadCPUClocks may be  */            \
-  /*  overridden in Arguments::parse_each_vm_init_arg.            */            \
-  product(bool, UseBsdPosixThreadCPUClocks, true,                               \
-          "enable fast Bsd Posix clocks where available")                       \
-                                                                                \
-  product(bool, UseHugeTLBFS, false,                                            \
-          "Use MAP_HUGETLB for large pages")                                    \
-                                                                                \
-  product(bool, UseSHM, false,                                                  \
+                                                    \
+  product(bool, UseHugeTLBFS, false,                \
+          "Use MAP_HUGETLB for large pages")        \
+                                                    \
+  product(bool, UseSHM, false,                      \
           "Use SYSV shared memory for large pages")
 
 //
