@@ -1580,8 +1580,52 @@ static int iter_callback(struct dl_phdr_info *info, size_t size, void* d) {
 }
 #endif
 
+#ifdef __FreeBSD__
+struct loaded_modules_info_param {
+  os::LoadedModulesCallbackFunc callback;
+  void *param;
+};
+
+#ifdef _LP64
+typedef Elf64_Phdr	Elf_Phdr;
+#else
+typedef Elf32_Phdr	Elf_Phdr;
+#endif
+
+static int dl_iterate_callback(struct dl_phdr_info *info, size_t size, void *data) {
+  if ((info->dlpi_name == NULL) || (*info->dlpi_name == '\0')) {
+    return 0;
+  }
+
+  struct loaded_modules_info_param *callback_param = reinterpret_cast<struct loaded_modules_info_param *>(data);
+  address base = NULL;
+  address top = NULL;
+  for (int idx = 0; idx < info->dlpi_phnum; idx++) {
+    const Elf_Phdr *phdr = info->dlpi_phdr + idx;
+    if (phdr->p_type == PT_LOAD) {
+      address raw_phdr_base = reinterpret_cast<address>(info->dlpi_addr + phdr->p_vaddr);
+
+      address phdr_base = align_down(raw_phdr_base, phdr->p_align);
+      if ((base == NULL) || (base > phdr_base)) {
+        base = phdr_base;
+      }
+
+      address phdr_top = align_up(raw_phdr_base + phdr->p_memsz, phdr->p_align);
+      if ((top == NULL) || (top < phdr_top)) {
+        top = phdr_top;
+      }
+    }
+  }
+
+  return callback_param->callback(info->dlpi_name, base, top, callback_param->param);
+}
+#endif
+
 int os::get_loaded_modules_info(os::LoadedModulesCallbackFunc callback, void *param) {
-#ifdef RTLD_DI_LINKMAP
+#ifdef __FreeBSD__
+  struct loaded_modules_info_param callback_param = {callback, param};
+  return dl_iterate_phdr(&dl_iterate_callback, &callback_param);
+#elif defined(RTLD_DI_LINKMAP)
   Dl_info dli;
   void *handle;
   Link_map *map;
@@ -1663,7 +1707,7 @@ void os::print_os_info_brief(outputStream* st) {
 }
 
 void os::print_os_info(outputStream* st) {
-  st->print("OS:");
+  st->print_cr("OS:");
 
   os::Posix::print_uname_info(st);
 
@@ -1672,6 +1716,7 @@ void os::print_os_info(outputStream* st) {
   os::Posix::print_rlimit_info(st);
 
   os::Posix::print_load_average(st);
+  st->cr();
 
   VM_Version::print_platform_virtualization_info(st);
 }
@@ -1680,7 +1725,7 @@ void os::pd_print_cpu_info(outputStream* st, char* buf, size_t buflen) {
   size_t size = buflen;
   int mib[] = { CTL_HW, HW_MODEL };
   if (sysctl(mib, 2, buf, &size, NULL, 0) == 0) {
-    st->print("CPU Model: %s\n", buf);
+    st->print_cr("CPU Model: %s", buf);
   }
 }
 
