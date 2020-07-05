@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,27 +20,33 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
+package org.openjdk.bench.vm.compiler;
+
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
 
 
-package org.graalvm.compiler.nodes.graphbuilderconf;
+import java.util.concurrent.TimeUnit;
 
-import org.graalvm.compiler.core.common.type.Stamp;
+@BenchmarkMode(Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+public class BitTest {
 
-public interface NodeIntrinsicPluginFactory {
+    private static final int COUNT = 1000;
 
-    public interface InjectionProvider {
-
-        <T> T getInjectedArgument(Class<T> type);
-
-        /**
-         * Gets a stamp denoting a given type and non-nullness property.
-         *
-         * @param type the type the returned stamp represents
-         * @param nonNull specifies if the returned stamp denotes a value that is guaranteed to be
-         *            non-null
-         */
-        Stamp getInjectedStamp(Class<?> type, boolean nonNull);
+    @Benchmark
+    public int bitTestAndBranch() {
+        int dummy = 0;
+        for (int value = 0; value < COUNT; value++) {
+            dummy++;
+            if ((value & 32) == 32) {
+                dummy = value ^ dummy;
+            } else {
+                dummy = value ^ value;
+            }
+        }
+        return dummy;
     }
-
-    void registerPlugins(InvocationPlugins plugins, InjectionProvider injection);
 }
