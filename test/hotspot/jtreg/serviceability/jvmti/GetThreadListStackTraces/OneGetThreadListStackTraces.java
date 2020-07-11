@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, NTT DATA.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,28 +21,22 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package vm.share.vmcrasher;
 
-import vm.share.UnsafeAccess;
+/**
+ * @test
+ * @bug 8242428
+ * @summary Verifies JVMTI GetThreadListStackTraces API with thread_count = 1
+ * @library /test/lib
+ * @run main/othervm/native -agentlib:OneGetThreadListStackTraces OneGetThreadListStackTraces
+ *
+ */
 
-public class UnsafeJavaCrasher extends Crasher {
+public class OneGetThreadListStackTraces {
 
-    private static class C {
-        C next;
+    private static native void checkCallStacks(Thread thread);
+
+    public static void main(String[] args) throws Exception {
+        /* Check call stack native */
+        checkCallStacks(Thread.currentThread());
     }
-
-    @SuppressWarnings("restriction")
-    @Override
-    public void run() {
-        try {
-            C a = new C();
-            a.next = new C();
-            a.next.next = new C();
-            UnsafeAccess.unsafe.putInt(a.next, UnsafeAccess.unsafe.objectFieldOffset(C.class.getDeclaredField("next")), 0xDEADCAFE);
-            a.next.next.next = new C();
-        } catch ( Throwable t ) {
-            t.printStackTrace();
-        }
-    }
-
 }
