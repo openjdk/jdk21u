@@ -40,6 +40,7 @@ include lib/Awt2dLibraries.gmk
 # Create the libjsound library
 
 ifeq ($(call isTargetOs, aix), false)
+ifneq ($(OPENJDK_TARGET_OS_ENV), bsd.openbsd)
 
   LIBJSOUND_CFLAGS := \
       $(ALSA_CFLAGS) \
@@ -63,10 +64,6 @@ ifeq ($(call isTargetOs, aix), false)
 
   ifeq ($(call isTargetOs, bsd), true)
     LIBJSOUND_CFLAGS += $(ICONV_CFLAGS)
-  endif
-
-  ifeq ($(OPENJDK_TARGET_OS_ENV), bsd.openbsd)
-    LIBJSOUND_EXCLUDE_SRC_PATTERNS := bsd
   endif
 
   $(eval $(call SetupJdkLibrary, BUILD_LIBJSOUND, \
@@ -95,6 +92,7 @@ ifeq ($(call isTargetOs, aix), false)
 
   TARGETS += $(BUILD_LIBJSOUND)
 
+endif
 endif
 
 ################################################################################
