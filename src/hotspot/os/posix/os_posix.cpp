@@ -573,7 +573,7 @@ bool os::get_host_name(char* buf, size_t buflen) {
 
 bool os::has_allocatable_memory_limit(julong* limit) {
   struct rlimit rlim;
-#ifdef __OpenBSD__
+#ifndef RLIMIT_AS
   int getrlimit_res = getrlimit(RLIMIT_DATA, &rlim);
 #else
   int getrlimit_res = getrlimit(RLIMIT_AS, &rlim);
