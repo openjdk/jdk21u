@@ -26,7 +26,7 @@
 # set platform-dependent variable
 OS=`uname -s`
 case "$OS" in
-  Linux | Darwin ) TMP=/tmp ;;
+  Linux | Darwin | *BSD ) TMP=/tmp ;;
   Windows_98 )    return    ;;
   Windows* )      SID=`sid`; TMP="c:/temp"  ;;
   * )
