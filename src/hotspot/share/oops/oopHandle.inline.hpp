@@ -47,9 +47,17 @@ inline OopHandle::OopHandle(OopStorage* storage, oop obj) :
 }
 
 inline void OopHandle::release(OopStorage* storage) {
-  // Clear the OopHandle first
-  NativeAccess<>::oop_store(_obj, (oop)NULL);
-  storage->release(_obj);
+  if (peek() != NULL) {
+    // Clear the OopHandle first
+    NativeAccess<>::oop_store(_obj, (oop)NULL);
+    storage->release(_obj);
+  }
+}
+
+inline void OopHandle::replace(oop obj) {
+  oop* ptr = ptr_raw();
+  assert(ptr != NULL, "should not use replace");
+  NativeAccess<>::oop_store(ptr, obj);
 }
 
 #endif // SHARE_OOPS_OOPHANDLE_INLINE_HPP

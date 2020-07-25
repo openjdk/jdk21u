@@ -174,7 +174,7 @@ void VM_Version::get_processor_features() {
   }
 
 #if defined(__linux__)
-  unsigned long auxv = getauxval(AT_HWCAP);
+  uint64_t auxv = getauxval(AT_HWCAP);
 
   char buf[512];
 
@@ -209,7 +209,7 @@ void VM_Version::get_processor_features() {
 #elif defined(__FreeBSD__)
   char buf[512];
   int cpu_lines = 0;
-  unsigned long auxv = os_get_processor_features();
+  uint64_t auxv = os_get_processor_features();
 #endif
 
   if (os::supports_map_sync()) {

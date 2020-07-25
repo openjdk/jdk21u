@@ -37,10 +37,10 @@ ifeq ($(call check-jvm-feature, compiler2), true)
   ifeq ($(call isBuildOs, linux), true)
     ADLC_CFLAGS := -fno-exceptions -DLINUX
   else ifeq ($(call isBuildOs, aix), true)
-    ADLC_LDFLAGS := -q64
+    ADLC_LDFLAGS += -q64
     ADLC_CFLAGS := -qnortti -qeh -q64 -DAIX
   else ifeq ($(call isBuildOs, windows), true)
-    ADLC_LDFLAGS := -nologo
+    ADLC_LDFLAGS += -nologo
     ADLC_CFLAGS := -nologo -EHsc
     # NOTE: The old build also have -D_CRT_SECURE_NO_DEPRECATE but it doesn't
     # seem needed any more.
@@ -49,8 +49,8 @@ ifeq ($(call check-jvm-feature, compiler2), true)
     ADLC_CFLAGS := -fno-exceptions -D_ALLBSD_SOURCE=1 -D_BSDONLY_SOURCE
   endif
 
-  # Set the C++ standard if supported
-  ADLC_CFLAGS += $(ADLC_CXXFLAG)
+  # Set the C++ standard
+  ADLC_CFLAGS += $(ADLC_LANGSTD_CXXFLAG)
 
   # NOTE: The old build didn't set -DASSERT for windows but it doesn't seem to
   # hurt.
