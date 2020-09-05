@@ -444,7 +444,7 @@ public class JavacParser implements Parser {
             }
         }
         S.errPos(pos);
-        if (token.pos == errorPos) {
+        if (token.pos == errorPos && token.kind != EOF) {
             //check for a possible infinite loop in parsing:
             Assert.check(count++ < RECOVERY_THRESHOLD);
         } else {
@@ -3489,7 +3489,7 @@ public class JavacParser implements Parser {
             List<JCAnnotation> annotations = List.nil();
             seenPackage = true;
             if (mods != null) {
-                checkNoMods(mods.flags);
+                checkNoMods(mods.flags & ~Flags.DEPRECATED);
                 annotations = mods.annotations;
                 mods = null;
             }
@@ -3800,7 +3800,8 @@ public class JavacParser implements Parser {
                     for (JCVariableDecl param : headerFields) {
                         tmpParams.add(F.at(param)
                                 // we will get flags plus annotations from the record component
-                                .VarDef(F.Modifiers(Flags.PARAMETER | param.mods.flags & Flags.VARARGS, param.mods.annotations),
+                                .VarDef(F.Modifiers(Flags.PARAMETER | Flags.GENERATED_MEMBER | param.mods.flags & Flags.VARARGS,
+                                        param.mods.annotations),
                                 param.name, param.vartype, null));
                     }
                     methDef.params = tmpParams.toList();
@@ -4048,6 +4049,8 @@ public class JavacParser implements Parser {
             skip(false, true, false, false);
             if (token.kind == LBRACE)
                 nextToken();
+            else
+                return List.nil();
         }
         ListBuffer<JCTree> defs = new ListBuffer<>();
         while (token.kind != RBRACE && token.kind != EOF) {
