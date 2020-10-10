@@ -63,6 +63,7 @@
 #include "services/attachListener.hpp"
 #include "services/memTracker.hpp"
 #include "services/runtimeService.hpp"
+#include "signals_posix.hpp"
 #include "utilities/align.hpp"
 #include "utilities/decoder.hpp"
 #include "utilities/defaultStream.hpp"
@@ -146,16 +147,6 @@ static jlong initial_time_count=0;
 
 static int clock_tics_per_sec = 100;
 
-// For diagnostics to print a message once. see run_periodic_checks
-static sigset_t check_signal_done;
-static bool check_signals = true;
-
-// Signal number used to suspend/resume a thread
-
-// do not use any signal number less than SIGSEGV, see 4355769
-static int SR_signum = SIGUSR2;
-sigset_t SR_sigset;
-
 #ifdef __APPLE__
 static const int processor_id_unassigned = -1;
 static const int processor_id_assigning = -2;
@@ -166,8 +157,6 @@ static volatile int processor_id_next = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // utility functions
-
-static int SR_initialize();
 
 julong os::available_memory() {
   return Bsd::available_memory();
@@ -592,96 +581,6 @@ extern "C" void breakpoint() {
   // use debugger to set breakpoint here
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// signal support
-
-debug_only(static bool signal_sets_initialized = false);
-static sigset_t unblocked_sigs, vm_sigs;
-
-void os::Bsd::signal_sets_init() {
-  // Should also have an assertion stating we are still single-threaded.
-  assert(!signal_sets_initialized, "Already initialized");
-  // Fill in signals that are necessarily unblocked for all threads in
-  // the VM. Currently, we unblock the following signals:
-  // SHUTDOWN{1,2,3}_SIGNAL: for shutdown hooks support (unless over-ridden
-  //                         by -Xrs (=ReduceSignalUsage));
-  // BREAK_SIGNAL which is unblocked only by the VM thread and blocked by all
-  // other threads. The "ReduceSignalUsage" boolean tells us not to alter
-  // the dispositions or masks wrt these signals.
-  // Programs embedding the VM that want to use the above signals for their
-  // own purposes must, at this time, use the "-Xrs" option to prevent
-  // interference with shutdown hooks and BREAK_SIGNAL thread dumping.
-  // (See bug 4345157, and other related bugs).
-  // In reality, though, unblocking these signals is really a nop, since
-  // these signals are not blocked by default.
-  sigemptyset(&unblocked_sigs);
-  sigaddset(&unblocked_sigs, SIGILL);
-  sigaddset(&unblocked_sigs, SIGSEGV);
-  sigaddset(&unblocked_sigs, SIGBUS);
-  sigaddset(&unblocked_sigs, SIGFPE);
-#if defined(PPC64)
-  sigaddset(&unblocked_sigs, SIGTRAP);
-#endif
-  sigaddset(&unblocked_sigs, SR_signum);
-
-  if (!ReduceSignalUsage) {
-    if (!os::Posix::is_sig_ignored(SHUTDOWN1_SIGNAL)) {
-      sigaddset(&unblocked_sigs, SHUTDOWN1_SIGNAL);
-
-    }
-    if (!os::Posix::is_sig_ignored(SHUTDOWN2_SIGNAL)) {
-      sigaddset(&unblocked_sigs, SHUTDOWN2_SIGNAL);
-    }
-    if (!os::Posix::is_sig_ignored(SHUTDOWN3_SIGNAL)) {
-      sigaddset(&unblocked_sigs, SHUTDOWN3_SIGNAL);
-    }
-  }
-  // Fill in signals that are blocked by all but the VM thread.
-  sigemptyset(&vm_sigs);
-  if (!ReduceSignalUsage) {
-    sigaddset(&vm_sigs, BREAK_SIGNAL);
-  }
-  debug_only(signal_sets_initialized = true);
-
-}
-
-// These are signals that are unblocked while a thread is running Java.
-// (For some reason, they get blocked by default.)
-sigset_t* os::Bsd::unblocked_signals() {
-  assert(signal_sets_initialized, "Not initialized");
-  return &unblocked_sigs;
-}
-
-// These are the signals that are blocked while a (non-VM) thread is
-// running Java. Only the VM thread handles these signals.
-sigset_t* os::Bsd::vm_signals() {
-  assert(signal_sets_initialized, "Not initialized");
-  return &vm_sigs;
-}
-
-void os::Bsd::hotspot_sigmask(Thread* thread) {
-
-  //Save caller's signal mask before setting VM signal mask
-  sigset_t caller_sigmask;
-  pthread_sigmask(SIG_BLOCK, NULL, &caller_sigmask);
-
-  OSThread* osthread = thread->osthread();
-  osthread->set_caller_sigmask(caller_sigmask);
-
-  pthread_sigmask(SIG_UNBLOCK, os::Bsd::unblocked_signals(), NULL);
-
-  if (!ReduceSignalUsage) {
-    if (thread->is_VM_thread()) {
-      // Only the VM thread handles BREAK_SIGNAL ...
-      pthread_sigmask(SIG_UNBLOCK, vm_signals(), NULL);
-    } else {
-      // ... all other threads block BREAK_SIGNAL
-      pthread_sigmask(SIG_BLOCK, vm_signals(), NULL);
-    }
-  }
-}
-
-
 //////////////////////////////////////////////////////////////////////////////
 // create new thread
 
@@ -725,7 +624,7 @@ static void *thread_native_entry(Thread *thread) {
 #endif
 
   // initialize signal mask for this thread
-  os::Bsd::hotspot_sigmask(thread);
+  PosixSignals::hotspot_sigmask(thread);
 
   // initialize floating point control register
   os::Bsd::init_thread_fpu_state();
@@ -892,7 +791,7 @@ bool os::create_attached_thread(JavaThread* thread) {
 
   // initialize signal mask for this thread
   // and save the caller's signal mask
-  os::Bsd::hotspot_sigmask(thread);
+  PosixSignals::hotspot_sigmask(thread);
 
   log_info(os, thread)("Thread attached (tid: " UINTX_FORMAT ", pthread id: " UINTX_FORMAT ").",
     os::current_thread_id(), (uintx) pthread_self());
@@ -1837,22 +1736,19 @@ void os::print_memory_info(outputStream* st) {
   st->cr();
 }
 
-static void print_signal_handler(outputStream* st, int sig,
-                                 char* buf, size_t buflen);
-
 void os::print_signal_handlers(outputStream* st, char* buf, size_t buflen) {
   st->print_cr("Signal Handlers:");
-  print_signal_handler(st, SIGSEGV, buf, buflen);
-  print_signal_handler(st, SIGBUS , buf, buflen);
-  print_signal_handler(st, SIGFPE , buf, buflen);
-  print_signal_handler(st, SIGPIPE, buf, buflen);
-  print_signal_handler(st, SIGXFSZ, buf, buflen);
-  print_signal_handler(st, SIGILL , buf, buflen);
-  print_signal_handler(st, SR_signum, buf, buflen);
-  print_signal_handler(st, SHUTDOWN1_SIGNAL, buf, buflen);
-  print_signal_handler(st, SHUTDOWN2_SIGNAL , buf, buflen);
-  print_signal_handler(st, SHUTDOWN3_SIGNAL , buf, buflen);
-  print_signal_handler(st, BREAK_SIGNAL, buf, buflen);
+  PosixSignals::print_signal_handler(st, SIGSEGV, buf, buflen);
+  PosixSignals::print_signal_handler(st, SIGBUS , buf, buflen);
+  PosixSignals::print_signal_handler(st, SIGFPE , buf, buflen);
+  PosixSignals::print_signal_handler(st, SIGPIPE, buf, buflen);
+  PosixSignals::print_signal_handler(st, SIGXFSZ, buf, buflen);
+  PosixSignals::print_signal_handler(st, SIGILL , buf, buflen);
+  PosixSignals::print_signal_handler(st, SR_signum, buf, buflen);
+  PosixSignals::print_signal_handler(st, SHUTDOWN1_SIGNAL, buf, buflen);
+  PosixSignals::print_signal_handler(st, SHUTDOWN2_SIGNAL , buf, buflen);
+  PosixSignals::print_signal_handler(st, SHUTDOWN3_SIGNAL , buf, buflen);
+  PosixSignals::print_signal_handler(st, BREAK_SIGNAL, buf, buflen);
 }
 
 static char saved_jvm_path[MAXPATHLEN] = {0};
@@ -1963,114 +1859,6 @@ void os::print_jni_name_prefix_on(outputStream* st, int args_size) {
 
 void os::print_jni_name_suffix_on(outputStream* st, int args_size) {
   // no suffix required
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// sun.misc.Signal support
-
-static void UserHandler(int sig, void *siginfo, void *context) {
-  // Ctrl-C is pressed during error reporting, likely because the error
-  // handler fails to abort. Let VM die immediately.
-  if (sig == SIGINT && VMError::is_error_reported()) {
-    os::die();
-  }
-
-  os::signal_notify(sig);
-}
-
-void* os::user_handler() {
-  return CAST_FROM_FN_PTR(void*, UserHandler);
-}
-
-extern "C" {
-  typedef void (*sa_handler_t)(int);
-  typedef void (*sa_sigaction_t)(int, siginfo_t *, void *);
-}
-
-void* os::signal(int signal_number, void* handler) {
-  struct sigaction sigAct, oldSigAct;
-
-  sigfillset(&(sigAct.sa_mask));
-  sigAct.sa_flags   = SA_RESTART|SA_SIGINFO;
-  sigAct.sa_handler = CAST_TO_FN_PTR(sa_handler_t, handler);
-
-  if (sigaction(signal_number, &sigAct, &oldSigAct)) {
-    // -1 means registration failed
-    return (void *)-1;
-  }
-
-  return CAST_FROM_FN_PTR(void*, oldSigAct.sa_handler);
-}
-
-void os::signal_raise(int signal_number) {
-  ::raise(signal_number);
-}
-
-// The following code is moved from os.cpp for making this
-// code platform specific, which it is by its very nature.
-
-// Will be modified when max signal is changed to be dynamic
-int os::sigexitnum_pd() {
-  return NSIG;
-}
-
-// a counter for each possible signal value
-static volatile jint pending_signals[NSIG+1] = { 0 };
-static Semaphore* sig_sem = NULL;
-
-static void jdk_misc_signal_init() {
-  // Initialize signal structures
-  ::memset((void*)pending_signals, 0, sizeof(pending_signals));
-
-  // Initialize signal semaphore
-  sig_sem = new Semaphore();
-}
-
-void os::signal_notify(int sig) {
-  if (sig_sem != NULL) {
-    Atomic::inc(&pending_signals[sig]);
-    sig_sem->signal();
-  } else {
-    // Signal thread is not created with ReduceSignalUsage and jdk_misc_signal_init
-    // initialization isn't called.
-    assert(ReduceSignalUsage, "signal semaphore should be created");
-  }
-}
-
-static int check_pending_signals() {
-  for (;;) {
-    for (int i = 0; i < NSIG + 1; i++) {
-      jint n = pending_signals[i];
-      if (n > 0 && n == Atomic::cmpxchg(&pending_signals[i], n, n - 1)) {
-        return i;
-      }
-    }
-    JavaThread *thread = JavaThread::current();
-    ThreadBlockInVM tbivm(thread);
-
-    bool threadIsSuspended;
-    do {
-      thread->set_suspend_equivalent();
-      // cleared by handle_special_suspend_equivalent_condition() or java_suspend_self()
-      sig_sem->wait();
-
-      // were we externally suspended while we were waiting?
-      threadIsSuspended = thread->handle_special_suspend_equivalent_condition();
-      if (threadIsSuspended) {
-        // The semaphore has been incremented, but while we were waiting
-        // another thread suspended us. We don't want to continue running
-        // while suspended because that would surprise the thread that
-        // suspended us.
-        sig_sem->signal();
-
-        thread->java_suspend_self();
-      }
-    } while (threadIsSuspended);
-  }
-}
-
-int os::signal_wait() {
-  return check_pending_signals();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2472,6 +2260,7 @@ OSReturn os::get_native_priority(const Thread* const thread, int *priority_ptr) 
   return (*priority_ptr != -1 || errno == 0 ? OS_OK : OS_ERR);
 }
 
+<<<<<<< HEAD
 ////////////////////////////////////////////////////////////////////////////////
 // suspend/resume support
 
@@ -3199,6 +2988,8 @@ void os::Bsd::check_signal_handler(int sig) {
   }
 }
 
+=======
+>>>>>>> master
 extern void report_error(char* file_name, int line_no, char* title,
                          char* format, ...);
 
@@ -3244,16 +3035,16 @@ jint os::init_2(void) {
   os::Posix::init_2();
 
   // initialize suspend/resume support - must do this before signal_sets_init()
-  if (SR_initialize() != 0) {
+  if (PosixSignals::SR_initialize() != 0) {
     perror("SR_initialize failed");
     return JNI_ERR;
   }
 
-  Bsd::signal_sets_init();
-  Bsd::install_signal_handlers();
+  PosixSignals::signal_sets_init();
+  PosixSignals::install_signal_handlers();
   // Initialize data for jdk.internal.misc.Signal
   if (!ReduceSignalUsage) {
-    jdk_misc_signal_init();
+    PosixSignals::jdk_misc_signal_init();
   }
 
   // Check and sets minimum stack sizes against command line options
@@ -3405,10 +3196,10 @@ bool os::bind_to_processor(uint processor_id) {
 }
 
 void os::SuspendedThreadTask::internal_do_task() {
-  if (do_suspend(_thread->osthread())) {
+  if (PosixSignals::do_suspend(_thread->osthread())) {
     SuspendedThreadTaskContext context(_thread, _thread->osthread()->ucontext());
     do_task(context);
-    do_resume(_thread->osthread());
+    PosixSignals::do_resume(_thread->osthread());
   }
 }
 
