@@ -529,7 +529,7 @@ static native String XSetLocaleModifiers(String modifier_list);
           display   Specifies the connection to the X server.
           onoff     Specifies a Boolean value that indicates whether to enable or disable synchronization.
      */
-    static native int XSynchronize(long display, boolean onoff);
+    static native long XSynchronize(long display, boolean onoff);
 
     /**
      * Extracts an X event that can be processed in a secondary loop.
