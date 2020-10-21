@@ -50,7 +50,7 @@ ifeq ($(call check-jvm-feature, dtrace), true)
         hs_private.d \
     )
 
-    $(JVM_OUTPUTDIR)/objs/dtrace.d: $(DTRACE_SOURCE_FILES)
+    $(JVM_OUTPUTDIR)/objs/dtrace.dt: $(DTRACE_SOURCE_FILES)
 	$(call LogInfo, Generating $(@F))
 	$(call MakeDir, $(@D))
 	$(CAT) $^ > $@
@@ -92,12 +92,12 @@ ifeq ($(call check-jvm-feature, dtrace), true)
 
     # Make sure we run our selected compiler for preprocessing instead of letting
     # the dtrace tool pick it on it's own.
-    $(DTRACE_OBJ): $(JVM_OUTPUTDIR)/objs/dtrace.d $(DTRACE_INSTRUMENTED_OBJS)
+    $(DTRACE_OBJ): $(JVM_OUTPUTDIR)/objs/dtrace.dt $(DTRACE_INSTRUMENTED_OBJS)
 	$(call LogInfo, Generating $(@F) from $(<F) and object files)
 	$(call MakeDir, $(DTRACE_SUPPORT_DIR))
-	$(call ExecuteWithLog, $(DTRACE_SUPPORT_DIR)/$(@F).d, \
-	    ($(CPP) $(DTRACE_CPP_FLAGS) $< > $(DTRACE_SUPPORT_DIR)/$(@F).d))
+	$(call ExecuteWithLog, $(DTRACE_SUPPORT_DIR)/$(@F).dt, \
+	    ($(CPP) $(DTRACE_CPP_FLAGS) $< > $(DTRACE_SUPPORT_DIR)/$(@F).dt))
 	$(call ExecuteWithLog, $@, $(DTRACE) $(DTRACE_FLAGS) -xlazyload -o $@ \
-	    -s $(DTRACE_SUPPORT_DIR)/$(@F).d $(sort $(DTRACE_INSTRUMENTED_OBJS)))
+	    -s $(DTRACE_SUPPORT_DIR)/$(@F).dt $(sort $(DTRACE_INSTRUMENTED_OBJS)))
   endif
 endif
