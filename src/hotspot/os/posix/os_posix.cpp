@@ -1033,7 +1033,7 @@ bool os::Posix::handle_stack_overflow(JavaThread* thread, address addr, address 
                       "enabled executable stack (see man page execstack(8))");
 
   } else {
-#if !defined(AIX) && !defined(__APPLE__)
+#if !defined(AIX) && !defined(__APPLE__) && !defined(_ALLBSD_SOURCE)
     // bsd and aix don't have this
 
     // Accessing stack address below sp may cause SEGV if current
