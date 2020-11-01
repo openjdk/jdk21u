@@ -23,6 +23,7 @@
  * questions.
  */
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
@@ -105,6 +106,24 @@ JNIEXPORT void JNICALL Java_jdk_net_BsdSocketOptions_setTcpKeepAliveTime0
     jint rv = setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &optval, sizeof (optval));
     handleError(env, rv, "set option TCP_KEEPIDLE failed");
 #endif
+}
+
+/*
+ * Class:     jdk_net_BsdSocketOptions
+ * Method:    getSoPeerCred0
+ * Signature: (I)L
+ */
+JNIEXPORT jlong JNICALL Java_jdk_net_BsdSocketOptions_getSoPeerCred0
+  (JNIEnv *env, jclass clazz, jint fd) {
+
+    jint rv;
+    int uid, gid;
+    rv = getpeereid(fd, (uid_t *)&uid, (gid_t *)&gid);
+    handleError(env, rv, "get peer eid failed");
+    if (rv == -1) {
+        uid = gid = -1;
+    }
+    return (((long)uid) << 32) | (gid & 0xffffffffL);
 }
 
 /*
