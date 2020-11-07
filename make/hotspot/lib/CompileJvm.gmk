@@ -101,6 +101,10 @@ ifneq (,$(filter 1%,$(CC_VERSION_NUMBER)))
   DISABLED_WARNINGS_clang += misleading-indentation
 endif
 
+ifeq ($(call check-jvm-feature, zero), true)
+  DISABLED_WARNINGS_clang += switch
+endif
+
 DISABLED_WARNINGS_xlc := tautological-compare shift-negative-value
 
 DISABLED_WARNINGS_microsoft := 4100 4127 4146 4201 4244 4291 4351 \
