@@ -41,7 +41,7 @@ import static java.lang.String.format;
  * @bug 8255380
  * @summary Test that Zip FS can access the LOC offset from the Zip64 extra field
  * @modules jdk.zipfs
- * @requires (os.family == "linux") | (os.family == "mac")
+ * @requires (os.family == "linux") | (os.family == "mac") | (os.family == "freebsd") | (os.family == "netbsd") | (os.family == "openbsd")
  * @run testng/manual TestLocOffsetFromZip64EF
  */
 public class TestLocOffsetFromZip64EF {
