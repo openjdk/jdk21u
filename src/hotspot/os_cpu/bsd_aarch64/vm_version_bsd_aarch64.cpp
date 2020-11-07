@@ -238,7 +238,6 @@ unsigned long VM_Version::os_get_processor_features() {
       break;
     }
   }
-
   part_id = CPU_PART(midr);
   for (i = 0; &cpu_partsp[i] != NULL; i++) {
     if (part_id == cpu_partsp[i].part_id || cpu_partsp[i].part_id == 0) {
