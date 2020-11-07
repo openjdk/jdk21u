@@ -25,7 +25,7 @@
 
 #if !defined(__APPLE__) && !defined(__NetBSD__)
 #include <pthread.h>
-# include <pthread_np.h> /* For pthread_attr_get_np */
+#include <pthread_np.h> /* For pthread_attr_get_np */
 #endif
 
 // no precompiled headers
@@ -54,6 +54,7 @@
 #include "runtime/thread.inline.hpp"
 #include "runtime/timer.hpp"
 #include "signals_posix.hpp"
+#include "utilities/align.hpp"
 #include "utilities/events.hpp"
 #include "utilities/vmError.hpp"
 
@@ -68,7 +69,7 @@ address os::current_stack_pointer() {
 
 frame os::get_sender_for_C_frame(frame* fr) {
   ShouldNotCallThis();
-  return frame();
+  return frame(NULL, NULL); // silence compile warning.
 }
 
 frame os::current_frame() {
@@ -96,7 +97,7 @@ char* os::non_memory_address_word() {
 
 address os::Bsd::ucontext_get_pc(const ucontext_t* uc) {
   ShouldNotCallThis();
-  return NULL;
+  return NULL; // silence compile warnings
 }
 
 void os::Bsd::ucontext_set_pc(ucontext_t * uc, address pc) {
@@ -107,12 +108,12 @@ address os::fetch_frame_from_context(const void* ucVoid,
                                      intptr_t** ret_sp,
                                      intptr_t** ret_fp) {
   ShouldNotCallThis();
-  return NULL;
+  return NULL; // silence compile warnings
 }
 
 frame os::fetch_frame_from_context(const void* ucVoid) {
   ShouldNotCallThis();
-  return frame();
+  return frame(NULL, NULL); // silence compile warnings
 }
 
 extern "C" JNIEXPORT int
@@ -226,13 +227,23 @@ JVM_handle_bsd_signal(int sig,
   }
 #endif // !PRODUCT
 
-  const char *fmt =
-      "caught unhandled signal " INT32_FORMAT " at address " PTR_FORMAT;
   char buf[128];
+  char exc_buf[32];
 
-  sprintf(buf, fmt, sig, info->si_addr);
+  if (os::exception_name(sig, exc_buf, sizeof(exc_buf))) {
+    bool sent_by_kill = (info != NULL && os::signal_sent_by_kill(info));
+    snprintf(buf, sizeof(buf), "caught unhandled signal: %s %s",
+             exc_buf, sent_by_kill ? "(sent by kill)" : "");
+  } else {
+    snprintf(buf, sizeof(buf), "caught unhandled signal: %d", sig);
+  }
+
+// Silence -Wformat-security warning for fatal()
+PRAGMA_DIAG_PUSH
+PRAGMA_FORMAT_NONLITERAL_IGNORED
   fatal(buf);
-  return false;
+PRAGMA_DIAG_POP
+  return true; // silence compiler warnings
 }
 
 void os::Bsd::init_thread_fpu_state(void) {
@@ -355,8 +366,9 @@ void os::print_register_info(outputStream *st, const void *context) {
 
 extern "C" {
   int SpinPause() {
-    return 1;
+      return -1; // silence compile warnings
   }
+
 
   void _Copy_conjoint_jshorts_atomic(const jshort* from, jshort* to, size_t count) {
     if (from > to) {
@@ -445,6 +457,6 @@ void os::verify_stack_alignment() {
 #endif
 
 int os::extra_bang_size_in_bytes() {
-  // Zero does not require an additional stack bang.
+  // Zero does not require an additional stack banging.
   return 0;
 }
