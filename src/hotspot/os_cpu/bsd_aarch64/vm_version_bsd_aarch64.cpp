@@ -202,22 +202,66 @@ const struct cpu_implementers cpu_implementers[] = {
 	CPU_IMPLEMENTER_NONE,
 };
 
+#ifdef __FreeBSD__
+static unsigned long os_get_processor_features() {
+  unsigned long auxv = 0;
+  uint64_t id_aa64isar0, id_aa64pfr0;
+
+  id_aa64isar0 = READ_SPECIALREG(id_aa64isar0_el1);
+  id_aa64pfr0 = READ_SPECIALREG(id_aa64pfr0_el1);
+
+  if (ID_AA64ISAR0_AES_VAL(id_aa64isar0) == ID_AA64ISAR0_AES_BASE) {
+    auxv = auxv | HWCAP_AES;
+  }
+
+  if (ID_AA64ISAR0_AES_VAL(id_aa64isar0) == ID_AA64ISAR0_AES_PMULL) {
+    auxv = auxv | HWCAP_PMULL;
+  }
+
+  if (ID_AA64ISAR0_SHA1_VAL(id_aa64isar0) == ID_AA64ISAR0_SHA1_BASE) {
+    auxv = auxv | HWCAP_SHA1;
+  }
+
+  if (ID_AA64ISAR0_SHA2_VAL(id_aa64isar0) == ID_AA64ISAR0_SHA2_BASE) {
+    auxv = auxv | HWCAP_SHA2;
+  }
+
+  if (ID_AA64ISAR0_CRC32_VAL(id_aa64isar0) == ID_AA64ISAR0_CRC32_BASE) {
+    auxv = auxv | HWCAP_CRC32;
+  }
+
+  if (ID_AA64PFR0_AdvSIMD(id_aa64pfr0) == ID_AA64PFR0_AdvSIMD_IMPL || \
+      ID_AA64PFR0_AdvSIMD(id_aa64pfr0) == ID_AA64PFR0_AdvSIMD_HP ) {
+    auxv = auxv | HWCAP_ASIMD;
+  }
+
+  return auxv;
+}
+#endif
+
+int VM_Version::get_current_sve_vector_length() {
+  assert(_features & CPU_SVE, "should not call this");
+  // Not available on *BSD
+  return 0;
+}
+
+int VM_Version::set_and_get_current_sve_vector_length(int length) {
+  assert(_features & CPU_SVE, "should not call this");
+  // Not available on *BSD
+  return 0;
+}
+
+void VM_Version::get_os_cpu_info() {
 #ifdef __OpenBSD__
-// READ_SPECIALREG is not available from userland on OpenBSD.
-// Hardcode these values to the "lowest common denominator"
-unsigned long VM_Version::os_get_processor_features() {
+  // READ_SPECIALREG is not available from userland on OpenBSD.
+  // Hardcode these values to the "lowest common denominator"
   _cpu = CPU_IMPL_ARM;
   _model = CPU_PART_CORTEX_A53;
   _variant = 0;
   _revision = 0;
-  return HWCAP_ASIMD;
-}
-#else
-unsigned long VM_Version::os_get_processor_features() {
+#elif defined(__FreeBSD__)
   struct cpu_desc cpu_desc[1];
   struct cpu_desc user_cpu_desc;
-  unsigned long auxv = 0;
-  uint64_t id_aa64isar0, id_aa64pfr0;
 
   uint32_t midr;
   uint32_t impl_id;
@@ -255,34 +299,36 @@ unsigned long VM_Version::os_get_processor_features() {
   _model = cpu_desc[cpu].cpu_part_num;
   _revision = cpu_desc[cpu].cpu_revision;
 
-  id_aa64isar0 = READ_SPECIALREG(id_aa64isar0_el1);
-  id_aa64pfr0 = READ_SPECIALREG(id_aa64pfr0_el1);
+  uint64_t auxv = os_get_processor_features();
 
-  if (ID_AA64ISAR0_AES_VAL(id_aa64isar0) == ID_AA64ISAR0_AES_BASE) {
-    auxv = auxv | HWCAP_AES;
+  _features = auxv & (
+      HWCAP_FP      |
+      HWCAP_ASIMD   |
+      HWCAP_EVTSTRM |
+      HWCAP_AES     |
+      HWCAP_PMULL   |
+      HWCAP_SHA1    |
+      HWCAP_SHA2    |
+      HWCAP_CRC32   |
+      HWCAP_ATOMICS |
+      HWCAP_DCPOP   |
+      HWCAP_SHA3    |
+      HWCAP_SHA512  |
+      HWCAP_SVE);
+
+  uint64_t ctr_el0;
+  uint64_t dczid_el0;
+  __asm__ (
+    "mrs %0, CTR_EL0\n"
+    "mrs %1, DCZID_EL0\n"
+    : "=r"(ctr_el0), "=r"(dczid_el0)
+  );
+
+  _icache_line_size = (1 << (ctr_el0 & 0x0f)) * 4;
+  _dcache_line_size = (1 << ((ctr_el0 >> 16) & 0x0f)) * 4;
+
+  if (!(dczid_el0 & 0x10)) {
+    _zva_length = 4 << (dczid_el0 & 0xf);
   }
-
-  if (ID_AA64ISAR0_AES_VAL(id_aa64isar0) == ID_AA64ISAR0_AES_PMULL) {
-    auxv = auxv | HWCAP_PMULL;
-  }
-
-  if (ID_AA64ISAR0_SHA1_VAL(id_aa64isar0) == ID_AA64ISAR0_SHA1_BASE) {
-    auxv = auxv | HWCAP_SHA1;
-  }
-
-  if (ID_AA64ISAR0_SHA2_VAL(id_aa64isar0) == ID_AA64ISAR0_SHA2_BASE) {
-    auxv = auxv | HWCAP_SHA2;
-  }
-
-  if (ID_AA64ISAR0_CRC32_VAL(id_aa64isar0) == ID_AA64ISAR0_CRC32_BASE) {
-    auxv = auxv | HWCAP_CRC32;
-  }
-
-  if (ID_AA64PFR0_AdvSIMD(id_aa64pfr0) == ID_AA64PFR0_AdvSIMD_IMPL || \
-      ID_AA64PFR0_AdvSIMD(id_aa64pfr0) == ID_AA64PFR0_AdvSIMD_HP ) {
-    auxv = auxv | HWCAP_ASIMD;
-  }
-
-  return auxv;
-}
 #endif
+}
