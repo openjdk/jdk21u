@@ -149,7 +149,7 @@ frame os::fetch_compiled_frame_from_context(const void* ucVoid) {
   // belong to the caller.
   intptr_t* fp = os::Bsd::ucontext_get_fp(uc);
   intptr_t* sp = os::Bsd::ucontext_get_sp(uc);
-  address pc = (address)(uc->uc_mcontext.regs[REG_LR]
+  address pc = (address)(uc->uc_mcontext.mc_gpregs.gp_lr
                          - NativeInstruction::instruction_size);
   return frame(sp, fp, pc);
 }
