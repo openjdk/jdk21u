@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -247,7 +247,14 @@ void setSignalHandler()
 #ifndef __OpenBSD__
     else if (!strcmp(mode, "sigset"))
     {
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
         sigset(signal_num, handler);
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
     } // end dealing with sigset
 #endif
     printf("%s: signal handler using function '%s' has been set\n", signal_name, mode);
