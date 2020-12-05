@@ -136,6 +136,7 @@ ifdef LP64
 CFLAGS/sparcv9  += -m64
 CFLAGS/amd64    += -m64
 CFLAGS/ppc64    += -m64
+CFLAGS/ppc64le  += -m64 -DABI_ELFv2
 else # LP64
 ARCH=$(ARCH2:amd64=i386)
 ifneq ($(findstring arm,$(ARCH)),)
