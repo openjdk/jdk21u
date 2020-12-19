@@ -1881,7 +1881,6 @@ static void warn_fail_commit_memory(char* addr, size_t size, bool exec,
 //       problem.
 bool os::pd_commit_memory(char* addr, size_t size, bool exec) {
   int prot = exec ? PROT_READ|PROT_WRITE|PROT_EXEC : PROT_READ|PROT_WRITE;
-#if defined(__APPLE__)
   if (exec) {
     // Do not replace MAP_JIT mappings, see JDK-8234930
     if (::mprotect(addr, size, prot) == 0) {
@@ -1894,19 +1893,8 @@ bool os::pd_commit_memory(char* addr, size_t size, bool exec) {
       return true;
     }
   }
-#else
-  uintptr_t res = (uintptr_t) ::mmap(addr, size, prot,
-                                     MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0);
-  if (res != (uintptr_t) MAP_FAILED) {
-    return true;
-  }
-
-  // Warn about any commit errors we see in non-product builds just
-  // in case mmap() doesn't work as described on the man page.
-  NOT_PRODUCT(warn_fail_commit_memory(addr, size, exec, errno);)
 
   return false;
-#endif
 }
 
 bool os::pd_commit_memory(char* addr, size_t size, size_t alignment_hint,
@@ -1977,7 +1965,6 @@ char *os::scan_pages(char *start, char* end, page_info* page_expected, page_info
 
 
 bool os::pd_uncommit_memory(char* addr, size_t size, bool exec) {
-#if defined(__APPLE__)
   if (exec) {
     if (::madvise(addr, size, MADV_FREE) != 0) {
       return false;
@@ -1988,11 +1975,6 @@ bool os::pd_uncommit_memory(char* addr, size_t size, bool exec) {
         MAP_PRIVATE|MAP_FIXED|MAP_NORESERVE|MAP_ANONYMOUS, -1, 0);
     return res  != (uintptr_t) MAP_FAILED;
   }
-#else
-  uintptr_t res = (uintptr_t) ::mmap(addr, size, PROT_NONE,
-                                     MAP_PRIVATE|MAP_FIXED|MAP_NORESERVE|MAP_ANONYMOUS, -1, 0);
-  return res  != (uintptr_t) MAP_FAILED;
-#endif
 }
 
 bool os::pd_create_stack_guard_pages(char* addr, size_t size) {
