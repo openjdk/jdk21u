@@ -66,6 +66,30 @@
   #endif
 #endif
 
+#if defined(__OpenBSD__)
+  #ifndef IP_ADD_SOURCE_MEMBERSHIP
+    #define IP_ADD_SOURCE_MEMBERSHIP        70   /* join a source-specific group */
+    #define IP_DROP_SOURCE_MEMBERSHIP       71   /* drop a single source */
+
+    struct ip_mreq_source {
+        struct in_addr  imr_multiaddr;  /* IP multicast address of group */
+        struct in_addr  imr_interface;  /* local IP address of interface */
+        struct in_addr  imr_sourceaddr; /* IP address of source */
+    };
+  #endif
+
+  #ifndef MCAST_JOIN_SOURCE_GROUP
+    #define MCAST_JOIN_SOURCE_GROUP         82   /* join a source-specific group */
+    #define MCAST_LEAVE_SOURCE_GROUP        83   /* leave a single source */
+
+    struct group_source_req {
+        uint32_t                gsr_interface;  /* interface index */
+        struct sockaddr_storage gsr_group;      /* group address */
+        struct sockaddr_storage gsr_source;     /* source address */
+    };
+  #endif
+#endif
+
 #define COPY_INET6_ADDRESS(env, source, target) \
     (*env)->GetByteArrayRegion(env, source, 0, 16, target)
 
@@ -624,7 +648,7 @@ JNIEXPORT jint JNICALL
 Java_sun_nio_ch_Net_blockOrUnblock4(JNIEnv *env, jobject this, jboolean block, jobject fdo,
                                     jint group, jint interf, jint source)
 {
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__)
+#if defined(_ALLBSD_SOURCE)
     /* no IPv4 exclude-mode filtering for now */
     return IOS_UNAVAILABLE;
 #else
@@ -701,7 +725,7 @@ JNIEXPORT jint JNICALL
 Java_sun_nio_ch_Net_blockOrUnblock6(JNIEnv *env, jobject this, jboolean block, jobject fdo,
                                     jbyteArray group, jint index, jbyteArray source)
 {
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__)
+#if defined(_ALLBSD_SOURCE)
     /* no IPv6 exclude-mode filtering for now */
     return IOS_UNAVAILABLE;
 #else
