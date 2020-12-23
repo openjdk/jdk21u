@@ -122,7 +122,7 @@ AC_DEFUN([FLAGS_SETUP_LDFLAGS_HELPER],
           [
             if $READELF -l conftest$ac_exeext | $GREP WXNEED > /dev/null; then
               AC_MSG_RESULT([yes])
-              OS_LDFLAGS_JDK_ONLY="-Wl,-z,wxneeded"
+              OS_LDFLAGS="-Wl,-z,wxneeded"
             else
               AC_MSG_RESULT([no])
             fi
