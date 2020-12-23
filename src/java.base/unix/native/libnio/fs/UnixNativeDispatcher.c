@@ -267,8 +267,8 @@ Java_sun_nio_fs_UnixNativeDispatcher_init(JNIEnv* env, jclass this)
     my_renameat_func = (renameat_func*) dlsym(RTLD_DEFAULT, "renameat");
 #ifndef _ALLBSD_SOURCE
     my_futimesat_func = (futimesat_func*) dlsym(RTLD_DEFAULT, "futimesat");
-    my_lutimes_func = (lutimes_func*) dlsym(RTLD_DEFAULT, "lutimes");
 #endif
+    my_lutimes_func = (lutimes_func*) dlsym(RTLD_DEFAULT, "lutimes");
     my_futimens_func = (futimens_func*) dlsym(RTLD_DEFAULT, "futimens");
 #if defined(_AIX)
     my_fdopendir_func = (fdopendir_func*) dlsym(RTLD_DEFAULT, "fdopendir64");
@@ -286,13 +286,12 @@ Java_sun_nio_fs_UnixNativeDispatcher_init(JNIEnv* env, jclass this)
 
 #ifdef _ALLBSD_SOURCE
     capabilities |= sun_nio_fs_UnixNativeDispatcher_SUPPORTS_FUTIMES;
-    capabilities |= sun_nio_fs_UnixNativeDispatcher_SUPPORTS_LUTIMES;
 #else
     if (my_futimesat_func != NULL)
         capabilities |= sun_nio_fs_UnixNativeDispatcher_SUPPORTS_FUTIMES;
+#endif
     if (my_lutimes_func != NULL)
         capabilities |= sun_nio_fs_UnixNativeDispatcher_SUPPORTS_LUTIMES;
-#endif
     if (my_futimens_func != NULL)
         capabilities |= sun_nio_fs_UnixNativeDispatcher_SUPPORTS_FUTIMENS;
 
@@ -738,15 +737,11 @@ Java_sun_nio_fs_UnixNativeDispatcher_lutimes0(JNIEnv* env, jclass this,
     times[1].tv_sec = modificationTime / 1000000;
     times[1].tv_usec = modificationTime % 1000000;
 
-#ifdef _ALLBSD_SOURCE
-    RESTARTABLE(lutimes(path, &times[0]), err);
-#else
     if (my_lutimes_func == NULL) {
         JNU_ThrowInternalError(env, "my_lutimes_func is NULL");
         return;
     }
     RESTARTABLE((*my_lutimes_func)(path, &times[0]), err);
-#endif
     if (err == -1) {
         throwUnixException(env, errno);
     }
