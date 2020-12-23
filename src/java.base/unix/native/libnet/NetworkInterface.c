@@ -37,7 +37,7 @@
 #include <strings.h>
 #endif
 
-#if defined(_ALLBSD_SOURCE)
+#if defined(__APPLE__)
 #include <net/ethernet.h>
 #include <net/if_dl.h>
 #include <ifaddrs.h>
