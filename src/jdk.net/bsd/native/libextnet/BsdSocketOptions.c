@@ -123,7 +123,7 @@ JNIEXPORT jlong JNICALL Java_jdk_net_BsdSocketOptions_getSoPeerCred0
     if (rv == -1) {
         uid = gid = -1;
     }
-    return (((long)uid) << 32) | (gid & 0xffffffffL);
+    return (((int64_t)uid) << 32) | ((int64_t)gid & 0xffffffffL);
 }
 
 /*
