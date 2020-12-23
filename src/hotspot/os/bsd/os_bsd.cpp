@@ -99,7 +99,7 @@
 # include <time.h>
 # include <unistd.h>
 
-#if defined(__FreeBSD__) || defined(__NetBSD__)
+#if !defined(__APPLE__)
   #include <elf.h>
 #endif
 
@@ -110,7 +110,8 @@
 #endif
 
 #ifdef __OpenBSD__
-# include <pthread_np.h>
+  #include <pthread_np.h>
+  #include <link_elf.h>
 #endif
 
 #ifdef __APPLE__
