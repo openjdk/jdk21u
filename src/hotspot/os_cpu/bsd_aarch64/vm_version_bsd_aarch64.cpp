@@ -259,6 +259,7 @@ void VM_Version::get_os_cpu_info() {
   _model = CPU_PART_CORTEX_A53;
   _variant = 0;
   _revision = 0;
+  _features = HWCAP_ASIMD;
 #elif defined(__FreeBSD__)
   struct cpu_desc cpu_desc[1];
   struct cpu_desc user_cpu_desc;
@@ -315,6 +316,7 @@ void VM_Version::get_os_cpu_info() {
       HWCAP_SHA3    |
       HWCAP_SHA512  |
       HWCAP_SVE);
+#endif
 
   uint64_t ctr_el0;
   uint64_t dczid_el0;
@@ -330,5 +332,4 @@ void VM_Version::get_os_cpu_info() {
   if (!(dczid_el0 & 0x10)) {
     _zva_length = 4 << (dczid_el0 & 0xf);
   }
-#endif
 }
