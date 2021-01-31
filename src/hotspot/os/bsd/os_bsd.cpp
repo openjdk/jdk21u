@@ -145,7 +145,6 @@ julong os::Bsd::_physical_memory = 0;
 mach_timebase_info_data_t os::Bsd::_timebase_info = {0, 0};
 volatile uint64_t         os::Bsd::_max_abstime   = 0;
 #else
-int (*os::Bsd::_clock_gettime)(clockid_t, struct timespec *) = NULL;
 int (*os::Bsd::_getcpuclockid)(pthread_t, clockid_t *) = NULL;
 #endif
 pthread_t os::Bsd::_main_thread;
@@ -863,61 +862,13 @@ double os::elapsedVTime() {
   return elapsedTime();
 }
 
-jlong os::javaTimeMillis() {
-  if (os::Posix::supports_clock_gettime()) {
-    struct timespec ts;
-    int status = os::Posix::clock_gettime(CLOCK_REALTIME, &ts);
-    assert_status(status == 0, status, "gettime error");
-    return jlong(ts.tv_sec) * MILLIUNITS +
-           jlong(ts.tv_nsec) / NANOUNITS_PER_MILLIUNIT;
-  } else {
-    timeval time;
-    int status = gettimeofday(&time, NULL);
-    assert(status != -1, "bsd error");
-    return jlong(time.tv_sec) * MILLIUNITS  +
-           jlong(time.tv_usec) / (MICROUNITS / MILLIUNITS);
-  }
-}
-
-void os::javaTimeSystemUTC(jlong &seconds, jlong &nanos) {
-  if (os::Posix::supports_clock_gettime()) {
-    struct timespec ts;
-    int status = os::Posix::clock_gettime(CLOCK_REALTIME, &ts);
-    assert_status(status == 0, status, "gettime error");
-    seconds = jlong(ts.tv_sec);
-    nanos = jlong(ts.tv_nsec);
-  } else {
-    timeval time;
-    int status = gettimeofday(&time, NULL);
-    assert(status != -1, "bsd error");
-    seconds = jlong(time.tv_sec);
-    nanos = jlong(time.tv_usec) * (NANOUNITS / MICROUNITS);
-  }
-}
-
-#ifndef __APPLE__
-  #ifndef CLOCK_MONOTONIC
-    #define CLOCK_MONOTONIC (1)
-  #endif
-#endif
-
 #ifdef __APPLE__
 void os::Bsd::clock_init() {
   mach_timebase_info(&_timebase_info);
 }
 #else
 void os::Bsd::clock_init() {
-  struct timespec res;
-  struct timespec tp;
-  _getcpuclockid = (int (*)(pthread_t, clockid_t *))dlsym(RTLD_DEFAULT, "pthread_getcpuclockid");
-  if (::clock_getres(CLOCK_MONOTONIC, &res) == 0 &&
-      ::clock_gettime(CLOCK_MONOTONIC, &tp)  == 0) {
-    // yes, monotonic clock is supported
-    _clock_gettime = ::clock_gettime;
-    return;
-  }
-  warning("No monotonic clock was available - timed services may " \
-          "be adversely affected if the time-of-day clock changes");
+  // Nothing to do
 }
 #endif
 
@@ -949,44 +900,14 @@ jlong os::javaTimeNanos() {
   return (prev == obsv) ? now : obsv;
 }
 
-#else // __APPLE__
-
-jlong os::javaTimeNanos() {
-  if (os::supports_monotonic_clock()) {
-    struct timespec tp;
-    int status = Bsd::_clock_gettime(CLOCK_MONOTONIC, &tp);
-    assert(status == 0, "gettime error");
-    jlong result = jlong(tp.tv_sec) * (1000 * 1000 * 1000) + jlong(tp.tv_nsec);
-    return result;
-  } else {
-    timeval time;
-    int status = gettimeofday(&time, NULL);
-    assert(status != -1, "bsd error");
-    jlong usecs = jlong(time.tv_sec) * (1000 * 1000) + jlong(time.tv_usec);
-    return 1000 * usecs;
-  }
+void os::javaTimeNanos_info(jvmtiTimerInfo *info_ptr) {
+  info_ptr->max_value = ALL_64_BITS;
+  info_ptr->may_skip_backward = false;      // not subject to resetting or drifting
+  info_ptr->may_skip_forward = false;       // not subject to resetting or drifting
+  info_ptr->kind = JVMTI_TIMER_ELAPSED;     // elapsed not CPU time
 }
 
 #endif // __APPLE__
-
-void os::javaTimeNanos_info(jvmtiTimerInfo *info_ptr) {
-  if (os::supports_monotonic_clock()) {
-    info_ptr->max_value = ALL_64_BITS;
-
-    // CLOCK_MONOTONIC - amount of time since some arbitrary point in the past
-    info_ptr->may_skip_backward = false;      // not subject to resetting or drifting
-    info_ptr->may_skip_forward = false;       // not subject to resetting or drifting
-  } else {
-    // gettimeofday - based on time in seconds since the Epoch thus does not wrap
-    info_ptr->max_value = ALL_64_BITS;
-
-    // gettimeofday is a real time clock so it skips
-    info_ptr->may_skip_backward = true;
-    info_ptr->may_skip_forward = true;
-  }
-
-  info_ptr->kind = JVMTI_TIMER_ELAPSED;                // elapsed not CPU time
-}
 
 // Return the real, user, and system times in seconds from an
 // arbitrary fixed point in the past.
@@ -3176,4 +3097,3 @@ bool os::start_debugging(char *buf, int buflen) {
 }
 
 void os::print_memory_mappings(char* addr, size_t bytes, outputStream* st) {}
-

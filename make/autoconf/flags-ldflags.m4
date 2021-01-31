@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2021, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -113,6 +113,7 @@ AC_DEFUN([FLAGS_SETUP_LDFLAGS_HELPER],
       OS_LDFLAGS_JVM_ONLY="-Wl,-rpath,@loader_path/. -Wl,-rpath,@loader_path/.."
       OS_LDFLAGS="-mmacosx-version-min=$MACOSX_VERSION_MIN"
     fi
+
     # On OpenBSD check to see if ld requires -z wxneeded
     if test "x$OPENJDK_TARGET_OS_ENV" = xbsd.openbsd; then
       AC_MSG_CHECKING([if ld requires -z wxneeded])
@@ -135,6 +136,14 @@ AC_DEFUN([FLAGS_SETUP_LDFLAGS_HELPER],
           ]
       )
       LDFLAGS="$PUSHED_LDFLAGS"
+    fi
+
+    if test "x$OPENJDK_TARGET_OS" = xlinux; then
+      # Hotspot needs to link librt to get the clock_* functions.
+      # But once our supported minimum build and runtime platform
+      # has glibc 2.17, this can be removed as the functions are
+      # in libc.
+      OS_LDFLAGS_JVM_ONLY="-lrt"
     fi
   fi
 

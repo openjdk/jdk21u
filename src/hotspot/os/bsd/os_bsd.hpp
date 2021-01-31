@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -38,7 +38,6 @@ class Bsd {
   static mach_timebase_info_data_t _timebase_info;
   static volatile uint64_t         _max_abstime;
 #else
-  static int (*_clock_gettime)(clockid_t, struct timespec *);
   static int (*_getcpuclockid)(pthread_t, clockid_t *);
 #endif
 
