@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,6 +30,10 @@
 
 #include <sys/param.h>
 #include <sys/mount.h>
+#ifdef __FreeBSD__
+#include <sys/types.h>
+#include <sys/extattr.h>
+#endif
 #ifdef ST_RDONLY
 #define statfs statvfs
 #define getfsstat getvfsstat
@@ -202,4 +206,73 @@ Java_sun_nio_fs_BsdNativeDispatcher_endfsstat(JNIEnv* env, jclass this, jlong va
         free(iter->buf);
         free(iter);
     }
+}
+
+JNIEXPORT jint JNICALL
+Java_sun_nio_fs_BsdNativeDispatcher_fgetxattr0(JNIEnv* env, jclass clazz,
+    jint fd, jlong nameAddress, jlong valueAddress, jint valueLen)
+{
+#ifdef __FreeBSD__
+    const char* name = jlong_to_ptr(nameAddress);
+    void* value = jlong_to_ptr(valueAddress);
+
+    ssize_t res = extattr_get_fd(fd, EXTATTR_NAMESPACE_USER, name, value, (size_t)valueLen);
+    if (res == (ssize_t)-1)
+        throwUnixException(env, errno);
+    return (jint)res;
+#else
+    throwUnixException(env, EOPNOTSUPP);
+    return -1;
+#endif
+}
+
+JNIEXPORT void JNICALL
+Java_sun_nio_fs_BsdNativeDispatcher_fsetxattr0(JNIEnv* env, jclass clazz,
+    jint fd, jlong nameAddress, jlong valueAddress, jint valueLen)
+{
+#ifdef __FreeBSD__
+    const char* name = jlong_to_ptr(nameAddress);
+    void* value = jlong_to_ptr(valueAddress);
+
+    int res = extattr_set_fd(fd, EXTATTR_NAMESPACE_USER, name, value, (size_t)valueLen);
+    if (res == -1)
+        throwUnixException(env, errno);
+#else
+    throwUnixException(env, EOPNOTSUPP);
+    return -1;
+#endif
+}
+
+JNIEXPORT void JNICALL
+Java_sun_nio_fs_BsdNativeDispatcher_fremovexattr0(JNIEnv* env, jclass clazz,
+    jint fd, jlong nameAddress)
+{
+#ifdef __FreeBSD__
+    const char* name = jlong_to_ptr(nameAddress);
+
+    int res = extattr_delete_fd(fd, EXTATTR_NAMESPACE_USER, name);
+    if (res == -1)
+        throwUnixException(env, errno);
+#else
+    throwUnixException(env, EOPNOTSUPP);
+    return -1;
+#endif
+}
+
+JNIEXPORT jint JNICALL
+Java_sun_nio_fs_BsdNativeDispatcher_flistxattr0(JNIEnv* env, jclass clazz,
+    jint fd, jlong nameBufAddress, jint size)
+{
+#ifdef __FreeBSD__
+    char* nameBuf = jlong_to_ptr(nameBufAddress);
+
+    ssize_t res = extattr_list_fd(fd, EXTATTR_NAMESPACE_USER, nameBuf, (size_t)size);
+
+    if (res == (ssize_t)-1)
+        throwUnixException(env, errno);
+    return (jint)res;
+#else
+    throwUnixException(env, EOPNOTSUPP);
+    return -1;
+#endif
 }
