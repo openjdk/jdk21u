@@ -50,6 +50,8 @@ ifeq ($(call check-jvm-feature, dtrace), true)
         hs_private.d \
     )
 
+    # *.d in the objs dir is used for generated make dependency files, so use
+    # *.dt for dtrace files to avoid clashes.
     $(JVM_OUTPUTDIR)/objs/dtrace.dt: $(DTRACE_SOURCE_FILES)
 	$(call LogInfo, Generating $(@F))
 	$(call MakeDir, $(@D))
