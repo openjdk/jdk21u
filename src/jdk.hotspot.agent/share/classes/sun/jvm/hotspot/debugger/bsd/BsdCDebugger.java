@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2021, Oracle and/or its affiliates. All rights reserved.
  * Copyright (c) 2015, Red Hat Inc.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -60,29 +60,18 @@ class BsdCDebugger implements CDebugger {
       return null;
     }
 
-    List<LoadObject> objs = getLoadObjectList();
-    Object[] arr = objs.toArray();
-    // load objects are sorted by base address, do binary search
-    int mid  = -1;
-    int low  = 0;
-    int high = arr.length - 1;
+    /* Typically we have about ten loaded objects here. So no reason to do
+      sort/binary search here. Linear search gives us acceptable performance.*/
 
-    while (low <= high) {
-       mid = (low + high) >> 1;
-       LoadObject midVal = (LoadObject) arr[mid];
-       long cmp = pc.minus(midVal.getBase());
-       if (cmp < 0) {
-          high = mid - 1;
-       } else if (cmp > 0) {
-          long size = midVal.getSize();
-          if (cmp >= size) {
-             low = mid + 1;
-          } else {
-             return (LoadObject) arr[mid];
-          }
-       } else { // match found
-          return (LoadObject) arr[mid];
-       }
+    List<LoadObject> objs = getLoadObjectList();
+
+    for (int i = 0; i < objs.size(); i++) {
+      LoadObject ob = (LoadObject) objs.get(i);
+      Address base = ob.getBase();
+      long size = ob.getSize();
+      if (pc.greaterThanOrEqual(base) && pc.lessThan(base.addOffsetTo(size))) {
+        return ob;
+      }
     }
 
     return null;
