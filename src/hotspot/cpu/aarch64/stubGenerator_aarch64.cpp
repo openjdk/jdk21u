@@ -5573,7 +5573,7 @@ class StubGenerator: public StubCodeGenerator {
     return start;
   }
 
-#ifdef LINUX
+#if defined(LINUX) || defined(_ALLBSD_SOURCE)
   // ARMv8.1 LSE versions of the atomic stubs used by Atomic::PlatformXX.
   //
   // If LSE is in use, generate LSE versions of all the stubs. The
@@ -6770,7 +6770,7 @@ class StubGenerator: public StubCodeGenerator {
       StubRoutines::_updateBytesAdler32 = generate_updateBytesAdler32();
     }
 
-#ifdef LINUX
+#if defined(LINUX) || defined(_ALLBSD_SOURCE)
 
 #if 0  // JDK-8261660: disabled for now.
     generate_atomic_entry_points();
@@ -6800,7 +6800,7 @@ void StubGenerator_generate(CodeBuffer* code, bool all) {
 }
 
 
-#ifdef LINUX
+#if defined(LINUX) || defined(_ALLBSD_SOURCE)
 
 // Define pointers to atomic stubs and initialize them to point to the
 // code in atomic_aarch64.S.
