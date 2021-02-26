@@ -239,7 +239,6 @@ Java_sun_nio_fs_BsdNativeDispatcher_fsetxattr0(JNIEnv* env, jclass clazz,
         throwUnixException(env, errno);
 #else
     throwUnixException(env, EOPNOTSUPP);
-    return -1;
 #endif
 }
 
@@ -255,7 +254,6 @@ Java_sun_nio_fs_BsdNativeDispatcher_fremovexattr0(JNIEnv* env, jclass clazz,
         throwUnixException(env, errno);
 #else
     throwUnixException(env, EOPNOTSUPP);
-    return -1;
 #endif
 }
 
