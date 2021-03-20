@@ -48,64 +48,6 @@ class BsdNativeDispatcher extends UnixNativeDispatcher {
     */
     static native void endfsstat(long iter) throws UnixException;
 
-    /**
-     * ssize_t fgetxattr(int fd, const char *name, void *value, size_t size);
-     */
-    static int fgetxattr(int fd, byte[] name, long valueAddress,
-                         int valueLen) throws UnixException
-    {
-        NativeBuffer buffer = NativeBuffers.asNativeBuffer(name);
-        try {
-            return fgetxattr0(fd, buffer.address(), valueAddress, valueLen);
-        } finally {
-            buffer.release();
-        }
-    }
-
-    private static native int fgetxattr0(int fd, long nameAddress,
-        long valueAddress, int valueLen) throws UnixException;
-
-    /**
-     * int fsetxattr(int fd, const char *name, void *value, size_t size);
-     */
-    static void fsetxattr(int fd, byte[] name, long valueAddress,
-                          int valueLen) throws UnixException
-    {
-        NativeBuffer buffer = NativeBuffers.asNativeBuffer(name);
-        try {
-            fsetxattr0(fd, buffer.address(), valueAddress, valueLen);
-        } finally {
-            buffer.release();
-        }
-    }
-
-    private static native void fsetxattr0(int fd, long nameAddress,
-        long valueAddress, int valueLen) throws UnixException;
-
-    /**
-     * int fremovexattr(int fd, const char *name);
-     */
-    static void fremovexattr(int fd, byte[] name) throws UnixException {
-        NativeBuffer buffer = NativeBuffers.asNativeBuffer(name);
-        try {
-            fremovexattr0(fd, buffer.address());
-        } finally {
-            buffer.release();
-        }
-    }
-
-    private static native void fremovexattr0(int fd, long nameAddress)
-        throws UnixException;
-
-    /**
-     * ssize_t flistxattr(int fd, char *namebuf, size_t size);
-     */
-    static int flistxattr(int fd, long nameBufAddress, int size) throws UnixException {
-        return flistxattr0(fd, nameBufAddress, size);
-    }
-
-    private static native int flistxattr0(int fd, long nameBufAddress, int size) throws UnixException;
-
     // initialize field IDs
     private static native void initIDs();
 
