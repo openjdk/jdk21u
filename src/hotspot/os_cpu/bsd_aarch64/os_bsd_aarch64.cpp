@@ -26,12 +26,14 @@
 // no precompiled headers
 #include "jvm.h"
 #include "asm/macroAssembler.hpp"
+#include "classfile/classLoader.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "code/codeCache.hpp"
 #include "code/icBuffer.hpp"
 #include "code/vtableStubs.hpp"
 #include "code/nativeInst.hpp"
 #include "interpreter/interpreter.hpp"
+#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "os_share_bsd.hpp"
 #include "prims/jniFastGetField.hpp"
@@ -50,6 +52,7 @@
 #include "runtime/timer.hpp"
 #include "signals_posix.hpp"
 #include "utilities/debug.hpp"
+#include "utilities/align.hpp"
 #include "utilities/events.hpp"
 #include "utilities/vmError.hpp"
 
@@ -71,6 +74,7 @@
 # include <sys/wait.h>
 # include <pwd.h>
 # include <poll.h>
+<<<<<<< HEAD
 #ifdef __FreeBSD__
 # include <ucontext.h>
 # include <sys/sysctl.h>
@@ -87,6 +91,43 @@
 
 NOINLINE address os::current_stack_pointer() {
   return (address)__builtin_frame_address(0);
+=======
+#ifndef __OpenBSD__
+# include <ucontext.h>
+#endif
+
+#if !defined(__APPLE__) && !defined(__NetBSD__)
+# include <pthread_np.h>
+#endif
+
+#define SPELL_REG_SP "sp"
+#define SPELL_REG_FP "fp"
+
+#ifdef __APPLE__
+// see darwin-xnu/osfmk/mach/arm/_structs.h
+
+// 10.5 UNIX03 member name prefixes
+#define DU3_PREFIX(s, m) __ ## s.__ ## m
+#endif
+
+#define context_x    uc_mcontext->DU3_PREFIX(ss,x)
+#define context_fp   uc_mcontext->DU3_PREFIX(ss,fp)
+#define context_lr   uc_mcontext->DU3_PREFIX(ss,lr)
+#define context_sp   uc_mcontext->DU3_PREFIX(ss,sp)
+#define context_pc   uc_mcontext->DU3_PREFIX(ss,pc)
+#define context_cpsr uc_mcontext->DU3_PREFIX(ss,cpsr)
+#define context_esr  uc_mcontext->DU3_PREFIX(es,esr)
+
+address os::current_stack_pointer() {
+#if defined(__clang__) || defined(__llvm__)
+  void *sp;
+  __asm__("mov %0, " SPELL_REG_SP : "=r"(sp));
+  return (address) sp;
+#else
+  register void *sp __asm__ (SPELL_REG_SP);
+  return (address) sp;
+#endif
+>>>>>>> master
 }
 
 char* os::non_memory_address_word() {
@@ -94,6 +135,8 @@ char* os::non_memory_address_word() {
   // even in its subfields (as defined by the CPU immediate fields,
   // if the CPU splits constants across multiple instructions).
 
+  // the return value used in computation of Universe::non_oop_word(), which
+  // is loaded by cpu/aarch64 by MacroAssembler::movptr(Register, uintptr_t)
   return (char*) 0xffffffffffff;
 }
 
@@ -102,6 +145,8 @@ address os::Posix::ucontext_get_pc(const ucontext_t * uc) {
   return (address)uc->uc_mcontext.mc_gpregs.gp_elr;
 #elif defined(__OpenBSD__)
   return (address)uc->sc_elr;
+#elif defined(__APPLE__)
+  return (address)uc->context_pc;
 #endif
 }
 
@@ -110,6 +155,8 @@ void os::Posix::ucontext_set_pc(ucontext_t * uc, address pc) {
   uc->uc_mcontext.mc_gpregs.gp_elr = (intptr_t)pc;
 #elif defined(__OpenBSD__)
   uc->sc_elr = (unsigned long)pc;
+#elif defined(__APPLE__)
+  uc->context_pc = (intptr_t)pc ;
 #endif
 }
 
@@ -118,6 +165,8 @@ intptr_t* os::Bsd::ucontext_get_sp(const ucontext_t * uc) {
   return (intptr_t*)uc->uc_mcontext.mc_gpregs.gp_sp;
 #elif defined(__OpenBSD__)
   return (intptr_t*)uc->sc_sp;
+#elif defined(__APPLE__)
+  return (intptr_t*)uc->context_sp;
 #endif
 }
 
@@ -126,6 +175,8 @@ intptr_t* os::Bsd::ucontext_get_fp(const ucontext_t * uc) {
   return (intptr_t*)uc->uc_mcontext.mc_gpregs.gp_x[REG_FP];
 #elif defined(__OpenBSD__)
   return (intptr_t*)uc->sc_x[REG_FP];
+#elif defined(__APPLE__)
+  return (intptr_t*)uc->context_fp;
 #endif
 }
 
@@ -166,7 +217,10 @@ frame os::fetch_compiled_frame_from_context(const void* ucVoid) {
   address pc = (address)(uc->uc_mcontext.mc_gpregs.gp_lr
                          - NativeInstruction::instruction_size);
 #elif defined(__OpenBSD__)
-      address pc = (address)(uc->sc_lr
+  address pc = (address)(uc->sc_lr
+                         - NativeInstruction::instruction_size);
+#elif defined(__APPLE__)
+  address pc = (address)(uc->context_lr
                          - NativeInstruction::instruction_size);
 #endif
   return frame(sp, fp, pc);
@@ -191,6 +245,7 @@ NOINLINE frame os::current_frame() {
   }
 }
 
+<<<<<<< HEAD
 // Utility functions
 
 bool PosixSignals::pd_hotspot_signal_handler(int sig, siginfo_t* info,
@@ -396,6 +451,51 @@ void os::print_context(outputStream *st, const void *context) {
 
   const ucontext_t *uc = (const ucontext_t*)context;
   st->print_cr("Registers:");
+<<<<<<< HEAD
+#ifdef __APPLE__
+  st->print( " x0=" INTPTR_FORMAT, (intptr_t)uc->context_x[ 0]);
+  st->print("  x1=" INTPTR_FORMAT, (intptr_t)uc->context_x[ 1]);
+  st->print("  x2=" INTPTR_FORMAT, (intptr_t)uc->context_x[ 2]);
+  st->print("  x3=" INTPTR_FORMAT, (intptr_t)uc->context_x[ 3]);
+  st->cr();
+  st->print( " x4=" INTPTR_FORMAT, (intptr_t)uc->context_x[ 4]);
+  st->print("  x5=" INTPTR_FORMAT, (intptr_t)uc->context_x[ 5]);
+  st->print("  x6=" INTPTR_FORMAT, (intptr_t)uc->context_x[ 6]);
+  st->print("  x7=" INTPTR_FORMAT, (intptr_t)uc->context_x[ 7]);
+  st->cr();
+  st->print( " x8=" INTPTR_FORMAT, (intptr_t)uc->context_x[ 8]);
+  st->print("  x9=" INTPTR_FORMAT, (intptr_t)uc->context_x[ 9]);
+  st->print(" x10=" INTPTR_FORMAT, (intptr_t)uc->context_x[10]);
+  st->print(" x11=" INTPTR_FORMAT, (intptr_t)uc->context_x[11]);
+  st->cr();
+  st->print( "x12=" INTPTR_FORMAT, (intptr_t)uc->context_x[12]);
+  st->print(" x13=" INTPTR_FORMAT, (intptr_t)uc->context_x[13]);
+  st->print(" x14=" INTPTR_FORMAT, (intptr_t)uc->context_x[14]);
+  st->print(" x15=" INTPTR_FORMAT, (intptr_t)uc->context_x[15]);
+  st->cr();
+  st->print( "x16=" INTPTR_FORMAT, (intptr_t)uc->context_x[16]);
+  st->print(" x17=" INTPTR_FORMAT, (intptr_t)uc->context_x[17]);
+  st->print(" x18=" INTPTR_FORMAT, (intptr_t)uc->context_x[18]);
+  st->print(" x19=" INTPTR_FORMAT, (intptr_t)uc->context_x[19]);
+  st->cr();
+  st->print( "x20=" INTPTR_FORMAT, (intptr_t)uc->context_x[20]);
+  st->print(" x21=" INTPTR_FORMAT, (intptr_t)uc->context_x[21]);
+  st->print(" x22=" INTPTR_FORMAT, (intptr_t)uc->context_x[22]);
+  st->print(" x23=" INTPTR_FORMAT, (intptr_t)uc->context_x[23]);
+  st->cr();
+  st->print( "x24=" INTPTR_FORMAT, (intptr_t)uc->context_x[24]);
+  st->print(" x25=" INTPTR_FORMAT, (intptr_t)uc->context_x[25]);
+  st->print(" x26=" INTPTR_FORMAT, (intptr_t)uc->context_x[26]);
+  st->print(" x27=" INTPTR_FORMAT, (intptr_t)uc->context_x[27]);
+  st->cr();
+  st->print( "x28=" INTPTR_FORMAT, (intptr_t)uc->context_x[28]);
+  st->print("  fp=" INTPTR_FORMAT, (intptr_t)uc->context_fp);
+  st->print("  lr=" INTPTR_FORMAT, (intptr_t)uc->context_lr);
+  st->print("  sp=" INTPTR_FORMAT, (intptr_t)uc->context_sp);
+  st->cr();
+  st->print(  "pc=" INTPTR_FORMAT,  (intptr_t)uc->context_pc);
+  st->print(" cpsr=" INTPTR_FORMAT, (intptr_t)uc->context_cpsr);
+#else
   for (int r = 0; r < 31; r++) {
     st->print("R%-2d=", r);
 #if defined(__FreeBSD__)
@@ -404,6 +504,7 @@ void os::print_context(outputStream *st, const void *context) {
     print_location(st, uc->sc_x[r]);
 #endif
   }
+#endif // __APPLE__
   st->cr();
 
   intptr_t *sp = (intptr_t *)os::Bsd::ucontext_get_sp(uc);
@@ -433,12 +534,47 @@ void os::print_register_info(outputStream *st, const void *context) {
 
   // this is only for the "general purpose" registers
 
+<<<<<<< HEAD
+#ifdef __APPLE__
+  st->print(" x0="); print_location(st, uc->context_x[ 0]);
+  st->print(" x1="); print_location(st, uc->context_x[ 1]);
+  st->print(" x2="); print_location(st, uc->context_x[ 2]);
+  st->print(" x3="); print_location(st, uc->context_x[ 3]);
+  st->print(" x4="); print_location(st, uc->context_x[ 4]);
+  st->print(" x5="); print_location(st, uc->context_x[ 5]);
+  st->print(" x6="); print_location(st, uc->context_x[ 6]);
+  st->print(" x7="); print_location(st, uc->context_x[ 7]);
+  st->print(" x8="); print_location(st, uc->context_x[ 8]);
+  st->print(" x9="); print_location(st, uc->context_x[ 9]);
+  st->print("x10="); print_location(st, uc->context_x[10]);
+  st->print("x11="); print_location(st, uc->context_x[11]);
+  st->print("x12="); print_location(st, uc->context_x[12]);
+  st->print("x13="); print_location(st, uc->context_x[13]);
+  st->print("x14="); print_location(st, uc->context_x[14]);
+  st->print("x15="); print_location(st, uc->context_x[15]);
+  st->print("x16="); print_location(st, uc->context_x[16]);
+  st->print("x17="); print_location(st, uc->context_x[17]);
+  st->print("x18="); print_location(st, uc->context_x[18]);
+  st->print("x19="); print_location(st, uc->context_x[19]);
+  st->print("x20="); print_location(st, uc->context_x[20]);
+  st->print("x21="); print_location(st, uc->context_x[21]);
+  st->print("x22="); print_location(st, uc->context_x[22]);
+  st->print("x23="); print_location(st, uc->context_x[23]);
+  st->print("x24="); print_location(st, uc->context_x[24]);
+  st->print("x25="); print_location(st, uc->context_x[25]);
+  st->print("x26="); print_location(st, uc->context_x[26]);
+  st->print("x27="); print_location(st, uc->context_x[27]);
+  st->print("x28="); print_location(st, uc->context_x[28]);
+#else
   for (int r = 0; r < 31; r++)
 #if defined(__FreeBSD__)
     st->print_cr(  "R%d=" INTPTR_FORMAT, r, (uintptr_t)uc->uc_mcontext.mc_gpregs.gp_x[r]);
 #elif defined(__OpenBSD__)
     st->print_cr(  "R%d=" INTPTR_FORMAT, r, (uintptr_t)uc->sc_x[r]);
 #endif
+#endif // __APPLE__
+=======
+
   st->cr();
 }
 
