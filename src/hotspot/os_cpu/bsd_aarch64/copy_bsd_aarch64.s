@@ -22,7 +22,11 @@
  *
  */
 
+#ifdef __APPLE__
 #define CFUNC(x) _##x
+#else
+#define CFUNC(x) x
+#endif
 
         .global CFUNC(_Copy_conjoint_words)
         .global CFUNC(_Copy_disjoint_words)

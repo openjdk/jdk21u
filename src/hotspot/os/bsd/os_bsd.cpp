@@ -258,8 +258,6 @@ static char cpu_arch[] = "aarch64";
 static char cpu_arch[] = "ppc";
 #elif defined(PPC64)
 static char cpu_arch[] = "ppc64";
-#elif defined(AARCH64)
-static char cpu_arch[] = "aarch64";
 #else
   #error Add appropriate cpu_arch setting
 #endif
