@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
  * or {@link javax.lang.model.element.Element "language model elements"}.
  * The usage is made explicit when it is not clear from the surrounding context.
  *
- * @see <a href="https://html.spec.whatwg.org/#classes>WhatWG: {@code class} attribute</a>
+ * @see <a href="https://html.spec.whatwg.org/#classes">WhatWG: {@code class} attribute</a>
  */
 public enum HtmlStyle {
     block,
@@ -338,6 +338,17 @@ public enum HtmlStyle {
      * all the properties declared in a JavaFX type element.
      */
     propertyDetails,
+
+    /**
+     * The class for the list containing the {@code @see} tags of an element.
+     */
+    seeList,
+
+    /**
+     * The class for the list containing the {@code @see} tags of an element
+     * when some of the tags have longer labels.
+     */
+    seeListLong,
 
     /**
      * The class for a {@code section} element containing details of the

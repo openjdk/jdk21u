@@ -137,14 +137,6 @@ AC_DEFUN([FLAGS_SETUP_LDFLAGS_HELPER],
       )
       LDFLAGS="$PUSHED_LDFLAGS"
     fi
-
-    if test "x$OPENJDK_TARGET_OS" = xlinux; then
-      # Hotspot needs to link librt to get the clock_* functions.
-      # But once our supported minimum build and runtime platform
-      # has glibc 2.17, this can be removed as the functions are
-      # in libc.
-      OS_LDFLAGS_JVM_ONLY="-lrt"
-    fi
   fi
 
   # Setup debug level-dependent LDFLAGS
