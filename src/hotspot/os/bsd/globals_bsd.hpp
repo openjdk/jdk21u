@@ -40,7 +40,10 @@
           "Use MAP_HUGETLB for large pages")        \
                                                     \
   product(bool, UseSHM, false,                      \
-          "Use SYSV shared memory for large pages")
+          "Use SYSV shared memory for large pages") \
+  AARCH64_ONLY(develop(bool, AssertWXAtThreadSync, false,               \
+          "Conservatively check W^X thread state at possible safepoint" \
+          "or handshake"))
 
 // end of RUNTIME_OS_FLAGS
 
