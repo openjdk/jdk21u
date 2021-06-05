@@ -1632,6 +1632,7 @@ public class PSPrinterJob extends RasterPrinterJob {
             String lprPath = "/usr/bin/lpr";
             if (osname.equals("FreeBSD")) {
                 final PrintService pservice = getPrintService();
+                @SuppressWarnings("removal")
                 Boolean isIPPPrinter = java.security.AccessController.doPrivileged(
                     new java.security.PrivilegedAction<Boolean>() {
                         public Boolean run() {
