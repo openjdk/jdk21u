@@ -62,11 +62,12 @@ import static com.sun.tools.javac.resources.CompilerProperties.Fragments.Implici
 import static com.sun.tools.javac.resources.CompilerProperties.Fragments.VarAndExplicitNotAllowed;
 import static com.sun.tools.javac.resources.CompilerProperties.Fragments.VarAndImplicitNotAllowed;
 
-/** The parser maps a token sequence into an abstract syntax
- *  tree. It operates by recursive descent, with code derived
- *  systematically from an LL(1) grammar. For efficiency reasons, an
- *  operator precedence scheme is used for parsing binary operation
- *  expressions.
+/**
+ * The parser maps a token sequence into an abstract syntax tree.
+ * The parser is a hand-written recursive-descent parser that
+ * implements the grammar described in the Java Language Specification.
+ * For efficiency reasons, an operator precedence scheme is used
+ * for parsing binary operation expressions.
  *
  *  <p><b>This is NOT part of any supported API.
  *  If you write code that depends on this, you do so at your own risk.
@@ -2407,16 +2408,12 @@ public class JavacParser implements Parser {
                 List<JCAnnotation> maybeDimAnnos = typeAnnotationsOpt();
                 int pos = token.pos;
                 nextToken();
-                if (token.kind == RBRACKET) {
+                if (token.kind == RBRACKET) { // no dimension
                     elemtype = bracketsOptCont(elemtype, pos, maybeDimAnnos);
                 } else {
-                    if (token.kind == RBRACKET) { // no dimension
-                        elemtype = bracketsOptCont(elemtype, pos, maybeDimAnnos);
-                    } else {
-                        dimAnnotations.append(maybeDimAnnos);
-                        dims.append(parseExpression());
-                        accept(RBRACKET);
-                    }
+                    dimAnnotations.append(maybeDimAnnos);
+                    dims.append(parseExpression());
+                    accept(RBRACKET);
                 }
             }
 
