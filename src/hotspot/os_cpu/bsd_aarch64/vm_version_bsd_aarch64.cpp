@@ -27,8 +27,11 @@
 #include "runtime/os.hpp"
 #include "vm_version_aarch64.hpp"
 
-#ifdef __APPLE__
-#include <sys/sysctl.h>
+void VM_Version::get_compatible_board(char *buf, int buflen) {
+  assert(buf != NULL, "invalid argument");
+  assert(buflen >= 1, "invalid argument");
+  *buf = '\0';
+}
 
 int VM_Version::get_current_sve_vector_length() {
   ShouldNotCallThis();
@@ -39,6 +42,9 @@ int VM_Version::set_and_get_current_sve_vector_length(int length) {
   ShouldNotCallThis();
   return -1;
 }
+
+#ifdef __APPLE__
+#include <sys/sysctl.h>
 
 static bool cpu_has(const char* optional) {
   uint32_t val;
@@ -89,12 +95,6 @@ void VM_Version::get_os_cpu_info() {
   }
   _model = family;
   _cpu = CPU_APPLE;
-}
-
-void VM_Version::get_compatible_board(char *buf, int buflen) {
-  assert(buf != NULL, "invalid argument");
-  assert(buflen >= 1, "invalid argument");
-  *buf = '\0';
 }
 
 bool VM_Version::is_cpu_emulated() {
@@ -290,28 +290,6 @@ static unsigned long os_get_processor_features() {
     auxv = auxv | HWCAP_AES;
   }
 
-
-void VM_Version::get_compatible_board(char *buf, int buflen) {
-  assert(buf != NULL, "invalid argument");
-  assert(buflen >= 1, "invalid argument");
-  *buf = '\0';
-  int fd = open("/proc/device-tree/compatible", O_RDONLY);
-  if (fd != -1) {
-    ssize_t read_sz = read(fd, buf, buflen - 1);
-    if (read_sz > 0) {
-      buf[read_sz] = '\0';
-      // Replace '\0' to ' '
-      for (char *ch = buf; ch < buf + read_sz; ch++) {
-        if (*ch == '\0') {
-          *ch = ' ';
-        }
-      }
-    } else {
-      *buf = '\0';
-    }
-    close(fd);
-  }
-}
   if (ID_AA64ISAR0_AES_VAL(id_aa64isar0) == ID_AA64ISAR0_AES_PMULL) {
     auxv = auxv | HWCAP_PMULL;
   }
@@ -336,18 +314,6 @@ void VM_Version::get_compatible_board(char *buf, int buflen) {
   return auxv;
 }
 #endif
-
-int VM_Version::get_current_sve_vector_length() {
-  assert(_features & CPU_SVE, "should not call this");
-  // Not available on *BSD
-  return 0;
-}
-
-int VM_Version::set_and_get_current_sve_vector_length(int length) {
-  assert(_features & CPU_SVE, "should not call this");
-  // Not available on *BSD
-  return 0;
-}
 
 void VM_Version::get_os_cpu_info() {
 #ifdef __OpenBSD__
