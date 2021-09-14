@@ -36,6 +36,7 @@ public record Platform(OperatingSystem os, Architecture arch) {
         LINUX,
         MACOS,
         AIX,
+        BSD,
         UNKNOWN;
     }
 
@@ -100,8 +101,11 @@ public record Platform(OperatingSystem os, Architecture arch) {
      * Returns the runtime {@code Platform.OperatingSystem}.
      */
     private static OperatingSystem runtimeOS() {
-        String osName = System.getProperty("os.name").substring(0, 3).toLowerCase();
-        OperatingSystem os = switch (osName) {
+        String osName = System.getProperty("os.name");
+        if (osName.toUpperCase().endsWith("BSD")) {
+            return OperatingSystem.BSD;
+        }
+        OperatingSystem os = switch (osName.substring(0, 3).toLowerCase()) {
             case "win" -> OperatingSystem.WINDOWS;
             case "lin" -> OperatingSystem.LINUX;
             case "mac" -> OperatingSystem.MACOS;
@@ -124,11 +128,11 @@ public record Platform(OperatingSystem os, Architecture arch) {
      */
     private static Architecture toArch(String archName) {
         Architecture arch = switch (archName) {
-            case "x86"             -> Architecture.X86;
-            case "amd64", "x86_64" -> Architecture.x64;
-            case "arm"             -> Architecture.ARM;
-            case "aarch64"         -> Architecture.AARCH64;
-            default                -> Architecture.UNKNOWN;
+            case "x86"              -> Architecture.X86;
+            case "amd64", "x86_64"  -> Architecture.x64;
+            case "arm"              -> Architecture.ARM;
+            case "aarch64", "arm64" -> Architecture.AARCH64;
+            default                 -> Architecture.UNKNOWN;
         };
         return arch;
     }
