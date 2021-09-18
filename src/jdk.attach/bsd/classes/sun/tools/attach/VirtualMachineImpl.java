@@ -33,6 +33,8 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.File;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /*
  * Bsd implementation of HotSpotVirtualMachine
  */
@@ -267,12 +269,7 @@ public class VirtualMachineImpl extends HotSpotVirtualMachine {
      */
     private void writeString(int fd, String s) throws IOException {
         if (s.length() > 0) {
-            byte b[];
-            try {
-                b = s.getBytes("UTF-8");
-            } catch (java.io.UnsupportedEncodingException x) {
-                throw new InternalError(x);
-            }
+            byte[] b = s.getBytes(UTF_8);
             VirtualMachineImpl.write(fd, b, 0, b.length);
         }
         byte b[] = new byte[1];
