@@ -199,7 +199,11 @@ size_t os::lasterror(char *buf, size_t len) {
 
 // Return true if user is running as root.
 bool os::have_special_privileges() {
+#ifdef _BSDONLY_SOURCE
+  static bool privileges = issetugid();
+#else
   static bool privileges = (getuid() != geteuid()) || (getgid() != getegid());
+#endif
   return privileges;
 }
 
