@@ -752,6 +752,10 @@ AC_DEFUN([FLAGS_SETUP_CFLAGS_CPU_DEP],
         # non-release builds.
         $1_CFLAGS_CPU_JVM="-homeparams"
       fi
+    elif test "x$OPENJDK_TARGET_OS_ENV" = xbsd.freebsd; then
+        if test "x$FLAGS_CPU" = xppc64; then
+            $1_CFLAGS_CPU_JVM="${$1_CFLAGS_CPU_JVM} -DABI_ELFv2 -mcpu=powerpc64 -mtune=power5"
+        fi
     fi
   fi
 
