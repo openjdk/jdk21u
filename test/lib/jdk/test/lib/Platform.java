@@ -381,7 +381,8 @@ public class Platform {
                 isServer() &&
                 (isLinux()   ||
                  isOSX()     ||
-                 isWindows()) &&
+                 isWindows() ||
+                 isBSD()) &&
                 !isZero()    &&
                 !isMinimal() &&
                 !isARM());
@@ -391,6 +392,6 @@ public class Platform {
      * This should match the #if condition in ClassListParser::load_class_from_source().
      */
     public static boolean areCustomLoadersSupportedForCDS() {
-        return (is64bit() && (isLinux() || isOSX() || isWindows()));
+        return (is64bit() && (isLinux() || isOSX() || isWindows() || isBSD()));
     }
 }
