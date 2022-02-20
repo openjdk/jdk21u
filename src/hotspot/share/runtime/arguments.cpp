@@ -548,6 +548,7 @@ static SpecialFlag const special_jvm_flags[] = {
 
   { "FilterSpuriousWakeups",        JDK_Version::jdk(18), JDK_Version::jdk(19), JDK_Version::jdk(20) },
   { "MinInliningThreshold",         JDK_Version::jdk(18), JDK_Version::jdk(19), JDK_Version::jdk(20) },
+  { "PrefetchFieldsAhead",          JDK_Version::undefined(), JDK_Version::jdk(19), JDK_Version::jdk(20) },
 #ifdef ASSERT
   { "DummyObsoleteTestFlag",        JDK_Version::undefined(), JDK_Version::jdk(18), JDK_Version::undefined() },
 #endif
@@ -2904,6 +2905,18 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
 #else // defined(DTRACE_ENABLED)
       jio_fprintf(defaultStream::error_stream(),
                   "ExtendedDTraceProbes flag is not applicable for this configuration\n");
+      return JNI_EINVAL;
+    } else if (match_option(option, "-XX:+DTraceMethodProbes")) {
+      jio_fprintf(defaultStream::error_stream(),
+                  "DTraceMethodProbes flag is not applicable for this configuration\n");
+      return JNI_EINVAL;
+    } else if (match_option(option, "-XX:+DTraceAllocProbes")) {
+      jio_fprintf(defaultStream::error_stream(),
+                  "DTraceAllocProbes flag is not applicable for this configuration\n");
+      return JNI_EINVAL;
+    } else if (match_option(option, "-XX:+DTraceMonitorProbes")) {
+      jio_fprintf(defaultStream::error_stream(),
+                  "DTraceMonitorProbes flag is not applicable for this configuration\n");
       return JNI_EINVAL;
 #endif // defined(DTRACE_ENABLED)
 #ifdef ASSERT
