@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -82,7 +82,7 @@ AC_DEFUN([FLAGS_SETUP_LDFLAGS_HELPER],
         -fPIC"
 
   elif test "x$TOOLCHAIN_TYPE" = xxlc; then
-    BASIC_LDFLAGS="-b64 -brtl -bnorwexec -bnolibpath -bexpall -bernotok -btextpsize:64K \
+    BASIC_LDFLAGS="-b64 -brtl -bnorwexec -bnolibpath -bnoexpall -bernotok -btextpsize:64K \
         -bdatapsize:64K -bstackpsize:64K"
     # libjvm.so has gotten too large for normal TOC size; compile with qpic=large and link with bigtoc
     BASIC_LDFLAGS_JVM_ONLY="-Wl,-lC_r -bbigtoc"
@@ -100,37 +100,34 @@ AC_DEFUN([FLAGS_SETUP_LDFLAGS_HELPER],
   fi
 
   # Setup OS-dependent LDFLAGS
-  if test "x$TOOLCHAIN_TYPE" = xclang || test "x$TOOLCHAIN_TYPE" = xgcc; then
-    if test "x$OPENJDK_TARGET_OS" = xmacosx; then
-      # Assume clang or gcc.
-      # FIXME: We should really generalize SET_SHARED_LIBRARY_ORIGIN instead.
-      OS_LDFLAGS_JVM_ONLY="-Wl,-rpath,@loader_path/. -Wl,-rpath,@loader_path/.."
-      OS_LDFLAGS="-mmacosx-version-min=$MACOSX_VERSION_MIN"
-    fi
+  if test "x$OPENJDK_TARGET_OS" = xmacosx && test "x$TOOLCHAIN_TYPE" = xclang; then
+    # FIXME: We should really generalize SET_SHARED_LIBRARY_ORIGIN instead.
+    OS_LDFLAGS_JVM_ONLY="-Wl,-rpath,@loader_path/. -Wl,-rpath,@loader_path/.."
+    OS_LDFLAGS="-mmacosx-version-min=$MACOSX_VERSION_MIN"
+  fi
 
-    # On OpenBSD check to see if ld requires -z wxneeded
-    if test "x$OPENJDK_TARGET_OS_ENV" = xbsd.openbsd; then
-      AC_MSG_CHECKING([if ld requires -z wxneeded])
-      PUSHED_LDFLAGS="$LDFLAGS"
-      LDFLAGS="$LDFLAGS -Wl,-z,wxneeded"
-      AC_LINK_IFELSE([AC_LANG_SOURCE([[int main() { }]])],
-          [
-            if $READELF -l conftest$ac_exeext | $GREP WXNEED > /dev/null; then
-              AC_MSG_RESULT([yes])
-              OS_LDFLAGS="-Wl,-z,wxneeded"
-            else
-              AC_MSG_RESULT([no])
-            fi
-          ],
-          [
+  # On OpenBSD check to see if ld requires -z wxneeded
+  if test "x$OPENJDK_TARGET_OS_ENV" = xbsd.openbsd; then
+    AC_MSG_CHECKING([if ld requires -z wxneeded])
+    PUSHED_LDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS -Wl,-z,wxneeded"
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[int main() { }]])],
+        [
+          if $READELF -l conftest$ac_exeext | $GREP WXNEED > /dev/null; then
+            AC_MSG_RESULT([yes])
+            OS_LDFLAGS="-Wl,-z,wxneeded"
+          else
             AC_MSG_RESULT([no])
-          ],
-          [
-            AC_MSG_RESULT([no])
-          ]
-      )
-      LDFLAGS="$PUSHED_LDFLAGS"
-    fi
+          fi
+        ],
+        [
+          AC_MSG_RESULT([no])
+        ],
+        [
+          AC_MSG_RESULT([no])
+        ]
+    )
+    LDFLAGS="$PUSHED_LDFLAGS"
   fi
 
   # Setup debug level-dependent LDFLAGS
