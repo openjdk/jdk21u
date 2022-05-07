@@ -131,7 +131,7 @@ intx CompilerConfig::scaled_compile_threshold(intx threshold, double scale) {
   } else {
     double v = threshold * scale;
     assert(v >= 0, "must be");
-    if (v > max_intx) {
+    if (v > (double)max_intx) {
       return max_intx;
     } else {
       return (intx)(v);
