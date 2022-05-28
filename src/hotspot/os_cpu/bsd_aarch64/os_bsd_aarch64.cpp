@@ -954,16 +954,22 @@ void os::print_context(outputStream *st, const void *context) {
   if (context == NULL) return;
 
   const ucontext_t *uc = (const ucontext_t*)context;
+
   st->print_cr("Registers:");
   for (int r = 0; r < 31; r++) {
-    st->print("R%-2d=", r);
 #if defined(__FreeBSD__)
-    print_location(st, uc->uc_mcontext.mc_gpregs.gp_x[r]);
+    st->print_cr(  "R%d=" INTPTR_FORMAT, r, (uintptr_t)uc->uc_mcontext.mc_gpregs.gp_x[r]);
 #elif defined(__OpenBSD__)
-    print_location(st, uc->sc_x[r]);
+    st->print_cr(  "R%d=" INTPTR_FORMAT, r, (uintptr_t)uc->sc_x[r]);
 #endif
   }
   st->cr();
+}
+
+void os::print_tos_pc(outputStream *st, const void *context) {
+  if (context == NULL) return;
+
+  const ucontext_t* uc = (const ucontext_t*)context;
 
   intptr_t *sp = (intptr_t *)os::Bsd::ucontext_get_sp(uc);
   st->print_cr("Top of Stack: (sp=" PTR_FORMAT ")", p2i(sp));
@@ -993,10 +999,11 @@ void os::print_register_info(outputStream *st, const void *context) {
   // this is only for the "general purpose" registers
 
   for (int r = 0; r < 31; r++)
+    st->print("R%-2d=", r);
 #if defined(__FreeBSD__)
-    st->print_cr(  "R%d=" INTPTR_FORMAT, r, (uintptr_t)uc->uc_mcontext.mc_gpregs.gp_x[r]);
+    print_location(st, uc->uc_mcontext.mc_gpregs.gp_x[r]);
 #elif defined(__OpenBSD__)
-    st->print_cr(  "R%d=" INTPTR_FORMAT, r, (uintptr_t)uc->sc_x[r]);
+    print_location(st, uc->sc_x[r]);
 #endif
   st->cr();
 }
