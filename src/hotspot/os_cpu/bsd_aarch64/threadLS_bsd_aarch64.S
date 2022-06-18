@@ -19,6 +19,7 @@
 // or visit www.oracle.com if you need additional information or have any
 // questions.
 
+#ifndef __APPLE__
         // JavaThread::aarch64_get_thread_helper()
         //
         // Return the current thread pointer in x0.
@@ -44,3 +45,4 @@ _ZN10JavaThread25aarch64_get_thread_helperEv:
 	ret
 
 	.size _ZN10JavaThread25aarch64_get_thread_helperEv, .-_ZN10JavaThread25aarch64_get_thread_helperEv
+#endif // !__APPLE__
