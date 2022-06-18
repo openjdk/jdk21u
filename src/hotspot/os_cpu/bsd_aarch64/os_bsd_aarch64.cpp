@@ -409,21 +409,6 @@ static void current_stack_region(address * bottom, size_t * size) {
          os::current_stack_pointer() < *bottom + *size, "just checking");
 }
 
-address os::current_stack_base() {
-  address bottom;
-  size_t size;
-  current_stack_region(&bottom, &size);
-  return (bottom + size);
-}
-
-size_t os::current_stack_size() {
-  // stack size includes normal stack and HotSpot guard pages
-  address bottom;
-  size_t size;
-  current_stack_region(&bottom, &size);
-  return size;
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // helper functions for fatal error handler
 
