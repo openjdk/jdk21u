@@ -48,6 +48,12 @@ private:
   bool pd_get_top_frame(frame* fr_addr, void* ucontext, bool isInJava);
 public:
 
+#ifdef __APPLE__
+  static Thread *aarch64_get_thread_helper() {
+    return Thread::current();
+  }
+#else
   static Thread *aarch64_get_thread_helper();
+#endif
 
 #endif // OS_CPU_BSD_AARCH64_THREAD_BSD_AARCH64_HPP
