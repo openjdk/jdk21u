@@ -21,6 +21,7 @@
 
 
 
+#ifndef __APPLE__
         .text
 
         .globl aarch64_atomic_fetch_add_8_default_impl
@@ -196,3 +197,4 @@ aarch64_atomic_cmpxchg_8_relaxed_default_impl:
         cbnz    w8, 0b
 1:      mov     x0, x3
         ret
+#endif // !__APPLE__
