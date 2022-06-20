@@ -650,6 +650,8 @@ address os::Posix::ucontext_get_pc(const ucontext_t * uc) {
   return (address)uc->uc_mcontext.mc_gpregs.gp_elr;
 #elif defined(__OpenBSD__)
   return (address)uc->sc_elr;
+#elif defined(__NetBSD__)
+  return (address)uc->uc_mcontext.__gregs[_REG_ELR];
 #endif
 }
 
@@ -658,6 +660,8 @@ void os::Posix::ucontext_set_pc(ucontext_t * uc, address pc) {
   uc->uc_mcontext.mc_gpregs.gp_elr = (intptr_t)pc;
 #elif defined(__OpenBSD__)
   uc->sc_elr = (unsigned long)pc;
+#elif defined(__NetBSD__)
+  uc->uc_mcontext.__gregs[_REG_ELR] = (__greg_t)pc;
 #endif
 }
 
@@ -666,6 +670,8 @@ intptr_t* os::Bsd::ucontext_get_sp(const ucontext_t * uc) {
   return (intptr_t*)uc->uc_mcontext.mc_gpregs.gp_sp;
 #elif defined(__OpenBSD__)
   return (intptr_t*)uc->sc_sp;
+#elif defined(__NetBSD__)
+  return (intptr_t*)uc->uc_mcontext.__gregs[_REG_SP];
 #endif
 }
 
@@ -674,6 +680,8 @@ intptr_t* os::Bsd::ucontext_get_fp(const ucontext_t * uc) {
   return (intptr_t*)uc->uc_mcontext.mc_gpregs.gp_x[REG_FP];
 #elif defined(__OpenBSD__)
   return (intptr_t*)uc->sc_x[REG_FP];
+#elif defined(__NetBSD__)
+  return (intptr_t*)uc->uc_mcontext.__gregs[_REG_FP];
 #endif
 }
 
@@ -715,6 +723,9 @@ frame os::fetch_compiled_frame_from_context(const void* ucVoid) {
                          - NativeInstruction::instruction_size);
 #elif defined(__OpenBSD__)
       address pc = (address)(uc->sc_lr
+                         - NativeInstruction::instruction_size);
+#elif defined(__NetBSD__)
+      address pc = (address)(uc->uc_mcontext.__gregs[_REG_LR]
                          - NativeInstruction::instruction_size);
 #endif
   return frame(sp, fp, pc);
@@ -946,6 +957,8 @@ void os::print_context(outputStream *st, const void *context) {
     st->print_cr(  "R%d=" INTPTR_FORMAT, r, (uintptr_t)uc->uc_mcontext.mc_gpregs.gp_x[r]);
 #elif defined(__OpenBSD__)
     st->print_cr(  "R%d=" INTPTR_FORMAT, r, (uintptr_t)uc->sc_x[r]);
+#elif defined(__NetBSD__)
+    st->print_cr(  "R%d=" INTPTR_FORMAT, r, (uintptr_t)uc->uc_mcontext.__gregs[r]);
 #endif
   }
   st->cr();
@@ -989,6 +1002,8 @@ void os::print_register_info(outputStream *st, const void *context) {
     print_location(st, uc->uc_mcontext.mc_gpregs.gp_x[r]);
 #elif defined(__OpenBSD__)
     print_location(st, uc->sc_x[r]);
+#elif defined(__NetBSD__)
+    print_location(st, uc->uc_mcontext.__gregs[r]);
 #endif
   }
   st->cr();
