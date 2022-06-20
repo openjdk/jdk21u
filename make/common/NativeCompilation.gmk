@@ -1206,6 +1206,9 @@ define SetupNativeCompilationBody
 		    $$($1_MT) -nologo -manifest $$($1_MANIFEST) -identity:"$$($1_NAME).exe, version=$$($1_MANIFEST_VERSION)" -outputresource:$$@;#1
                   endif
                 endif
+                ifeq ($(OPENJDK_TARGET_OS_ENV), bsd.netbsd)
+		  /usr/sbin/paxctl +m $$@
+                endif
                 # This only works if the openjdk_codesign identity is present on the system. Let
                 # silently fail otherwise.
                 ifneq ($(CODESIGN), )

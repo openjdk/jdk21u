@@ -106,6 +106,11 @@
   #include <vm/vm_param.h>
 #endif
 
+#ifdef __NetBSD__
+#include <link_elf.h>
+#include <lwp.h>
+#endif
+
 #ifdef __OpenBSD__
   #include <pthread_np.h>
   #include <link_elf.h>
@@ -2256,7 +2261,7 @@ void os::set_native_thread_name(const char *name) {
 #elif defined(__FreeBSD__) || defined(__OpenBSD__)
     pthread_set_name_np(pthread_self(), name);
 #elif defined(__NetBSD__)
-    pthread_setname_np(pthread_self(), "%s", name);
+    pthread_setname_np(pthread_self(), "%s", const_cast<char *>(name));
 #endif
   }
 }

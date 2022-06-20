@@ -66,7 +66,7 @@
   #endif
 #endif
 
-#if defined(__OpenBSD__)
+#if defined(__OpenBSD__) || defined(__NetBSD__)
   #ifndef IP_ADD_SOURCE_MEMBERSHIP
     #define IP_ADD_SOURCE_MEMBERSHIP        70   /* join a source-specific group */
     #define IP_DROP_SOURCE_MEMBERSHIP       71   /* drop a single source */

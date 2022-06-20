@@ -34,7 +34,9 @@
   #include <mach/mach.h>
   #include <mach/task_info.h>
 #else
+# if !defined(__NetBSD__)
   #include <sys/user.h>
+# endif
   #include <sys/sched.h>
   #include <sys/resource.h>
   #define NET_RT_IFLIST2 NET_RT_IFLIST
@@ -857,6 +859,9 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
 
   for (int i = 0; i < pid_count; i++) {
     // Executable path
+#if !defined(KERN_PROC_PATHNAME)
+#define KERN_PROC_PATHNAME 5
+#endif
     int pmib[] = { CTL_KERN, KERN_PROC_ARGS, lproc[i].p_pid, KERN_PROC_PATHNAME };
     const u_int pmiblen = sizeof(pmib) / sizeof(pmib[0]);
     char pbuf[PATH_MAX];
