@@ -921,9 +921,9 @@ void os::Bsd::init_thread_fpu_state(void) {
 
 // Minimum usable stack sizes required to get to user code. Space for
 // HotSpot guard pages is added later.
-size_t os::Posix::_compiler_thread_min_stack_allowed = 72 * K;
-size_t os::Posix::_java_thread_min_stack_allowed = 72 * K;
-size_t os::Posix::_vm_internal_thread_min_stack_allowed = 72 * K;
+size_t os::_compiler_thread_min_stack_allowed = 72 * K;
+size_t os::_java_thread_min_stack_allowed = 72 * K;
+size_t os::_vm_internal_thread_min_stack_allowed = 72 * K;
 
 // return default stack size for thr_type
 size_t os::Posix::default_stack_size(os::ThreadType thr_type) {
@@ -983,13 +983,14 @@ void os::print_register_info(outputStream *st, const void *context) {
 
   // this is only for the "general purpose" registers
 
-  for (int r = 0; r < 31; r++)
+  for (int r = 0; r < 31; r++) {
     st->print("R%-2d=", r);
 #if defined(__FreeBSD__)
     print_location(st, uc->uc_mcontext.mc_gpregs.gp_x[r]);
 #elif defined(__OpenBSD__)
     print_location(st, uc->sc_x[r]);
 #endif
+  }
   st->cr();
 }
 
