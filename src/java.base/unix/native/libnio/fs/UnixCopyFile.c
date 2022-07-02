@@ -84,7 +84,7 @@ Java_sun_nio_fs_UnixCopyFile_bufferedCopy0
 
     char* buf = (char*)jlong_to_ptr(address);
 
-#if defined(__linux__) || defined(_ALLBSD_SOURCE)
+#if defined(__linux__) || defined(_BSDONLY_SOURCE)
     int advice = POSIX_FADV_SEQUENTIAL | // sequential data access
                  POSIX_FADV_NOREUSE    | // will access only once
                  POSIX_FADV_WILLNEED;    // will access in near future
