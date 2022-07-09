@@ -28,7 +28,7 @@
 #include "utilities/debug.hpp"
 #include "utilities/globalDefinitions.hpp"
 
-#if defined(LINUX) || defined(AIX) || defined(BSD)
+#if defined(LINUX) || defined(AIX) || defined(_ALLBSD_SOURCE)
 # include "park_posix.hpp"
 #else
 # include OS_HEADER(park)

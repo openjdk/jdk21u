@@ -33,7 +33,7 @@ public:
   virtual void call() = 0;
 };
 
-#if defined(LINUX) || defined(AIX) || defined(BSD)
+#if defined(LINUX) || defined(AIX) || defined(_ALLBSD_SOURCE)
 # include "threadCrashProtection_posix.hpp"
 #else
 # include OS_HEADER(threadCrashProtection)

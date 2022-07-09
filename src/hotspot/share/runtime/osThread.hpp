@@ -32,7 +32,7 @@
 #include "runtime/suspendedThreadTask.hpp"
 #include "utilities/macros.hpp"
 
-#if defined(LINUX) || defined(AIX) || defined(BSD)
+#if defined(LINUX) || defined(AIX) || defined(_ALLBSD_SOURCE)
 #include "suspendResume_posix.hpp"
 #endif
 
