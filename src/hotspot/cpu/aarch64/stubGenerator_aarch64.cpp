@@ -298,9 +298,9 @@ class StubGenerator: public StubCodeGenerator {
 
     // call Java entry -- passing methdoOop, and current sp
     //      rmethod: Method*
-    //      r13: sender sp
+    //      r19_sender_sp: sender sp
     BLOCK_COMMENT("call Java function");
-    __ mov(r13, sp);
+    __ mov(r19_sender_sp, sp);
     __ blr(c_rarg4);
 
     // we do this here because the notify will already have been done
@@ -6414,7 +6414,7 @@ class StubGenerator: public StubCodeGenerator {
     return start;
   }
 
-#if defined(LINUX) || defined(_BSDONLY_SOURCE)
+#if (defined (LINUX) && !defined (__ARM_FEATURE_ATOMICS)) || defined(_BSDONLY_SOURCE)
 
   // ARMv8.1 LSE versions of the atomic stubs used by Atomic::PlatformXX.
   //
@@ -7989,7 +7989,7 @@ class StubGenerator: public StubCodeGenerator {
 
     StubRoutines::aarch64::_spin_wait = generate_spin_wait();
 
-#if defined(LINUX) || defined(_BSDONLY_SOURCE)
+#if (defined (LINUX) && !defined (__ARM_FEATURE_ATOMICS)) || defined(_BSDONLY_SOURCE)
 
     generate_atomic_entry_points();
 
@@ -8092,11 +8092,11 @@ void fill_continuation_entry(MacroAssembler* masm) {
 
   __ ldr(rscratch1, Address(rthread, JavaThread::cont_fastpath_offset()));
   __ str(rscratch1, Address(sp, ContinuationEntry::parent_cont_fastpath_offset()));
-  __ ldrw(rscratch1, Address(rthread, JavaThread::held_monitor_count_offset()));
-  __ strw(rscratch1, Address(sp, ContinuationEntry::parent_held_monitor_count_offset()));
+  __ ldr(rscratch1, Address(rthread, JavaThread::held_monitor_count_offset()));
+  __ str(rscratch1, Address(sp, ContinuationEntry::parent_held_monitor_count_offset()));
 
   __ str(zr, Address(rthread, JavaThread::cont_fastpath_offset()));
-  __ reset_held_monitor_count(rthread);
+  __ str(zr, Address(rthread, JavaThread::held_monitor_count_offset()));
 }
 
 // on entry, sp points to the ContinuationEntry
@@ -8113,8 +8113,8 @@ void continuation_enter_cleanup(MacroAssembler* masm) {
 
   __ ldr(rscratch1, Address(sp, ContinuationEntry::parent_cont_fastpath_offset()));
   __ str(rscratch1, Address(rthread, JavaThread::cont_fastpath_offset()));
-  __ ldrw(rscratch1, Address(sp, ContinuationEntry::parent_held_monitor_count_offset()));
-  __ strw(rscratch1, Address(rthread, JavaThread::held_monitor_count_offset()));
+  __ ldr(rscratch1, Address(sp, ContinuationEntry::parent_held_monitor_count_offset()));
+  __ str(rscratch1, Address(rthread, JavaThread::held_monitor_count_offset()));
 
   __ ldr(rscratch2, Address(sp, ContinuationEntry::parent_offset()));
   __ str(rscratch2, Address(rthread, JavaThread::cont_entry_offset()));
