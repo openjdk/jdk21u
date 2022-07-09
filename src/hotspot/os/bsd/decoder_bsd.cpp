@@ -23,8 +23,10 @@
  */
 
 #include "jvm.h"
+#include "runtime/os.hpp"
 #include "utilities/decoder_elf.hpp"
 #include "utilities/elfFile.hpp"
+#include "utilities/globalDefinitions.hpp"
 
 #include <cxxabi.h>
 
@@ -49,7 +51,7 @@ bool ElfDecoder::demangle(const char* symbol, char *buf, int buflen) {
   if ((result = abi::__cxa_demangle(symbol, NULL, NULL, &status)) != NULL) {
     jio_snprintf(buf, buflen, "%s", result);
       // call c library's free
-      ::free(result);
+      ALLOW_C_FUNCTION(::free, ::free(result);)
       return true;
   }
   return false;
