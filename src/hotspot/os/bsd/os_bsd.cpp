@@ -37,7 +37,6 @@
 #include "oops/oop.inline.hpp"
 #include "os_bsd.inline.hpp"
 #include "os_posix.inline.hpp"
-#include "os_share_bsd.hpp"
 #include "prims/jniFastGetField.hpp"
 #include "prims/jvm_misc.hpp"
 #include "runtime/arguments.hpp"
@@ -2318,25 +2317,6 @@ void os::os_exception_wrapper(java_call_t f, JavaValue* value,
 void os::print_statistics() {
 }
 
-bool os::message_box(const char* title, const char* message) {
-  int i;
-  fdStream err(defaultStream::error_fd());
-  for (i = 0; i < 78; i++) err.print_raw("=");
-  err.cr();
-  err.print_raw_cr(title);
-  for (i = 0; i < 78; i++) err.print_raw("-");
-  err.cr();
-  err.print_raw_cr(message);
-  for (i = 0; i < 78; i++) err.print_raw("=");
-  err.cr();
-
-  char buf[16];
-  // Prevent process from exiting upon "read error" without consuming all CPU
-  while (::read(0, buf, sizeof(buf)) <= 0) { ::sleep(100); }
-
-  return buf[0] == 'y' || buf[0] == 'Y';
-}
-
 // Java thread:
 //
 //   Low memory addresses
@@ -2445,7 +2425,6 @@ size_t os::current_stack_size() {
   return size;
 }
 #endif // ZERO
-
 
 static inline struct timespec get_mtime(const char* filename) {
   struct stat st;
