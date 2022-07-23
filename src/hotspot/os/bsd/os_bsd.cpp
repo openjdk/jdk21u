@@ -2314,9 +2314,6 @@ void os::os_exception_wrapper(java_call_t f, JavaValue* value,
   f(value, method, args, thread);
 }
 
-void os::print_statistics() {
-}
-
 // Java thread:
 //
 //   Low memory addresses
