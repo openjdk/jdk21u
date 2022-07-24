@@ -599,14 +599,14 @@ extern "C" {
     if (from > to) {
       const jlong *end = from + count;
       while (from < end)
-        os::atomic_copy64(from++, to++);
+        atomic_copy64(from++, to++);
     }
     else if (from < to) {
       const jlong *end = from;
       from += count - 1;
       to   += count - 1;
       while (from >= end)
-        os::atomic_copy64(from--, to--);
+        atomic_copy64(from--, to--);
     }
   }
 
@@ -1024,6 +1024,10 @@ void os::verify_stack_alignment() {
 int os::extra_bang_size_in_bytes() {
   // AArch64 does not require the additional stack bang.
   return 0;
+}
+
+static inline void atomic_copy64(const volatile void *src, volatile void *dst) {
+  *(jlong *) dst = *(const jlong *) src;
 }
 
 extern "C" {
