@@ -44,6 +44,7 @@
 #endif
 
 #if defined(_AIX)
+#include "os_aix.hpp"
 #include <libperfstat.h>
 #endif
 

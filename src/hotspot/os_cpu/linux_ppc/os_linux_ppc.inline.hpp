@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 1999, 2022, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, Red Hat Inc. All rights reserved.
+ * Copyright (c) 2002, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2013 SAP SE. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,19 +23,17 @@
  *
  */
 
-#ifndef OS_CPU_BSD_AARCH64_OS_BSD_AARCH64_HPP
-#define OS_CPU_BSD_AARCH64_OS_BSD_AARCH64_HPP
+#ifndef OS_CPU_LINUX_PPC_OS_LINUX_PPC_INLINE_HPP
+#define OS_CPU_LINUX_PPC_OS_LINUX_PPC_INLINE_HPP
 
-#if defined(COMPATIBLE_CDS_ALIGNMENT)
-#define CDS_CORE_REGION_ALIGNMENT (64*K)
+#include "os_linux.hpp"
+
+#if !defined(ABI_ELFv2)
+  // ppc (not ppcle) has function descriptors
+#define HAVE_FUNCTION_DESCRIPTORS 1
+inline void* os::resolve_function_descriptor(void* p) {
+  return os::Linux::resolve_function_descriptor(p);
+}
 #endif
 
-  static void setup_fpu();
-
-  static bool is_allocatable(size_t bytes);
-
-  // Used to register dynamic code cache area with the OS
-  // Note: Currently only used in 64 bit Windows implementations
-  static bool register_code_area(char *low, char *high) { return true; }
-
-#endif // OS_CPU_BSD_AARCH64_OS_BSD_AARCH64_HPP
+#endif // OS_CPU_LINUX_PPC_OS_LINUX_PPC_INLINE_HPP
