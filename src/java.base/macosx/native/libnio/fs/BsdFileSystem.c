@@ -64,54 +64,6 @@ int fcopyfile_callback(int what, int stage, copyfile_state_t state,
     }
     return COPYFILE_CONTINUE;
 }
-#endif
-
-// Copy via an intermediate temporary direct buffer
-JNIEXPORT void JNICALL
-Java_sun_nio_fs_UnixCopyFile_bufferedCopy0
-    (JNIEnv* env, jclass this, jint dst, jint src, jlong address,
-    jint transferSize, jlong cancelAddress)
-{
-    volatile jint* cancel = (jint*)jlong_to_ptr(cancelAddress);
-
-    char* buf = (char*)jlong_to_ptr(address);
-
-#if defined(__linux__) || defined(_BSDONLY_SOURCE)
-    int advice = POSIX_FADV_SEQUENTIAL | // sequential data access
-                 POSIX_FADV_NOREUSE    | // will access only once
-                 POSIX_FADV_WILLNEED;    // will access in near future
-
-    // ignore the return value hence any failure
-    posix_fadvise(src, 0, 0, advice);
-#endif
-
-    for (;;) {
-        ssize_t n, pos, len;
-        RESTARTABLE(read((int)src, buf, transferSize), n);
-        if (n <= 0) {
-            if (n < 0)
-                throwUnixException(env, errno);
-            return;
-        }
-        if (cancel != NULL && *cancel != 0) {
-            throwUnixException(env, ECANCELED);
-            return;
-        }
-        pos = 0;
-        len = n;
-        do {
-            char* bufp = buf;
-            bufp += pos;
-            RESTARTABLE(write((int)dst, bufp, len), n);
-            if (n == -1) {
-                throwUnixException(env, errno);
-                return;
-            }
-            pos += n;
-            len -= n;
-        } while (len > 0);
-    }
-}
 
 // Copy all bytes from src to dst, within the kernel if possible (Linux),
 // and return zero, otherwise return the appropriate status code.
