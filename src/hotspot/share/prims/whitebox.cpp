@@ -25,9 +25,10 @@
 #include "precompiled.hpp"
 #include <new>
 #include "cds.h"
+#include "cds/archiveHeapLoader.hpp"
 #include "cds/cdsConstants.hpp"
 #include "cds/filemap.hpp"
-#include "cds/heapShared.inline.hpp"
+#include "cds/heapShared.hpp"
 #include "cds/metaspaceShared.hpp"
 #include "classfile/classLoaderDataGraph.hpp"
 #include "classfile/javaClasses.inline.hpp"
@@ -82,7 +83,6 @@
 #include "runtime/jniHandles.inline.hpp"
 #include "runtime/os.hpp"
 #include "runtime/stackFrameStream.inline.hpp"
-#include "runtime/sweeper.hpp"
 #include "runtime/synchronizer.hpp"
 #include "runtime/threadSMR.hpp"
 #include "runtime/vframe.hpp"
@@ -601,7 +601,6 @@ class OldRegionsLivenessClosure: public HeapRegionClosure {
 
   bool do_heap_region(HeapRegion* r) {
     if (r->is_old()) {
-      size_t prev_live = r->marked_bytes();
       size_t live = r->live_bytes();
       size_t size = r->used();
       size_t reg_size = HeapRegion::GrainBytes;
@@ -609,9 +608,9 @@ class OldRegionsLivenessClosure: public HeapRegionClosure {
         _total_memory += size;
         ++_total_count;
         if (size == reg_size) {
-        // we don't include non-full regions since they are unlikely included in mixed gc
-        // for testing purposes it's enough to have lowest estimation of total memory that is expected to be freed
-          _total_memory_to_free += size - prev_live;
+          // We don't include non-full regions since they are unlikely included in mixed gc
+          // for testing purposes it's enough to have lowest estimation of total memory that is expected to be freed
+          _total_memory_to_free += size - live;
         }
       }
     }
@@ -810,7 +809,7 @@ WB_ENTRY(jboolean, WB_IsMethodCompiled(JNIEnv* env, jobject o, jobject method, j
   if (code == NULL) {
     return JNI_FALSE;
   }
-  return (code->is_alive() && !code->is_marked_for_deoptimization());
+  return !code->is_marked_for_deoptimization();
 WB_END
 
 static bool is_excluded_for_compiler(AbstractCompiler* comp, methodHandle& mh) {
@@ -1421,11 +1420,6 @@ WB_ENTRY(void, WB_UnlockCompilation(JNIEnv* env, jobject o))
   mo.notify_all();
 WB_END
 
-WB_ENTRY(void, WB_ForceNMethodSweep(JNIEnv* env, jobject o))
-  // Force a code cache sweep and block until it finished
-  NMethodSweeper::force_sweep();
-WB_END
-
 WB_ENTRY(jboolean, WB_IsInStringTable(JNIEnv* env, jobject o, jstring javaString))
   ResourceMark rm(THREAD);
   int len;
@@ -1999,7 +1993,7 @@ WB_ENTRY(jboolean, WB_IsSharedClass(JNIEnv* env, jobject wb, jclass clazz))
 WB_END
 
 WB_ENTRY(jboolean, WB_AreSharedStringsMapped(JNIEnv* env))
-  return HeapShared::closed_regions_mapped();
+  return ArchiveHeapLoader::closed_regions_mapped();
 WB_END
 
 WB_ENTRY(jobject, WB_GetResolvedReferences(JNIEnv* env, jobject wb, jclass clazz))
@@ -2024,7 +2018,7 @@ WB_ENTRY(void, WB_LinkClass(JNIEnv* env, jobject wb, jclass clazz))
 WB_END
 
 WB_ENTRY(jboolean, WB_AreOpenArchiveHeapObjectsMapped(JNIEnv* env))
-  return HeapShared::open_regions_mapped();
+  return ArchiveHeapLoader::open_regions_mapped();
 WB_END
 
 WB_ENTRY(jboolean, WB_IsCDSIncluded(JNIEnv* env))
@@ -2394,7 +2388,7 @@ WB_ENTRY(jlong, WB_ResolvedMethodItemsCount(JNIEnv* env, jobject o))
 WB_END
 
 WB_ENTRY(jint, WB_ProtectionDomainRemovedCount(JNIEnv* env, jobject o))
-  return (jint) SystemDictionary::pd_cache_table()->removed_entries_count();
+  return (jint) ProtectionDomainCacheTable::removed_entries_count();
 WB_END
 
 WB_ENTRY(jint, WB_GetKlassMetadataSize(JNIEnv* env, jobject wb, jclass mirror))
@@ -2660,7 +2654,6 @@ static JNINativeMethod methods[] = {
   {CC"getCPUFeatures",     CC"()Ljava/lang/String;",  (void*)&WB_GetCPUFeatures     },
   {CC"getNMethod0",         CC"(Ljava/lang/reflect/Executable;Z)[Ljava/lang/Object;",
                                                       (void*)&WB_GetNMethod         },
-  {CC"forceNMethodSweep",  CC"()V",                   (void*)&WB_ForceNMethodSweep  },
   {CC"allocateCodeBlob",   CC"(II)J",                 (void*)&WB_AllocateCodeBlob   },
   {CC"freeCodeBlob",       CC"(J)V",                  (void*)&WB_FreeCodeBlob       },
   {CC"getCodeHeapEntries", CC"(I)[Ljava/lang/Object;",(void*)&WB_GetCodeHeapEntries },
