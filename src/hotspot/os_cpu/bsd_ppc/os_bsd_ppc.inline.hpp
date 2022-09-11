@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002, 2022, Oracle and/or its affiliates. All rights reserved.
  * Copyright (c) 2012, 2013 SAP SE. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -23,19 +23,17 @@
  *
  */
 
-#ifndef OS_CPU_BSD_PPC_VM_OS_BSD_PPC_HPP
-#define OS_CPU_BSD_PPC_VM_OS_BSD_PPC_HPP
+#ifndef OS_CPU_BSD_PPC_VM_OS_BSD_PPC_INLINE_HPP
+#define OS_CPU_BSD_PPC_VM_OS_BSD_PPC_INLINE_HPP
 
-  static void setup_fpu() {}
-
-  // Used to register dynamic code cache area with the OS
-  // Note: Currently only used in 64 bit Windows implementations
-  static bool register_code_area(char *low, char *high) { return true; }
+#include "os_bsd.hpp"
 
 #if !defined(ABI_ELFv2)
   // ppc (not ppcle) has function descriptors
-  #define HAVE_FUNCTION_DESCRIPTORS 1
-  static void* resolve_function_descriptor(void* p);
+#define HAVE_FUNCTION_DESCRIPTORS 1
+inline void* os::resolve_function_descriptor(void* p) {
+  return os::Bsd::resolve_function_descriptor(p);
+}
 #endif
 
-#endif // OS_CPU_BSD_PPC_VM_OS_BSD_PPC_HPP
+#endif // OS_CPU_BSD_PPC_VM_OS_BSD_PPC_INLINE_HPP
