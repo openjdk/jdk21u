@@ -30,7 +30,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#ifdef _ALLBSD_SOURCE
+#ifdef __APPLE__
 #include <sys/attr.h>
 #endif
 
@@ -143,7 +143,7 @@ class UnixConstants {
     static final int PREFIX_AT_REMOVEDIR = 00;
 #endif
 
-#ifdef _ALLBSD_SOURCE
+#ifdef __APPLE__
     // flags used with setattrlist
     static final int PREFIX_ATTR_CMN_CRTIME = ATTR_CMN_CRTIME;
     static final int PREFIX_ATTR_CMN_MODTIME = ATTR_CMN_MODTIME;
@@ -157,7 +157,7 @@ class UnixConstants {
     static final int PREFIX_FSOPT_NOFOLLOW = 00;
 #endif
 
-#ifdef __linux__
+#if defined(__linux__) || defined(_BSDONLY_SOURCE)
     // advice flags used with posix_fadvise(2)
     static final int PREFIX_POSIX_FADV_SEQUENTIAL = POSIX_FADV_SEQUENTIAL;
     static final int PREFIX_POSIX_FADV_NOREUSE    = POSIX_FADV_NOREUSE;
