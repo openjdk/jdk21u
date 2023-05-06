@@ -56,3 +56,12 @@ ifeq ($(OPENJDK_TARGET_OS_ENV), bsd.netbsd)
   ## WORKAROUND need to provide Impl classes that throw UnsupportedOperationException
   SRC_SUBDIRS += macosx/classes
 endif
+
+ifeq ($(call isTargetOsType, unix), true)
+  ifeq ($(call isTargetOs, macosx aix), false)
+    ifneq ($(OPENJDK_TARGET_OS_ENV), bsd.openbsd)
+      # This class is not needed on "unix" because SCTP in Java is supported for that platform
+      EXCLUDE_FILES += $(TOPDIR)/src/jdk.sctp/share/classes/sun/nio/ch/sctp/UnsupportedUtil.java
+    endif
+  endif
+endif

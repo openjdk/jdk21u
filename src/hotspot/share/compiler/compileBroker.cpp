@@ -23,7 +23,6 @@
  */
 
 #include "precompiled.hpp"
-#include "jvm.h"
 #include "classfile/javaClasses.inline.hpp"
 #include "classfile/symbolTable.hpp"
 #include "classfile/vmClasses.hpp"
@@ -39,6 +38,7 @@
 #include "compiler/compilerOracle.hpp"
 #include "compiler/directivesParser.hpp"
 #include "interpreter/linkResolver.hpp"
+#include "jvm.h"
 #include "jfr/jfrEvents.hpp"
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
@@ -76,12 +76,12 @@
 #ifdef COMPILER1
 #include "c1/c1_Compiler.hpp"
 #endif
+#ifdef COMPILER2
+#include "opto/c2compiler.hpp"
+#endif
 #if INCLUDE_JVMCI
 #include "jvmci/jvmciEnv.hpp"
 #include "jvmci/jvmciRuntime.hpp"
-#endif
-#ifdef COMPILER2
-#include "opto/c2compiler.hpp"
 #endif
 
 #ifdef DTRACE_ENABLED
@@ -547,13 +547,12 @@ void CompileQueue::print(outputStream* st) {
 }
 
 void CompileQueue::print_tty() {
-  ResourceMark rm;
   stringStream ss;
   // Dump the compile queue into a buffer before locking the tty
   print(&ss);
   {
     ttyLocker ttyl;
-    tty->print("%s", ss.as_string());
+    tty->print("%s", ss.freeze());
   }
 }
 
@@ -933,7 +932,7 @@ void CompileBroker::init_compiler_threads() {
     // for JVMCI compiler which can create further ones on demand.
     JVMCI_ONLY(if (!UseJVMCICompiler || !UseDynamicNumberOfCompilerThreads || i == 0) {)
     // Create a name for our thread.
-    sprintf(name_buffer, "%s CompilerThread%d", _compilers[1]->name(), i);
+    os::snprintf_checked(name_buffer, sizeof(name_buffer), "%s CompilerThread%d", _compilers[1]->name(), i);
     Handle thread_oop = create_thread_oop(name_buffer, CHECK);
     thread_handle = JNIHandles::make_global(thread_oop);
     JVMCI_ONLY(})
@@ -955,7 +954,7 @@ void CompileBroker::init_compiler_threads() {
 
   for (int i = 0; i < _c1_count; i++) {
     // Create a name for our thread.
-    sprintf(name_buffer, "C1 CompilerThread%d", i);
+    os::snprintf_checked(name_buffer, sizeof(name_buffer), "C1 CompilerThread%d", i);
     Handle thread_oop = create_thread_oop(name_buffer, CHECK);
     jobject thread_handle = JNIHandles::make_global(thread_oop);
     _compiler1_objects[i] = thread_handle;
@@ -1019,7 +1018,7 @@ void CompileBroker::possibly_add_compiler_threads(JavaThread* THREAD) {
         // transitions if we bind them to new JavaThreads.
         if (!THREAD->can_call_java()) break;
         char name_buffer[256];
-        sprintf(name_buffer, "%s CompilerThread%d", _compilers[1]->name(), i);
+        os::snprintf_checked(name_buffer, sizeof(name_buffer), "%s CompilerThread%d", _compilers[1]->name(), i);
         Handle thread_oop;
         {
           // We have to give up the lock temporarily for the Java calls.
@@ -1567,7 +1566,7 @@ int CompileBroker::assign_compile_id(const methodHandle& method, int osr_bci) {
 // CompileBroker::assign_compile_id_unlocked
 //
 // Public wrapper for assign_compile_id that acquires the needed locks
-uint CompileBroker::assign_compile_id_unlocked(Thread* thread, const methodHandle& method, int osr_bci) {
+int CompileBroker::assign_compile_id_unlocked(Thread* thread, const methodHandle& method, int osr_bci) {
   MutexLocker locker(thread, MethodCompileQueue_lock);
   return assign_compile_id(method, osr_bci);
 }
@@ -1961,7 +1960,7 @@ void CompileBroker::init_compiler_thread_log() {
         if (LogCompilation && Verbose) {
           tty->print_cr("Opening compilation log %s", file_name);
         }
-        CompileLog* log = new(ResourceObj::C_HEAP, mtCompiler) CompileLog(file_name, fp, thread_id);
+        CompileLog* log = new(mtCompiler) CompileLog(file_name, fp, thread_id);
         if (log == NULL) {
           fclose(fp);
           return;
@@ -2023,7 +2022,6 @@ void CompileBroker::maybe_block() {
 // wrapper for CodeCache::print_summary()
 static void codecache_print(bool detailed)
 {
-  ResourceMark rm;
   stringStream s;
   // Dump code cache  into a buffer before locking the tty,
   {
@@ -2031,12 +2029,11 @@ static void codecache_print(bool detailed)
     CodeCache::print_summary(&s, detailed);
   }
   ttyLocker ttyl;
-  tty->print("%s", s.as_string());
+  tty->print("%s", s.freeze());
 }
 
 // wrapper for CodeCache::print_summary() using outputStream
 static void codecache_print(outputStream* out, bool detailed) {
-  ResourceMark rm;
   stringStream s;
 
   // Dump code cache into a buffer
@@ -2096,11 +2093,13 @@ CompilerDirectives* DirectivesStack::_bottom = NULL;
 //
 void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
   task->print_ul();
-  if (PrintCompilation) {
+  elapsedTimer time;
+
+  DirectiveSet* directive = task->directive();
+  if (directive->PrintCompilationOption) {
     ResourceMark rm;
     task->print_tty();
   }
-  elapsedTimer time;
 
   CompilerThread* thread = CompilerThread::current();
   ResourceMark rm(thread);
@@ -2110,26 +2109,21 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
   }
 
   // Common flags.
-  uint compile_id = task->compile_id();
+  int compile_id = task->compile_id();
   int osr_bci = task->osr_bci();
   bool is_osr = (osr_bci != standard_entry_bci);
   bool should_log = (thread->log() != NULL);
   bool should_break = false;
   const int task_level = task->comp_level();
   AbstractCompiler* comp = task->compiler();
-
-  DirectiveSet* directive;
   {
     // create the handle inside it's own block so it can't
     // accidentally be referenced once the thread transitions to
     // native.  The NoHandleMark before the transition should catch
     // any cases where this occurs in the future.
     methodHandle method(thread, task->method());
-    assert(!method->is_native(), "no longer compile natives");
 
-    // Look up matching directives
-    directive = DirectivesStack::getMatchingDirective(method, comp);
-    task->set_directive(directive);
+    assert(!method->is_native(), "no longer compile natives");
 
     // Update compile information when using perfdata.
     if (UsePerfData) {
@@ -2351,7 +2345,6 @@ void CompileBroker::handle_full_code_cache(CodeBlobType code_blob_type) {
   UseInterpreter = true;
   if (UseCompiler || AlwaysCompileLoopMethods ) {
     if (xtty != NULL) {
-      ResourceMark rm;
       stringStream s;
       // Dump code cache state into a buffer before locking the tty,
       // because log_state() will use locks causing lock conflicts.
@@ -2359,7 +2352,7 @@ void CompileBroker::handle_full_code_cache(CodeBlobType code_blob_type) {
       // Lock to prevent tearing
       ttyLocker ttyl;
       xtty->begin_elem("code_cache_full");
-      xtty->print("%s", s.as_string());
+      xtty->print("%s", s.freeze());
       xtty->stamp();
       xtty->end_elem();
     }
@@ -2439,7 +2432,7 @@ void CompileBroker::update_compile_perf_data(CompilerThread* thread, const metho
 void CompileBroker::collect_statistics(CompilerThread* thread, elapsedTimer time, CompileTask* task) {
   bool success = task->is_success();
   methodHandle method (thread, task->method());
-  uint compile_id = task->compile_id();
+  int compile_id = task->compile_id();
   bool is_osr = (task->osr_bci() != standard_entry_bci);
   const int comp_level = task->comp_level();
   CompilerCounters* counters = thread->counters();
@@ -2607,7 +2600,7 @@ void CompileBroker::print_times(bool per_compiler, bool aggregate) {
     char tier_name[256];
     for (int tier = CompLevel_simple; tier <= CompilationPolicy::highest_compile_level(); tier++) {
       CompilerStatistics* stats = &_stats_per_level[tier-1];
-      sprintf(tier_name, "Tier%d", tier);
+      os::snprintf_checked(tier_name, sizeof(tier_name), "Tier%d", tier);
       print_times(tier_name, stats);
     }
   }
