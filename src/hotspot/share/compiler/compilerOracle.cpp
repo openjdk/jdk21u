@@ -1050,7 +1050,7 @@ void CompilerOracle::parse_compile_only(char* line) {
       }
     }
 
-    if (className == NULL || className[0] == '\0') {
+    if (className == nullptr || className[0] == '\0') {
       // missing class name handled as "Any" class match
       className = "";
       c_match = MethodMatcher::Any;
