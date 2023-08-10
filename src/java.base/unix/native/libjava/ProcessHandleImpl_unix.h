@@ -25,6 +25,10 @@
 
 #include <sys/types.h>
 
+#ifdef __OpenBSD__
+  #include <sys/param.h>
+#endif
+
 /*
  * Declaration of ProcessHandleImpl functions common on all Unix platforms.
  * 'unix_' functions have a single implementation in ProcessHandleImpl_unix.c
@@ -75,6 +79,6 @@ extern void unix_fillArgArray(JNIEnv *env, jobject jinfo, int nargs, char *cp,
 
 extern void os_initNative(JNIEnv *env, jclass clazz);
 
-#if defined(__OpenBSD__)
+#if defined(__OpenBSD__) && OpenBSD < 202304
 extern int os_waitForProcessExitNoReap(pid_t pid);
 #endif

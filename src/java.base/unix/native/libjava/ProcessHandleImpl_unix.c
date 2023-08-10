@@ -252,7 +252,7 @@ Java_java_lang_ProcessHandleImpl_waitForProcessExit0(JNIEnv* env,
             return status;
         }
      } else {
-#if defined(__OpenBSD__)
+#if defined(__OpenBSD__) && OpenBSD < 202304
         return os_waitForProcessExitNoReap(pid);
 #else
         /*
