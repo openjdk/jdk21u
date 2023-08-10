@@ -2419,6 +2419,12 @@ static void current_stack_region(address * bottom, size_t * size) {
          os::current_stack_pointer() < *bottom + *size, "just checking");
 }
 
+#ifdef __OpenBSD__
+bool os::is_primordial_thread() {
+  return (pthread_main_np() == 1);
+}
+#endif
+
 address os::current_stack_base() {
   address bottom;
   size_t size;
