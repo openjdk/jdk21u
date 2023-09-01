@@ -24,6 +24,8 @@
  */
 package jdk.jpackage.internal;
 
+import jdk.internal.util.OperatingSystem;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
@@ -58,6 +60,10 @@ final class LauncherData {
 
     String qualifiedClassName() {
         return qualifiedClassName;
+    }
+
+    boolean isClassNameFromMainJar() {
+        return jarMainClass != null;
     }
 
     String packageName() {
@@ -209,6 +215,7 @@ final class LauncherData {
                 if (attrs != null) {
                     launcherData.qualifiedClassName = attrs.getValue(
                             Attributes.Name.MAIN_CLASS);
+                    launcherData.jarMainClass = launcherData.qualifiedClassName;
                 }
             }
         }
@@ -307,6 +314,7 @@ final class LauncherData {
     }
 
     private String qualifiedClassName;
+    private String jarMainClass;
     private Path mainJarName;
     private List<Path> classPath;
     private List<Path> modulePath;
@@ -344,7 +352,7 @@ final class LauncherData {
             // of `release` file.
 
             final Path releaseFile;
-            if (!Platform.isMac()) {
+            if (!OperatingSystem.isMacOS()) {
                 releaseFile = cookedRuntime.resolve("release");
             } else {
                 // On Mac `cookedRuntime` can be runtime root or runtime home.
