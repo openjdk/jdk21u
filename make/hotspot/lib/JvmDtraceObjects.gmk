@@ -69,15 +69,11 @@ ifeq ($(call check-jvm-feature, dtrace), true)
         jni.o \
         jniCheck.o \
         jvm.o \
-        macro.o \
         memAllocator.o \
         memoryManager.o \
         nmethod.o \
         objectMonitor.o \
-        parse1.o \
-        parseHelper.o \
         psVMOperations.o \
-        runtime.o \
         runtimeService.o \
         sharedRuntime.o \
         synchronizer.o \
@@ -89,6 +85,15 @@ ifeq ($(call check-jvm-feature, dtrace), true)
     ifeq ($(call check-jvm-feature, parallelgc), true)
       DTRACE_INSTRUMENTED_OBJS += $(addprefix $(JVM_OUTPUTDIR)/objs/, \
           psVMOperations.o \
+      )
+    endif
+
+    ifeq ($(call check-jvm-feature, zero), false)
+      DTRACE_INSTRUMENTED_OBJS += $(addprefix $(JVM_OUTPUTDIR)/objs/, \
+          macro.o \
+          parse1.o \
+          parseHelper.o \
+          runtime.o \
       )
     endif
 

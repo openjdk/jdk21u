@@ -94,13 +94,13 @@ char* os::non_memory_address_word() {
 address os::Posix::ucontext_get_pc(const ucontext_t* uc) {
   if (DecodeErrorContext) {
 #if defined(IA32)
-    return (address)uc->uc_mcontext.gregs[REG_EIP];
+    return (address)uc->uc_mcontext.mc_eip;
 #elif defined(AMD64)
-    return (address)uc->uc_mcontext.gregs[REG_RIP];
+    return (address)uc->uc_mcontext.mc_rip;
 #elif defined(AARCH64)
-    return (address)uc->uc_mcontext.pc;
+    return (address)uc->uc_mcontext.mc_gpregs.gp_elr;
 #elif defined(PPC)
-    return (address)uc->uc_mcontext.regs->nip;
+    return (address)uc->uc_mcontext.mc_srr0;
 #else
     // Non-arch-specific Zero code does not really know the PC.
     // If possible, add the arch-specific definition in this method.
@@ -119,13 +119,13 @@ void os::Posix::ucontext_set_pc(ucontext_t* uc, address pc) {
 intptr_t* os::Bsd::ucontext_get_sp(const ucontext_t* uc) {
   if (DecodeErrorContext) {
 #if defined(IA32)
-    return (intptr_t*)uc->uc_mcontext.gregs[REG_UESP];
+    return (intptr_t*)uc->uc_mcontext.mc_esp;
 #elif defined(AMD64)
-    return (intptr_t*)uc->uc_mcontext.gregs[REG_RSP];
+    return (intptr_t*)uc->uc_mcontext.mc_rsp;
 #elif defined(AARCH64)
-    return (intptr_t*)uc->uc_mcontext.sp;
+    return (intptr_t*)uc->uc_mcontext.mc_gpregs.gp_sp;
 #elif defined(PPC)
-    return (intptr_t*)uc->uc_mcontext.regs->gpr[1/*REG_SP*/];
+    return (intptr_t*)uc->uc_mcontext.mc_gpr[1/*REG_SP*/];
 #else
     // Non-arch-specific Zero code does not really know the SP.
     // If possible, add the arch-specific definition in this method.
@@ -140,11 +140,11 @@ intptr_t* os::Bsd::ucontext_get_sp(const ucontext_t* uc) {
 intptr_t* os::Bsd::ucontext_get_fp(const ucontext_t* uc) {
   if (DecodeErrorContext) {
 #if defined(IA32)
-    return (intptr_t*)uc->uc_mcontext.gregs[REG_EBP];
+    return (intptr_t*)uc->uc_mcontext.mc_ebp;
 #elif defined(AMD64)
-    return (intptr_t*)uc->uc_mcontext.gregs[REG_RBP];
+    return (intptr_t*)uc->uc_mcontext.mc_rbp;
 #elif defined(AARCH64)
-    return (intptr_t*)uc->uc_mcontext.regs[29 /* REG_FP */];
+    return (intptr_t*)uc->uc_mcontext.mc_gpregs.gp_x[REG_FP];
 #elif defined(PPC)
     return nullptr;
 #else
