@@ -1245,7 +1245,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_fgetxattr0(JNIEnv* env, jclass clazz,
 
 #ifdef __linux__
     res = fgetxattr(fd, name, value, valueLen);
-#elif MACOSX
+#elif defined(MACOSX)
     res = fgetxattr(fd, name, value, valueLen, 0, 0);
 #elif defined(__FreeBSD__) || defined(__NetBSD__)
     res = extattr_get_fd(fd, EXTATTR_NAMESPACE_USER, name, value, (size_t)valueLen);
@@ -1268,7 +1268,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_fsetxattr0(JNIEnv* env, jclass clazz,
 
 #ifdef __linux__
     res = fsetxattr(fd, name, value, valueLen, 0);
-#elif MACOSX
+#elif defined(MACOSX)
     res = fsetxattr(fd, name, value, valueLen, 0, 0);
 #elif defined(__FreeBSD__) || defined(__NetBSD__)
     res = extattr_set_fd(fd, EXTATTR_NAMESPACE_USER, name, value, (size_t)valueLen);
@@ -1289,7 +1289,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_fremovexattr0(JNIEnv* env, jclass clazz,
 
 #ifdef __linux__
     res = fremovexattr(fd, name);
-#elif MACOSX
+#elif defined(MACOSX)
     res = fremovexattr(fd, name, 0);
 #elif defined(__FreeBSD__) || defined(__NetBSD__)
     res = extattr_delete_fd(fd, EXTATTR_NAMESPACE_USER, name);
@@ -1310,7 +1310,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_flistxattr(JNIEnv* env, jclass clazz,
 
 #ifdef __linux__
     res = flistxattr(fd, list, (size_t)size);
-#elif MACOSX
+#elif defined(MACOSX)
     res = flistxattr(fd, list, (size_t)size, 0);
 #elif defined(__FreeBSD__) || defined(__NetBSD__)
     res = extattr_list_fd(fd, EXTATTR_NAMESPACE_USER, list, (size_t)size);
