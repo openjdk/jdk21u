@@ -148,7 +148,7 @@ class UnixConstants {
     static final int PREFIX_AT_REMOVEDIR = 00;
 #endif
 
-#ifdef _ALLBSD_SOURCE
+#ifdef __APPLE__
     // flags used with clonefile
     static final int PREFIX_CLONE_NOFOLLOW = CLONE_NOFOLLOW;
     static final int PREFIX_CLONE_NOOWNERCOPY = CLONE_NOOWNERCOPY;
