@@ -127,14 +127,14 @@ else ifeq ($(call isTargetOs, bsd), true)
   FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)^_ZTV|^gHotSpotVM|^UseSharedSpaces$$
   FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)|^_ZN9Arguments17SharedArchivePathE$$
   ifeq ($(OPENJDK_TARGET_OS_ENV), bsd.openbsd)
-    DUMP_SYMBOLS_CMD := $(NM) *.o
+    DUMP_SYMBOLS_CMD := $(NM) *$(OBJ_SUFFIX)
     FILTER_SYMBOLS_AWK_SCRIPT := \
         '{ \
           if ($$2 == "U") next; \
           if ($$3 ~ /$(FILTER_SYMBOLS_PATTERN)/) print $$3; \
         }'
   else
-    DUMP_SYMBOLS_CMD := $(NM) --defined-only *.o
+    DUMP_SYMBOLS_CMD := $(NM) --defined-only *$(OBJ_SUFFIX)
     FILTER_SYMBOLS_AWK_SCRIPT := \
         '{ \
           if ($$3 ~ /$(FILTER_SYMBOLS_PATTERN)/) print $$3; \
