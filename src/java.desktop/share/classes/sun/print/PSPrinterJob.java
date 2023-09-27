@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -82,6 +82,7 @@ import java.util.Properties;
 
 import sun.awt.CharsetString;
 import sun.awt.FontConfiguration;
+import sun.awt.OSInfo;
 import sun.awt.PlatformFont;
 import sun.awt.SunToolkit;
 import sun.font.FontAccess;
@@ -344,8 +345,7 @@ public class PSPrinterJob extends RasterPrinterJob {
                             new java.security.PrivilegedAction<Object>() {
             public Object run() {
                 mFontProps = initProps();
-                String osName = System.getProperty("os.name");
-                isMac = osName.startsWith("Mac");
+                isMac = OSInfo.getOSType() == OSInfo.OSType.MACOSX;
                 return null;
             }
         });
@@ -1623,31 +1623,9 @@ public class PSPrinterJob extends RasterPrinterJob {
             ncomps+=1; // for jobsheet
         }
 
-        String osname = System.getProperty("os.name");
-        if (osname.equals("Linux") || osname.contains("OS X") || osname.endsWith("BSD")) {
-            String lprPath = "/usr/bin/lpr";
-            if (osname.equals("FreeBSD")) {
-                final PrintService pservice = getPrintService();
-                @SuppressWarnings("removal")
-                Boolean isIPPPrinter = java.security.AccessController.doPrivileged(
-                    new java.security.PrivilegedAction<Boolean>() {
-                        public Boolean run() {
-                           try {
-                               Class<?> psClass =
-                                   Class.forName("sun.print.IPPPrintService");
-                               if (psClass.isInstance(pservice)) {
-                                    return Boolean.TRUE;
-                               }
-                           } catch (Throwable t) {
-                           }
-                           return Boolean.FALSE;
-                        }
-                    }
-                );
-                if (isIPPPrinter) {
-                    lprPath = "/usr/local/bin/lpr";
-                }
-            }
+        if (OSInfo.getOSType() == OSInfo.OSType.LINUX ||
+            OSInfo.getOSType() == OSInfo.OSType.BSD ||
+                OSInfo.getOSType() == OSInfo.OSType.MACOSX) {
             execCmd = new String[ncomps];
             execCmd[n++] = lprPath;
             if ((pFlags & PRINTER) != 0) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -230,14 +230,16 @@ import java.util.Locale;
  * <p>
  * The first example uses the static method {@code MessageFormat.format},
  * which internally creates a {@code MessageFormat} for one-time use:
- * <blockquote><pre>
+ * <blockquote>
+ * {@snippet lang=java :
  * int planet = 7;
  * String event = "a disturbance in the Force";
  *
  * String result = MessageFormat.format(
  *     "At {1,time} on {1,date}, there was {2} on planet {0,number,integer}.",
  *     planet, new Date(), event);
- * </pre></blockquote>
+ * }
+ * </blockquote>
  * The output is:
  * <blockquote><pre>
  * At 12:30 PM on Jul 3, 2053, there was a disturbance in the Force on planet 7.
@@ -246,16 +248,18 @@ import java.util.Locale;
  * <p>
  * The following example creates a {@code MessageFormat} instance that
  * can be used repeatedly:
- * <blockquote><pre>
+ * <blockquote>
+ * {@snippet lang=java :
  * int fileCount = 1273;
  * String diskName = "MyDisk";
- * Object[] testArgs = {new Long(fileCount), diskName};
+ * Object[] testArgs = {Long.valueOf(fileCount), diskName};
  *
  * MessageFormat form = new MessageFormat(
  *     "The disk \"{1}\" contains {0} file(s).");
  *
  * System.out.println(form.format(testArgs));
- * </pre></blockquote>
+ * }
+ * </blockquote>
  * The output with different values for {@code fileCount}:
  * <blockquote><pre>
  * The disk "MyDisk" contains 0 file(s).
@@ -266,7 +270,8 @@ import java.util.Locale;
  * <p>
  * For more sophisticated patterns, you can use a {@code ChoiceFormat}
  * to produce correct forms for singular and plural:
- * <blockquote><pre>
+ * <blockquote>
+ * {@snippet lang=java :
  * MessageFormat form = new MessageFormat("The disk \"{1}\" contains {0}.");
  * double[] filelimits = {0,1,2};
  * String[] filepart = {"no files","one file","{0,number} files"};
@@ -275,10 +280,11 @@ import java.util.Locale;
  *
  * int fileCount = 1273;
  * String diskName = "MyDisk";
- * Object[] testArgs = {new Long(fileCount), diskName};
+ * Object[] testArgs = {Long.valueOf(fileCount), diskName};
  *
  * System.out.println(form.format(testArgs));
- * </pre></blockquote>
+ * }
+ * </blockquote>
  * The output with different values for {@code fileCount}:
  * <blockquote><pre>
  * The disk "MyDisk" contains no files.
@@ -290,10 +296,12 @@ import java.util.Locale;
  * You can create the {@code ChoiceFormat} programmatically, as in the
  * above example, or by using a pattern. See {@link ChoiceFormat}
  * for more information.
- * <blockquote><pre>{@code
+ * <blockquote>
+ * {@snippet lang=java :
  * form.applyPattern(
  *    "There {0,choice,0#are no files|1#is one file|1<are {0,number,integer} files}.");
- * }</pre></blockquote>
+ * }
+ * </blockquote>
  *
  * <p>
  * <strong>Note:</strong> As we see above, the string produced
@@ -305,26 +313,29 @@ import java.util.Locale;
  * <p>
  * When a single argument is parsed more than once in the string, the last match
  * will be the final result of the parsing.  For example,
- * <blockquote><pre>
+ * <blockquote>
+ * {@snippet lang=java :
  * MessageFormat mf = new MessageFormat("{0,number,#.##}, {0,number,#.#}");
- * Object[] objs = {new Double(3.1415)};
+ * Object[] objs = {Double.valueOf(3.1415)};
  * String result = mf.format( objs );
  * // result now equals "3.14, 3.1"
- * objs = null;
  * objs = mf.parse(result, new ParsePosition(0));
- * // objs now equals {new Double(3.1)}
- * </pre></blockquote>
+ * // objs now equals {Double.valueOf(3.1)}
+ * }
+ * </blockquote>
  *
  * <p>
  * Likewise, parsing with a {@code MessageFormat} object using patterns containing
  * multiple occurrences of the same argument would return the last match.  For
  * example,
- * <blockquote><pre>
+ * <blockquote>
+ * {@snippet lang=java :
  * MessageFormat mf = new MessageFormat("{0}, {0}, {0}");
  * String forParsing = "x, y, z";
  * Object[] objs = mf.parse(forParsing, new ParsePosition(0));
- * // result now equals {new String("z")}
- * </pre></blockquote>
+ * // objs now equals {new String("z")}
+ * }
+ * </blockquote>
  *
  * <h3><a id="synchronization">Synchronization</a></h3>
  *
@@ -379,11 +390,19 @@ public class MessageFormat extends Format {
      * Patterns and their interpretation are specified in the
      * <a href="#patterns">class description</a>.
      *
+     * @implSpec The default implementation throws a
+     * {@code NullPointerException} if {@code locale} is {@code null}
+     * either during the creation of the {@code MessageFormat} object or later
+     * when {@code format()} is called by a {@code MessageFormat}
+     * instance with a null locale and the implementation utilizes a
+     * locale-dependent subformat.
+     *
      * @param pattern the pattern for this message format
      * @param locale the locale for this message format
      * @throws    IllegalArgumentException if the pattern is invalid
      * @throws    NullPointerException if {@code pattern} is
-     *            {@code null}
+     *            {@code null} or {@code locale} is {@code null} and the
+     *            implementation uses a locale-dependent subformat.
      * @since 1.4
      */
     public MessageFormat(String pattern, Locale locale) {
@@ -832,7 +851,10 @@ public class MessageFormat extends Format {
      * @throws    IllegalArgumentException if an argument in the
      *            {@code arguments} array is not of the type
      *            expected by the format element(s) that use it.
-     * @throws    NullPointerException if {@code result} is {@code null}
+     * @throws    NullPointerException if {@code result} is {@code null} or
+     *            if the {@code MessageFormat} instance that calls this method
+     *            has locale set to null, and the implementation
+     *            uses a locale-dependent subformat.
      */
     public final StringBuffer format(Object[] arguments, StringBuffer result,
                                      FieldPosition pos)
@@ -878,7 +900,10 @@ public class MessageFormat extends Format {
      * @throws    IllegalArgumentException if an argument in the
      *            {@code arguments} array is not of the type
      *            expected by the format element(s) that use it.
-     * @throws    NullPointerException if {@code result} is {@code null}
+     * @throws    NullPointerException if {@code result} is {@code null} or
+     *            if the {@code MessageFormat} instance that calls this method
+     *            has locale set to null, and the implementation
+     *            uses a locale-dependent subformat.
      */
     public final StringBuffer format(Object arguments, StringBuffer result,
                                      FieldPosition pos)

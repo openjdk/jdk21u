@@ -150,16 +150,6 @@ class LambdaForm {
         static final int ARG_TYPE_LIMIT = ARG_TYPES.length;
         static final int TYPE_LIMIT = ALL_TYPES.length;
 
-        // Derived int constants, which (unlike the enums) can be constant folded.
-        // We can remove them when JDK-8161245 is fixed.
-        static final byte
-                L_TYPE_NUM = (byte) L_TYPE.ordinal(),
-                I_TYPE_NUM = (byte) I_TYPE.ordinal(),
-                J_TYPE_NUM = (byte) J_TYPE.ordinal(),
-                F_TYPE_NUM = (byte) F_TYPE.ordinal(),
-                D_TYPE_NUM = (byte) D_TYPE.ordinal(),
-                V_TYPE_NUM = (byte) V_TYPE.ordinal();
-
         final char btChar;
         final Class<?> btClass;
         final Wrapper btWrapper;
@@ -342,7 +332,7 @@ class LambdaForm {
         this.isCompiled = false;
     }
 
-    // root factory pre/post processing and calls simple cosntructor
+    // root factory pre/post processing and calls simple constructor
     private static LambdaForm create(int arity, Name[] names, int result, boolean forceInline, MethodHandle customized, Kind kind) {
         names = names.clone();
         assert(namesOK(arity, names));

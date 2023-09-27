@@ -48,7 +48,7 @@ public final class JVM {
      * The monitor type is used to exclude jdk.JavaMonitorWait events from being generated
      * when Object.wait() is called on this monitor.
      */
-    static final Object CHUNK_ROTATION_MONITOR = new ChunkRotationMonitor();
+    public static final Object CHUNK_ROTATION_MONITOR = new ChunkRotationMonitor();
 
     private volatile boolean nativeOK;
 
@@ -457,7 +457,17 @@ public final class JVM {
     /**
      * Flushes the EventWriter for this thread.
      */
-    public static native boolean flush(EventWriter writer, int uncommittedSize, int requestedSize);
+    public static native void flush(EventWriter writer, int uncommittedSize, int requestedSize);
+
+    /**
+     * Commits an event to the underlying buffer by setting the nextPosition.
+     *
+     * @param nextPosition
+     *
+     * @return the next startPosition
+     */
+    @IntrinsicCandidate
+    public static native long commit(long nextPosition);
 
     /**
      * Flushes all thread buffers to disk and the constant pool data needed to read
@@ -641,4 +651,11 @@ public final class JVM {
      * JVM runs in a container.
      */
     public native long hostTotalMemory();
+
+    /**
+     * Emit a jdk.DataLoss event for the specified amount of bytes.
+     *
+     * @param bytes number of bytes that were lost
+     */
+    public static native void emitDataLoss(long bytes);
 }

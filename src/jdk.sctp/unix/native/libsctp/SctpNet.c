@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,7 +30,6 @@
 #include "Sctp.h"
 #include "jni.h"
 #include "jni_util.h"
-#include "nio_util.h"
 #include "nio.h"
 #include "net_util.h"
 #include "net_util_md.h"
@@ -65,7 +64,7 @@ static int preCloseFD = -1;     /* File descriptor to which we dup other fd's
  * functions, as well as locating the individual functions.
  * There will be a pending exception if this method returns false.
  */
-jboolean loadSocketExtensionFuncs
+static jboolean loadSocketExtensionFuncs
   (JNIEnv* env) {
 #ifndef __FreeBSD__
     if (dlopen(nativeSctpLib, RTLD_GLOBAL | RTLD_LAZY) == NULL) {
@@ -121,8 +120,8 @@ jboolean loadSocketExtensionFuncs
     return JNI_TRUE;
 }
 
-jint
-handleSocketError(JNIEnv *env, jint errorValue)
+jint sctpHandleSocketErrorWithMessage(JNIEnv *env, jint errorValue,
+                                      const char* message)
 {
     char *xn;
     switch (errorValue) {
@@ -132,9 +131,8 @@ handleSocketError(JNIEnv *env, jint errorValue)
             xn= JNU_JAVANETPKG "ProtocolException";
             break;
         case ECONNREFUSED:
-            xn = JNU_JAVANETPKG "ConnectException";
-            break;
         case ETIMEDOUT:
+        case ENOTCONN:
             xn = JNU_JAVANETPKG "ConnectException";
             break;
         case EHOSTUNREACH:
@@ -149,8 +147,17 @@ handleSocketError(JNIEnv *env, jint errorValue)
             break;
     }
     errno = errorValue;
-    JNU_ThrowByNameWithLastError(env, xn, "NioSocketError");
+    if (message == NULL) {
+        JNU_ThrowByNameWithLastError(env, xn, "NioSocketError");
+    } else {
+        JNU_ThrowByNameWithMessageAndLastError(env, xn, message);
+    }
     return IOS_THROWN;
+}
+
+jint sctpHandleSocketError(JNIEnv *env, jint errorValue)
+{
+    return sctpHandleSocketErrorWithMessage(env, errorValue, NULL);
 }
 
 /*
@@ -199,7 +206,7 @@ JNIEXPORT jint JNICALL Java_sun_nio_ch_sctp_SctpNet_socket0
                                          "Protocol not supported");
             return IOS_THROWN;
         } else {
-            return handleSocketError(env, errno);
+            return sctpHandleSocketErrorWithMessage(env, errno, "socket call failed");
         }
     }
 
@@ -214,7 +221,7 @@ JNIEXPORT jint JNICALL Java_sun_nio_ch_sctp_SctpNet_socket0
     //event.sctp_partial_delivery_event = 1;
     //event.sctp_adaptation_layer_event = 1;
     if (setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS, &event, sizeof(event)) != 0) {
-       handleSocketError(env, errno);
+       sctpHandleSocketErrorWithMessage(env, errno, "setsockopt failed");
     }
     return fd;
 }
@@ -252,7 +259,7 @@ JNIEXPORT void JNICALL Java_sun_nio_ch_sctp_SctpNet_bindx
 
     if (nio_sctp_bindx(fd, (void *)sap, addrsLength, add ? SCTP_BINDX_ADD_ADDR :
                        SCTP_BINDX_REM_ADDR) != 0) {
-        handleSocketError(env, errno);
+        sctpHandleSocketError(env, errno);
     }
 
     free(sap);
@@ -267,7 +274,7 @@ JNIEXPORT void JNICALL
 Java_sun_nio_ch_sctp_SctpNet_listen0
   (JNIEnv *env, jclass cl, jint fd, jint backlog) {
     if (listen(fd, backlog) < 0)
-        handleSocketError(env, errno);
+        sctpHandleSocketError(env, errno);
 }
 
 /*
@@ -294,7 +301,7 @@ Java_sun_nio_ch_sctp_SctpNet_connect0
         } else if (errno == EINTR) {
             return IOS_INTERRUPTED;
         }
-        return handleSocketError(env, errno);
+        return sctpHandleSocketError(env, errno);
     }
     return 1;
 }
@@ -369,7 +376,7 @@ JNIEXPORT jobjectArray JNICALL Java_sun_nio_ch_sctp_SctpNet_getLocalAddresses0
     jobjectArray isaa;
 
     if ((addrCount = nio_sctp_getladdrs(fd, 0, (struct sockaddr **)&addr_buf)) == -1) {
-        handleSocketError(env, errno);
+        sctpHandleSocketError(env, errno);
         return NULL;
     }
 
@@ -414,7 +421,7 @@ jobjectArray getRemoteAddresses(JNIEnv *env, jint fd, sctp_assoc_t id) {
     jobjectArray isaa;
 
     if ((addrCount = nio_sctp_getpaddrs(fd, id, (struct sockaddr **)&addr_buf)) == -1) {
-        handleSocketError(env, errno);
+        sctpHandleSocketError(env, errno);
         return NULL;
     }
 
@@ -736,7 +743,7 @@ JNIEXPORT void JNICALL Java_sun_nio_ch_sctp_SctpNet_shutdown0
     msg->msg_controllen = cmsg->cmsg_len;
 
     if ((rv = sendmsg(fd, msg, 0)) < 0) {
-        handleSocketError(env, errno);
+        sctpHandleSocketError(env, errno);
     }
 }
 
@@ -749,7 +756,7 @@ JNIEXPORT int JNICALL Java_sun_nio_ch_sctp_SctpNet_branch0
   (JNIEnv *env, jclass klass, jint fd, jint assocId) {
     int newfd = 0;
     if ((newfd = nio_sctp_peeloff(fd, assocId)) < 0) {
-        handleSocketError(env, errno);
+        sctpHandleSocketError(env, errno);
     }
 
     return newfd;
