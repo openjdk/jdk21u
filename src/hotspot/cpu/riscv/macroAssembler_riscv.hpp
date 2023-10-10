@@ -763,6 +763,10 @@ public:
   void orrw(Register Rd, Register Rs1, Register Rs2);
   void xorrw(Register Rd, Register Rs1, Register Rs2);
 
+  // logic with negate
+  void andn(Register Rd, Register Rs1, Register Rs2);
+  void orn(Register Rd, Register Rs1, Register Rs2);
+
   // revb
   void revb_h_h(Register Rd, Register Rs, Register tmp = t0);                           // reverse bytes in halfword in lower 16 bits, sign-extend
   void revb_w_w(Register Rd, Register Rs, Register tmp1 = t0, Register tmp2 = t1);      // reverse bytes in lower word, sign-extend
@@ -1437,8 +1441,8 @@ private:
   void store_conditional(Register addr, Register new_val, enum operand_size size, Assembler::Aqrl release);
 
 public:
-  void fast_lock(Register obj, Register hdr, Register tmp1, Register tmp2, Label& slow);
-  void fast_unlock(Register obj, Register hdr, Register tmp1, Register tmp2, Label& slow);
+  void lightweight_lock(Register obj, Register hdr, Register tmp1, Register tmp2, Label& slow);
+  void lightweight_unlock(Register obj, Register hdr, Register tmp1, Register tmp2, Label& slow);
 };
 
 #ifdef ASSERT
