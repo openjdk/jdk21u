@@ -30,11 +30,7 @@
 #include <signal.h>
 
 void OSThread::pd_initialize() {
-#ifdef __APPLE__
   _thread_id        = 0;
-#else
-  _thread_id        = nullptr;
-#endif
   _unique_thread_id = 0;
   _pthread_id       = nullptr;
   _siginfo          = nullptr;
