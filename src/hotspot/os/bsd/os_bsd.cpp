@@ -415,11 +415,7 @@ void os::init_system_properties_values() {
     if (pslash != nullptr) {
       pslash = strrchr(buf, '/');
       if (pslash != nullptr) {
-        *pslash = '\0';          // Get rid of /<arch>.
-        pslash = strrchr(buf, '/');
-        if (pslash != nullptr) {
-          *pslash = '\0';        // Get rid of /lib.
-        }
+        *pslash = '\0';          // Get rid of /lib
       }
     }
     Arguments::set_java_home(buf);
@@ -1094,7 +1090,7 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
 
   Elf32_Ehdr elf_head;
 
-  const char* const error_report = ::dlerror();
+  const char* error_report = ::dlerror();
   if (error_report == nullptr) {
     error_report = "dlerror returned no error description";
   }
@@ -1710,13 +1706,6 @@ static void warn_fail_commit_memory(char* addr, size_t size, bool exec,
 //       problem.
 bool os::pd_commit_memory(char* addr, size_t size, bool exec) {
   int prot = exec ? PROT_READ|PROT_WRITE|PROT_EXEC : PROT_READ|PROT_WRITE;
-#if defined(__OpenBSD__)
-  // XXX: Work-around mmap/MAP_FIXED bug temporarily on OpenBSD
-  Events::log(nullptr, "Protecting memory [" INTPTR_FORMAT "," INTPTR_FORMAT "] with protection modes %x", p2i(addr), p2i(addr+size), prot);
-  if (::mprotect(addr, size, prot) == 0) {
-    return true;
-  }
-#elif defined(__APPLE__)
   if (exec) {
     // Do not replace MAP_JIT mappings, see JDK-8234930
     if (::mprotect(addr, size, prot) == 0) {
@@ -1801,11 +1790,6 @@ char *os::scan_pages(char *start, char* end, page_info* page_expected, page_info
 
 
 bool os::pd_uncommit_memory(char* addr, size_t size, bool exec) {
-#if defined(__OpenBSD__)
-  // XXX: Work-around mmap/MAP_FIXED bug temporarily on OpenBSD
-  Events::log(nullptr, "Protecting memory [" INTPTR_FORMAT "," INTPTR_FORMAT "] with PROT_NONE", p2i(addr), p2i(addr+size));
-  return ::mprotect(addr, size, PROT_NONE) == 0;
-#elif defined(__APPLE__)
   if (exec) {
     if (::madvise(addr, size, MADV_FREE) != 0) {
       return false;
@@ -2273,10 +2257,10 @@ uint os::processor_id() {
 
 void os::set_native_thread_name(const char *name) {
   if (name != nullptr) {
+#if defined(__APPLE__) && MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_5
     // Add a "Java: " prefix to the name
     char buf[MAXTHREADNAMESIZE];
     snprintf(buf, sizeof(buf), "Java: %s", name);
-#if defined(__APPLE__) && MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_5
     // This is only supported in Snow Leopard and beyond
     pthread_setname_np(buf);
 #elif defined(__FreeBSD__) || defined(__OpenBSD__)
@@ -2822,7 +2806,7 @@ bool os::start_debugging(char *buf, int buflen) {
 
 void os::print_memory_mappings(char* addr, size_t bytes, outputStream* st) {}
 
-#if INCLUDE_JFR
+#ifdef INCLUDE_JFR
 
 void os::jfr_report_memory_info() {
 #ifdef __APPLE__
@@ -2836,6 +2820,16 @@ void os::jfr_report_memory_info() {
     event.set_size(info.resident_size);
     event.set_peak(info.resident_size_max);
     event.commit();
+#else
+  struct rusage usage;
+  if (getrusage(RUSAGE_SELF, &usage) != 0) {
+    // Send the RSS JFR event
+    EventResidentSetSize event;
+    // FIXME: Determine size, not just peak
+    event.set_size(usage.ru_maxrss * K);
+    event.set_peak(usage.ru_maxrss * K);
+    event.commit();
+#endif // __APPLE__
   } else {
     // Log a warning
     static bool first_warning = true;
@@ -2844,8 +2838,6 @@ void os::jfr_report_memory_info() {
       first_warning = false;
     }
   }
-
-#endif // __APPLE__
 }
 
 #endif // INCLUDE_JFR
