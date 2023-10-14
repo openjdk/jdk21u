@@ -13,6 +13,11 @@ extern "C" {
 
 #if !defined(__FreeBSD__) && !defined(__MidnightBSD__) && !defined(AIX)
 #include <endian.h>
+#elif defined(__FreeBSD__) || defined(__MidnightBSD__)
+#include <sys/endian.h>
+#define __BIG_ENDIAN	_BIG_ENDIAN
+#define __LITTLE_ENDIAN _LITTLE_ENDIAN
+#define __BYTE_ORDER	_BYTE_ORDER
 #endif
 
 #if defined(AIX)
