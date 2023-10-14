@@ -26,7 +26,7 @@
   @bug 6239944
   @summary PIT: Right clicking on the scrollbar of the choice's dropdown disposes the drop-down, on XToolkit
   @key headful
-  @requires (os.family == "linux" | os.family == "windows")
+  @requires (os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd" | os.family == "windows")
 */
 
 import java.awt.Choice;
@@ -49,7 +49,7 @@ public class ChoiceHandleMouseEvent_2 {
 
     public static void main(String[] args) throws Exception {
         String os = System.getProperty("os.name").toLowerCase();
-        if (!os.startsWith("windows") && !os.startsWith("linux")) {
+        if (!os.startsWith("windows") && !os.startsWith("linux") && !os.endsWith("bsd")) {
             System.out.println("This test is only for Windows and Linux");
             return;
         }
