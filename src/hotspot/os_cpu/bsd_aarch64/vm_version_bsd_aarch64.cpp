@@ -29,7 +29,7 @@
 #include "vm_version_aarch64.hpp"
 
 void VM_Version::get_compatible_board(char *buf, int buflen) {
-  assert(buf != NULL, "invalid argument");
+  assert(buf != nullptr, "invalid argument");
   assert(buflen >= 1, "invalid argument");
   *buf = '\0';
 }
@@ -372,7 +372,7 @@ void VM_Version::get_os_cpu_info() {
   uint32_t part_id;
   uint32_t cpu = 0;
   size_t i;
-  const struct cpu_parts *cpu_partsp = NULL;
+  const struct cpu_parts *cpu_partsp = nullptr;
 
   midr = READ_SPECIALREG(midr_el1);
 
@@ -387,7 +387,7 @@ void VM_Version::get_os_cpu_info() {
     }
   }
   part_id = CPU_PART(midr);
-  for (i = 0; &cpu_partsp[i] != NULL; i++) {
+  for (i = 0; &cpu_partsp[i] != nullptr; i++) {
     if (part_id == cpu_partsp[i].part_id || cpu_partsp[i].part_id == 0) {
       cpu_desc[cpu].cpu_part_num = part_id;
       cpu_desc[cpu].cpu_part_name = cpu_partsp[i].part_name;

@@ -152,7 +152,7 @@ julong os::Bsd::_physical_memory = 0;
 mach_timebase_info_data_t os::Bsd::_timebase_info = {0, 0};
 volatile uint64_t         os::Bsd::_max_abstime   = 0;
 #else
-int (*os::Bsd::_getcpuclockid)(pthread_t, clockid_t *) = NULL;
+int (*os::Bsd::_getcpuclockid)(pthread_t, clockid_t *) = nullptr;
 #endif
 pthread_t os::Bsd::_main_thread;
 
@@ -200,7 +200,7 @@ julong os::Bsd::available_memory() {
 
   for (i = 0, free_pages = 0; i < sizeof(vm_stats) / sizeof(vm_stats[0]); i++) {
     size = sizeof(npages);
-    if (sysctlbyname(vm_stats[i], &npages, &size, NULL, 0) == -1) {
+    if (sysctlbyname(vm_stats[i], &npages, &size, nullptr, 0) == -1) {
       free_pages = 0;
       break;
     }
@@ -403,7 +403,7 @@ void os::init_system_properties_values() {
     // Found the full path to libjvm.so.
     // Now cut the path to <java_home>/jre if we can.
     pslash = strrchr(buf, '/');
-    if (pslash != NULL) {
+    if (pslash != nullptr) {
       *pslash = '\0';            // Get rid of /libjvm.so.
     }
     pslash = strrchr(buf, '/');
@@ -684,7 +684,7 @@ bool os::create_thread(Thread* thread, ThreadType thr_type,
     log_warning(os, thread)("The %sthread stack size specified is invalid: " SIZE_FORMAT "k",
                             (thr_type == compiler_thread) ? "compiler " : ((thr_type == java_thread) ? "" : "VM "),
                             stack_size / K);
-    thread->set_osthread(NULL);
+    thread->set_osthread(nullptr);
     delete osthread;
     return false;
   }
@@ -1312,25 +1312,25 @@ typedef Elf32_Phdr	Elf_Phdr;
 #endif
 
 static int dl_iterate_callback(struct dl_phdr_info *info, size_t size, void *data) {
-  if ((info->dlpi_name == NULL) || (*info->dlpi_name == '\0')) {
+  if ((info->dlpi_name == nullptr) || (*info->dlpi_name == '\0')) {
     return 0;
   }
 
   struct loaded_modules_info_param *callback_param = reinterpret_cast<struct loaded_modules_info_param *>(data);
-  address base = NULL;
-  address top = NULL;
+  address base = nullptr;
+  address top = nullptr;
   for (int idx = 0; idx < info->dlpi_phnum; idx++) {
     const Elf_Phdr *phdr = info->dlpi_phdr + idx;
     if (phdr->p_type == PT_LOAD) {
       address raw_phdr_base = reinterpret_cast<address>(info->dlpi_addr + phdr->p_vaddr);
 
       address phdr_base = align_down(raw_phdr_base, phdr->p_align);
-      if ((base == NULL) || (base > phdr_base)) {
+      if ((base == nullptr) || (base > phdr_base)) {
         base = phdr_base;
       }
 
       address phdr_top = align_up(raw_phdr_base + phdr->p_memsz, phdr->p_align);
-      if ((top == NULL) || (top < phdr_top)) {
+      if ((top == nullptr) || (top < phdr_top)) {
         top = phdr_top;
       }
     }
@@ -1486,7 +1486,7 @@ void os::pd_print_cpu_info(outputStream* st, char* buf, size_t buflen) {
 #else
   size_t size = buflen;
   int mib[] = { CTL_HW, HW_MODEL };
-  if (sysctl(mib, 2, buf, &size, NULL, 0) == 0) {
+  if (sysctl(mib, 2, buf, &size, nullptr, 0) == 0) {
     st->print_cr("CPU Model: %s", buf);
   }
 #endif
@@ -1548,7 +1548,7 @@ static void get_swap_info(int *total_pages, int *used_pages) {
     for (n = 0; ; n++) {
       mib[mibsize] = n;
       size = sizeof(xsw);
-      if (sysctl(mib, mibsize + 1, &xsw, &size, NULL, 0) == -1)
+      if (sysctl(mib, mibsize + 1, &xsw, &size, nullptr, 0) == -1)
         break;
       total += xsw.xsw_nblks;
       used += xsw.xsw_used;
@@ -2392,7 +2392,7 @@ static void current_stack_region(address * bottom, size_t * size) {
     if ((*size) < (DEFAULT_MAIN_THREAD_STACK_PAGES * (size_t)getpagesize())) {
       char kern_osrelease[256];
       size_t kern_osrelease_size = sizeof(kern_osrelease);
-      int ret = sysctlbyname("kern.osrelease", kern_osrelease, &kern_osrelease_size, NULL, 0);
+      int ret = sysctlbyname("kern.osrelease", kern_osrelease, &kern_osrelease_size, nullptr, 0);
       if (ret == 0) {
         // get the major number, atoi will ignore the minor amd micro portions of the version string
         if (atoi(kern_osrelease) >= OS_X_10_9_0_KERNEL_MAJOR_VERSION) {
@@ -2641,7 +2641,7 @@ jlong os::thread_cpu_time(Thread *thread, bool user_sys_cpu_time) {
   int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PID|KERN_PROC_SHOW_THREADS, pid, sizeof(struct kinfo_proc), 0 };
   const u_int miblen = sizeof(mib) / sizeof(mib[0]);
 
-  if (sysctl(mib, miblen, NULL, &length, NULL, 0) < 0) {
+  if (sysctl(mib, miblen, nullptr, &length, nullptr, 0) < 0) {
     return -1;
   }
 
@@ -2650,7 +2650,7 @@ jlong os::thread_cpu_time(Thread *thread, bool user_sys_cpu_time) {
 
   mib[5] = num_threads;
 
-  if (sysctl(mib, miblen, ki, &length, NULL, 0) < 0) {
+  if (sysctl(mib, miblen, ki, &length, nullptr, 0) < 0) {
     FREE_C_HEAP_ARRAY(struct kinfo_proc, ki);
     return -1;
   }
@@ -2672,7 +2672,7 @@ jlong os::thread_cpu_time(Thread *thread, bool user_sys_cpu_time) {
   FREE_C_HEAP_ARRAY(struct kinfo_proc, ki);
   return -1;
 #else /* !OpenBSD */
-  if (user_sys_cpu_time && Bsd::_getcpuclockid != NULL) {
+  if (user_sys_cpu_time && Bsd::_getcpuclockid != nullptr) {
     struct timespec tp;
     clockid_t clockid;
     int ret;
@@ -2730,7 +2730,7 @@ bool os::is_thread_cpu_time_supported() {
 #if defined(__APPLE__) || defined(__OpenBSD__)
   return true;
 #else
-  return (Bsd::_getcpuclockid != NULL);
+  return (Bsd::_getcpuclockid != nullptr);
 #endif
 }
 
@@ -2767,15 +2767,15 @@ int os::get_core_path(char* buffer, size_t bufferSize) {
 #else
   const char *p = get_current_directory(buffer, bufferSize);
 
-  if (p == NULL) {
-    assert(p != NULL, "failed to get current directory");
+  if (p == nullptr) {
+    assert(p != nullptr, "failed to get current directory");
     return 0;
   }
 
   const char *q = getprogname();
 
-  if (q == NULL) {
-    assert(q != NULL, "failed to get progname");
+  if (q == nullptr) {
+    assert(q != nullptr, "failed to get progname");
     return 0;
   }
 

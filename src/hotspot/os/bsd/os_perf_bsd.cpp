@@ -205,7 +205,7 @@ CPUPerformanceInterface::CPUPerformance::CPUPerformance() {
   _num_procs = 0;
   _stathz = 0;
   _jvm_ticks = JVMTicks();
-  _cpus = NULL;
+  _cpus = nullptr;
   _total_csr_nanos= 0;
   _jvm_context_switches = 0;
 }
@@ -222,7 +222,7 @@ bool CPUPerformanceInterface::CPUPerformance::initialize() {
 
   size_t cpus_array_count = _num_procs + 1;
   _cpus = NEW_C_HEAP_ARRAY_RETURN_NULL(CPUTicks, cpus_array_count, mtInternal);
-  if (_cpus == NULL) {
+  if (_cpus == nullptr) {
     return false;
   }
   memset(_cpus, 0, cpus_array_count * sizeof(*_cpus));
@@ -230,7 +230,7 @@ bool CPUPerformanceInterface::CPUPerformance::initialize() {
   // For the CPU load total
   if (get_cpu_ticks(&_cpus[_num_procs], -1) != OS_OK) {
     FREE_C_HEAP_ARRAY(CPUTicks, _cpus);
-    _cpus = NULL;
+    _cpus = nullptr;
     return false;
   }
 
@@ -242,14 +242,14 @@ bool CPUPerformanceInterface::CPUPerformance::initialize() {
   // For JVM load
   if (get_jvm_ticks(&_jvm_ticks) != OS_OK) {
     FREE_C_HEAP_ARRAY(CPUTicks, _cpus);
-    _cpus = NULL;
+    _cpus = nullptr;
     return false;
   }
   return true;
 }
 
 CPUPerformanceInterface::CPUPerformance::~CPUPerformance() {
-  if (_cpus != NULL) {
+  if (_cpus != nullptr) {
     FREE_C_HEAP_ARRAY(CPUTicks, _cpus);
   }
 }
@@ -260,7 +260,7 @@ int CPUPerformanceInterface::CPUPerformance::init_stathz(void) {
   int mib[] = { CTL_KERN, KERN_CLOCKRATE };
   const u_int miblen = sizeof(mib) / sizeof(mib[0]);
 
-  if (sysctl(mib, miblen, &ci, &length, NULL, 0) == -1) {
+  if (sysctl(mib, miblen, &ci, &length, nullptr, 0) == -1) {
     return OS_ERR;
   }
 
@@ -282,7 +282,7 @@ int CPUPerformanceInterface::CPUPerformance::get_cpu_ticks(CPUTicks *ticks, int 
     int mib[] = { CTL_KERN, KERN_CPTIME };
     const u_int miblen = sizeof(mib) / sizeof(mib[0]);
 
-    if (sysctl(mib, miblen, &cpu_load_info, &length, NULL, 0) == -1) {
+    if (sysctl(mib, miblen, &cpu_load_info, &length, nullptr, 0) == -1) {
       return OS_ERR;
     }
     // OpenBSD returns the sum/_num_procs. Unify with other stat units
@@ -290,7 +290,7 @@ int CPUPerformanceInterface::CPUPerformance::get_cpu_ticks(CPUTicks *ticks, int 
        cpu_load_info[i] *= _num_procs;
     }
 #else
-    if (sysctlbyname("kern.cp_time", &cpu_load_info, &length, NULL, 0) == -1) {
+    if (sysctlbyname("kern.cp_time", &cpu_load_info, &length, nullptr, 0) == -1) {
       return OS_ERR;
     }
 #endif
@@ -299,14 +299,14 @@ int CPUPerformanceInterface::CPUPerformance::get_cpu_ticks(CPUTicks *ticks, int 
     int mib[] = { CTL_KERN, KERN_CPTIME2, which_logical_cpu };
     const u_int miblen = sizeof(mib) / sizeof(mib[0]);
 
-    if (sysctl(mib, miblen, &cpu_load_info, &length, NULL, 0) == -1) {
+    if (sysctl(mib, miblen, &cpu_load_info, &length, nullptr, 0) == -1) {
       return OS_ERR;
     }
 #elif defined(__FreeBSD__)
     size_t alllength = length * _num_procs;
     long *allcpus = NEW_C_HEAP_ARRAY(long, CPUSTATES * _num_procs, mtInternal);
 
-    if (sysctlbyname("kern.cp_times", allcpus, &alllength, NULL, 0) == -1) {
+    if (sysctlbyname("kern.cp_times", allcpus, &alllength, nullptr, 0) == -1) {
       FREE_C_HEAP_ARRAY(long, allcpus);
       return OS_ERR;
     }
@@ -316,7 +316,7 @@ int CPUPerformanceInterface::CPUPerformance::get_cpu_ticks(CPUTicks *ticks, int 
 #else
     char name[24];
     snprintf(name, sizeof(name), "kern.cp_time.%d", which_logical_cpu);
-    if (sysctlbyname(name, &cpu_load_info, &length, NULL, 0) == -1) {
+    if (sysctlbyname(name, &cpu_load_info, &length, nullptr, 0) == -1) {
       return OS_ERR;
     }
 #endif
@@ -368,7 +368,7 @@ int CPUPerformanceInterface::CPUPerformance::cpu_load(int which_logical_cpu, dou
 
   *cpu_load = 0.0;
 
-  if (_cpus == NULL) {
+  if (_cpus == nullptr) {
     return OS_ERR;
   }
 
@@ -424,7 +424,7 @@ int CPUPerformanceInterface::CPUPerformance::cpu_loads_process(double* pjvmUserL
   *pjvmKernelLoad = 0.0;
   *psystemTotalLoad = 0.0;
 
-  if (_cpus == NULL) {
+  if (_cpus == nullptr) {
     return OS_ERR;
   }
 
@@ -484,7 +484,7 @@ int CPUPerformanceInterface::CPUPerformance::context_switch_rate(double* rate) {
 #elif defined(__FreeBSD__)
   unsigned int jvm_context_switches = 0;
   size_t length = sizeof(jvm_context_switches);
-  if (sysctlbyname("vm.stats.sys.v_swtch", &jvm_context_switches, &length, NULL, 0) == -1) {
+  if (sysctlbyname("vm.stats.sys.v_swtch", &jvm_context_switches, &length, nullptr, 0) == -1) {
     return OS_ERR;
   }
 #elif defined(__OpenBSD__) || defined(__NetBSD__)
@@ -498,7 +498,7 @@ int CPUPerformanceInterface::CPUPerformance::context_switch_rate(double* rate) {
   size_t jslength = sizeof(js);
   const u_int miblen = sizeof(mib) / sizeof(mib[0]);
   unsigned int jvm_context_switches = 0;
-  if (sysctl(mib, miblen, &js, &jslength, NULL, 0) != 0) {
+  if (sysctl(mib, miblen, &js, &jslength, nullptr, 0) != 0) {
     return OS_ERR;
   }
 
@@ -650,23 +650,23 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
   size_t length;
   int pid_count;
 
-  if (sysctl(mib, miblen, NULL, &length, NULL, 0) == -1) {
+  if (sysctl(mib, miblen, nullptr, &length, nullptr, 0) == -1) {
     return OS_ERR;
   }
 
   lproc = NEW_C_HEAP_ARRAY_RETURN_NULL(struct kinfo_proc, length, mtInternal);
-  if (lproc == NULL) {
+  if (lproc == nullptr) {
     return OS_ERR;
   }
 
-  if (sysctl(mib, miblen, lproc, &length, NULL, 0) == -1) {
+  if (sysctl(mib, miblen, lproc, &length, nullptr, 0) == -1) {
     FREE_C_HEAP_ARRAY(struct kinfo_proc, lproc);
     return OS_ERR;
   }
 
   pid_count = length / sizeof(*lproc);
   int process_count = 0;
-  SystemProcess *next = NULL;
+  SystemProcess *next = nullptr;
 
   for (int i = 0; i < pid_count; i++) {
     // Executable path
@@ -674,7 +674,7 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
     const u_int pmiblen = sizeof(pmib) / sizeof(pmib[0]);
     char pbuf[PATH_MAX];
     size_t plen = sizeof(pbuf);
-    if (sysctl(pmib, pmiblen, pbuf, &plen, NULL, 0) == -1) {
+    if (sysctl(pmib, pmiblen, pbuf, &plen, nullptr, 0) == -1) {
       continue;
     }
     plen = strnlen(pbuf, PATH_MAX);
@@ -682,7 +682,7 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
       continue;
     }
     char *path = NEW_C_HEAP_ARRAY_RETURN_NULL(char, plen + 1, mtInternal);
-    if (path == NULL) {
+    if (path == nullptr) {
       continue;
     }
     strlcpy(path, pbuf, plen + 1);
@@ -692,8 +692,8 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
     const u_int amiblen = sizeof(amib) / sizeof(amib[0]);
     char abuf[ARG_MAX];
     size_t alen = sizeof(abuf);
-    char *cmdline = NULL;
-    if (sysctl(amib, amiblen, abuf, &alen, NULL, 0) != -1 && alen > 0) {
+    char *cmdline = nullptr;
+    if (sysctl(amib, amiblen, abuf, &alen, nullptr, 0) != -1 && alen > 0) {
       // Arguments are NUL separated in the result, replace that with a space
       for (size_t j = 0; j < alen; j++) {
         if (abuf[j] == '\0') {
@@ -701,7 +701,7 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
         }
       }
       cmdline = NEW_C_HEAP_ARRAY_RETURN_NULL(char, alen + 1, mtInternal);
-      if (cmdline != NULL) {
+      if (cmdline != nullptr) {
         strlcpy(cmdline, abuf, alen + 1);
       }
     }
@@ -727,50 +727,50 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
   size_t length;
   int pid_count, ret = OS_OK;
 
-  if (sysctl(mib, miblen, NULL, &length, NULL, 0) == -1) {
+  if (sysctl(mib, miblen, nullptr, &length, nullptr, 0) == -1) {
     return OS_ERR;
   }
 
   lproc = NEW_C_HEAP_ARRAY_RETURN_NULL(struct kinfo_proc, length, mtInternal);
-  if (lproc == NULL) {
+  if (lproc == nullptr) {
     return OS_ERR;
   }
 
   mib[5] = length / sizeof(struct kinfo_proc);
 
-  if (sysctl(mib, miblen, lproc, &length, NULL, 0) == -1) {
+  if (sysctl(mib, miblen, lproc, &length, nullptr, 0) == -1) {
     FREE_C_HEAP_ARRAY(struct kinfo_proc, lproc);
     return OS_ERR;
   }
 
   pid_count = length / sizeof(*lproc);
   int process_count = 0;
-  SystemProcess *next = NULL;
+  SystemProcess *next = nullptr;
 
   for (int i = 0; i < pid_count; i++) {
     int pmib[] = { CTL_KERN, KERN_PROC_ARGS, lproc[i].p_pid, KERN_PROC_ARGV };
     const u_int pmiblen = sizeof(pmib) / sizeof(pmib[0]);
     size_t slen;
 
-    if (sysctl(pmib, pmiblen, NULL, &length, NULL, 0) == -1) {
+    if (sysctl(pmib, pmiblen, nullptr, &length, nullptr, 0) == -1) {
       ret = OS_ERR;
       break;
     }
 
     // Allocate space for args and get the arguments
     char **argv = NEW_C_HEAP_ARRAY_RETURN_NULL(char*, length, mtInternal);
-    if (argv == NULL) {
+    if (argv == nullptr) {
       ret = OS_ERR;
       break;
     }
 
-    if (sysctl(pmib, pmiblen, argv, &length, NULL, 0) == -1) {
+    if (sysctl(pmib, pmiblen, argv, &length, nullptr, 0) == -1) {
       ret = OS_ERR;
       FREE_C_HEAP_ARRAY(char*, argv);
       break;
     }
 
-    if (argv[0] == NULL) {
+    if (argv[0] == nullptr) {
       FREE_C_HEAP_ARRAY(char*, argv);
       continue;
     }
@@ -814,25 +814,25 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
   size_t length;
   int pid_count;
 
-  if (sysctl(mib, miblen, NULL, &length, NULL, 0) == -1) {
+  if (sysctl(mib, miblen, nullptr, &length, nullptr, 0) == -1) {
     return OS_ERR;
   }
 
   lproc = NEW_C_HEAP_ARRAY_RETURN_NULL(struct kinfo_proc2, length, mtInternal);
-  if (lproc == NULL) {
+  if (lproc == nullptr) {
     return OS_ERR;
   }
 
   mib[5] = length / sizeof(struct kinfo_proc2);
 
-  if (sysctl(mib, miblen, lproc, &length, NULL, 0) == -1) {
+  if (sysctl(mib, miblen, lproc, &length, nullptr, 0) == -1) {
     FREE_C_HEAP_ARRAY(struct kinfo_proc2, lproc);
     return OS_ERR;
   }
 
   pid_count = length / sizeof(*lproc);
   int process_count = 0;
-  SystemProcess *next = NULL;
+  SystemProcess *next = nullptr;
 
   for (int i = 0; i < pid_count; i++) {
     // Executable path
@@ -843,7 +843,7 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
     const u_int pmiblen = sizeof(pmib) / sizeof(pmib[0]);
     char pbuf[PATH_MAX];
     size_t plen = sizeof(pbuf);
-    if (sysctl(pmib, pmiblen, pbuf, &plen, NULL, 0) == -1) {
+    if (sysctl(pmib, pmiblen, pbuf, &plen, nullptr, 0) == -1) {
       continue;
     }
     plen = strnlen(pbuf, PATH_MAX);
@@ -851,7 +851,7 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
       continue;
     }
     char *path = NEW_C_HEAP_ARRAY_RETURN_NULL(char, plen + 1, mtInternal);
-    if (path == NULL) {
+    if (path == nullptr) {
       continue;
     }
     strlcpy(path, pbuf, plen + 1);
@@ -861,8 +861,8 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
     const u_int amiblen = sizeof(amib) / sizeof(amib[0]);
     char abuf[ARG_MAX];
     size_t alen = sizeof(abuf);
-    char *cmdline = NULL;
-    if (sysctl(amib, amiblen, abuf, &alen, NULL, 0) != -1 && alen > 0) {
+    char *cmdline = nullptr;
+    if (sysctl(amib, amiblen, abuf, &alen, nullptr, 0) != -1 && alen > 0) {
       // Arguments are NUL separated in the result, replace that with a space
       for (size_t j = 0; j < alen; j++) {
         if (abuf[j] == '\0') {
@@ -870,7 +870,7 @@ int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** sy
         }
       }
       cmdline = NEW_C_HEAP_ARRAY_RETURN_NULL(char, alen + 1, mtInternal);
-      if (cmdline != NULL) {
+      if (cmdline != nullptr) {
         strlcpy(cmdline, abuf, alen + 1);
       }
     }
