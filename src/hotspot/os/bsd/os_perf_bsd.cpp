@@ -68,6 +68,30 @@ class CPUPerformanceInterface::CPUPerformance : public CHeapObj<mtInternal> {
   long _used_ticks;
   long _total_ticks;
   int  _active_processor_count;
+#else
+  struct CPUTicks {
+    uint64_t usedTicks;
+    uint64_t totalTicks;
+  };
+
+  struct JVMTicks {
+    uint64_t userTicks;
+    uint64_t systemTicks;
+    CPUTicks cpuTicks;
+  };
+
+  int _num_procs;
+  int _stathz;          // statistics clock frequency
+  JVMTicks _jvm_ticks;
+  CPUTicks* _cpus;
+  long _total_csr_nanos;
+  long _jvm_context_switches;
+
+  int init_stathz(void);
+  uint64_t tvtoticks(struct timeval tv);
+  int get_cpu_ticks(CPUTicks *ticks, int which_logical_cpu);
+  int get_jvm_ticks(JVMTicks *jvm_ticks);
+#endif
 
   bool now_in_nanos(uint64_t* resultp) {
     struct timespec tp;
@@ -79,7 +103,6 @@ class CPUPerformanceInterface::CPUPerformance : public CHeapObj<mtInternal> {
     *resultp = tp.tv_sec * NANOS_PER_SEC + tp.tv_nsec;
     return true;
   }
-#endif
 
   int cpu_load(int which_logical_cpu, double* cpu_load);
   int context_switch_rate(double* rate);
@@ -510,8 +533,6 @@ int CPUPerformanceInterface::CPUPerformance::context_switch_rate(double* rate) {
     // First call just set initial values.
     result = OS_ERR;
   }
-
-  long jvm_context_switches = ((task_events_info_t)task_info_data)->csw;
 
   uint64_t total_csr_nanos;
   if(!now_in_nanos(&total_csr_nanos)) {
