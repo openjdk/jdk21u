@@ -152,7 +152,7 @@ julong os::Bsd::_physical_memory = 0;
 mach_timebase_info_data_t os::Bsd::_timebase_info = {0, 0};
 volatile uint64_t         os::Bsd::_max_abstime   = 0;
 #else
-int (*os::Bsd::_getcpuclockid)(pthread_t, clockid_t *) = nullptr;
+int (*os::Bsd::_getcpuclockid)(pthread_t, clockid_t *) = &pthread_getcpuclockid;
 #endif
 pthread_t os::Bsd::_main_thread;
 
