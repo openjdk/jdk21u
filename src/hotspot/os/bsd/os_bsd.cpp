@@ -2806,7 +2806,7 @@ bool os::start_debugging(char *buf, int buflen) {
 
 void os::print_memory_mappings(char* addr, size_t bytes, outputStream* st) {}
 
-#ifdef INCLUDE_JFR
+#if INCLUDE_JFR
 
 void os::jfr_report_memory_info() {
 #ifdef __APPLE__
