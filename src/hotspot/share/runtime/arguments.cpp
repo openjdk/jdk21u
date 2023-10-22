@@ -1484,8 +1484,13 @@ void Arguments::set_use_compressed_oops() {
 
 void Arguments::set_use_compressed_klass_ptrs() {
 #ifdef _LP64
+#  if defined(__FreeBSD__) && defined(AARCH64)
+  FLAG_SET_DEFAULT(UseCompressedClassPointers, false);
+  FLAG_SET_ERGO(UseCompressedClassPointers, false);
+#  else
   assert(!UseCompressedClassPointers || CompressedClassSpaceSize <= KlassEncodingMetaspaceMax,
          "CompressedClassSpaceSize is too large for UseCompressedClassPointers");
+#  endif // __FreeBSD__ && AARCH64
 #endif // _LP64
 }
 
