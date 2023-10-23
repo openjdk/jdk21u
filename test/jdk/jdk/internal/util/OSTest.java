@@ -79,7 +79,7 @@ public class OSTest {
                 Arguments.of(LINUX, OperatingSystem.isLinux()),
                 Arguments.of(WINDOWS, OperatingSystem.isWindows()),
                 Arguments.of(MACOS, OperatingSystem.isMacOS()),
-                Arguments.of(BSD, OperatingSystem.isBSD()),
+                Arguments.of(BSD, OperatingSystem.isBsd()),
                 Arguments.of(AIX, OperatingSystem.isAix())
         );
     }
