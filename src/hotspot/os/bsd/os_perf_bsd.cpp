@@ -103,6 +103,9 @@ class CPUPerformanceInterface::CPUPerformance : public CHeapObj<mtInternal> {
     *resultp = tp.tv_sec * NANOS_PER_SEC + tp.tv_nsec;
     return true;
   }
+  double normalize(double value) {
+    return MIN2<double>(MAX2<double>(value, 0.0), 1.0);
+  }
 
   int cpu_load(int which_logical_cpu, double* cpu_load);
   int context_switch_rate(double* rate);
