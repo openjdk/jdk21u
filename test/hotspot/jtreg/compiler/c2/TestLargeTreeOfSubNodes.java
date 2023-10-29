@@ -1,12 +1,10 @@
 /*
- * Copyright (c) 2015, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2023, Red Hat, Inc. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
+ * published by the Free Software Foundation.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -23,17 +21,30 @@
  * questions.
  */
 
-package sun.java2d.marlin;
+/*
+ * @test
+ * @bug 8316396
+ * @summary Endless loop in C2 compilation triggered by AddNode::IdealIL
+ * @run main/othervm  -XX:CompileCommand=compileonly,*TestLargeTreeOfSubNodes*::test -XX:-TieredCompilation -Xcomp TestLargeTreeOfSubNodes
+ */
 
-public final class Version {
+public class TestLargeTreeOfSubNodes {
+    public static long res = 0;
 
-    private static final String VERSION = "marlin-0.9.4.6.1-Unsafe-OpenJDK";
-
-    public static String getVersion() {
-        return VERSION;
+    public static void test() {
+        int a = -1, b = 0;
+        for (int i = 0; i < 100; ++i) {
+            for (int j = 0; j < 10; ++j) {
+                for (int k = 0; k < 1; ++k) {
+                }
+                b -= a;
+                a += b;
+            }
+        }
+        res = a;
     }
 
-    private Version() {
+    public static void main(String[] args) {
+        test();
     }
-
 }
