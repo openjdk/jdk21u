@@ -48,8 +48,8 @@ class BsdSocketOptions extends PlatformSocketOptions {
     }
 
     @Override
-    void setTcpkeepAliveProbes(int fd, final int value) throws SocketException {
-        setTcpkeepAliveProbes0(fd, value);
+    void setTcpKeepAliveProbes(int fd, final int value) throws SocketException {
+        setTcpKeepAliveProbes0(fd, value);
     }
 
     @Override
@@ -63,8 +63,8 @@ class BsdSocketOptions extends PlatformSocketOptions {
     }
 
     @Override
-    int getTcpkeepAliveProbes(int fd) throws SocketException {
-        return getTcpkeepAliveProbes0(fd);
+    int getTcpKeepAliveProbes(int fd) throws SocketException {
+        return getTcpKeepAliveProbes0(fd);
     }
 
     @Override
@@ -87,10 +87,10 @@ class BsdSocketOptions extends PlatformSocketOptions {
         return new UnixDomainPrincipal(user, group);
     }
 
-    private static native void setTcpkeepAliveProbes0(int fd, int value) throws SocketException;
+    private static native void setTcpKeepAliveProbes0(int fd, int value) throws SocketException;
     private static native void setTcpKeepAliveTime0(int fd, int value) throws SocketException;
     private static native void setTcpKeepAliveIntvl0(int fd, int value) throws SocketException;
-    private static native int getTcpkeepAliveProbes0(int fd) throws SocketException;
+    private static native int getTcpKeepAliveProbes0(int fd) throws SocketException;
     private static native int getTcpKeepAliveTime0(int fd) throws SocketException;
     private static native int getTcpKeepAliveIntvl0(int fd) throws SocketException;
     private static native long getSoPeerCred0(int fd) throws SocketException;

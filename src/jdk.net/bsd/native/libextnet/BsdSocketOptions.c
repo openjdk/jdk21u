@@ -84,10 +84,10 @@ JNIEXPORT jboolean JNICALL Java_jdk_net_BsdSocketOptions_keepAliveOptionsSupport
 
 /*
  * Class:     jdk_net_BsdSocketOptions
- * Method:    setTcpkeepAliveProbes0
+ * Method:    setTcpKeepAliveProbes0
  * Signature: (II)V
  */
-JNIEXPORT void JNICALL Java_jdk_net_BsdSocketOptions_setTcpkeepAliveProbes0
+JNIEXPORT void JNICALL Java_jdk_net_BsdSocketOptions_setTcpKeepAliveProbes0
 (JNIEnv *env, jobject unused, jint fd, jint optval) {
 #ifdef __OpenBSD__
     JNU_ThrowByName(env, "java/lang/UnsupportedOperationException",
@@ -150,10 +150,10 @@ JNIEXPORT void JNICALL Java_jdk_net_BsdSocketOptions_setTcpKeepAliveIntvl0
 
 /*
  * Class:     jdk_net_BsdSocketOptions
- * Method:    getTcpkeepAliveProbes0
+ * Method:    getTcpKeepAliveProbes0
  * Signature: (I)I;
  */
-JNIEXPORT jint JNICALL Java_jdk_net_BsdSocketOptions_getTcpkeepAliveProbes0
+JNIEXPORT jint JNICALL Java_jdk_net_BsdSocketOptions_getTcpKeepAliveProbes0
 (JNIEnv *env, jobject unused, jint fd) {
 #ifdef __OpenBSD__
     JNU_ThrowByName(env, "java/lang/UnsupportedOperationException",
