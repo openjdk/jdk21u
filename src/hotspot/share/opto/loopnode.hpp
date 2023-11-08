@@ -1206,7 +1206,7 @@ public:
     if (!C->failing()) {
       // Cleanup any modified bits
       igvn.optimize();
-
+      if (C->failing()) { return; }
       v.log_loop_tree();
     }
   }
@@ -1737,6 +1737,8 @@ public:
   bool clone_cmp_loadklass_down(Node* n, const Node* blk1, const Node* blk2);
 
   bool at_relevant_ctrl(Node* n, const Node* blk1, const Node* blk2);
+
+  void update_addp_chain_base(Node* x, Node* old_base, Node* new_base);
 };
 
 
