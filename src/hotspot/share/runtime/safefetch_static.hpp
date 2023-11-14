@@ -34,7 +34,7 @@ extern "C" int SafeFetch32_impl(int* adr, int errValue);
 extern "C" intptr_t SafeFetchN_impl(intptr_t* adr, intptr_t errValue);
 #else
 inline intptr_t SafeFetchN_impl(intptr_t* adr, intptr_t errValue) {
-  return SafeFetch32_impl(adr, errValue);
+  return SafeFetch32_impl((int *)adr, errValue);
 }
 #endif // _LP64
 
