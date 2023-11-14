@@ -281,9 +281,17 @@
 # endif
 #endif
 
+#ifdef AMD64
 address os::current_stack_pointer() {
   return (address)__builtin_frame_address(0);
 }
+#else
+address os::current_stack_pointer() __attribute__ ((optnone)) {
+  intptr_t* esp;
+  __asm__ __volatile__ ("mov %%" SPELL_REG_SP ", %0":"=r"(esp):);
+  return (address) esp;
+}
+#endif
 
 char* os::non_memory_address_word() {
   // Must never look like an address returned by reserve_memory,
