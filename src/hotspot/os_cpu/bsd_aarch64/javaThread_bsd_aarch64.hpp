@@ -48,7 +48,7 @@ private:
   bool pd_get_top_frame(frame* fr_addr, void* ucontext, bool isInJava);
 public:
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__OpenBSD__)
   static Thread *aarch64_get_thread_helper() {
     return Thread::current();
   }

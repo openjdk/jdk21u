@@ -122,10 +122,6 @@ else ifeq ($(call And, $(call isTargetOs, linux) $(call isTargetCpu, aarch64)), 
   endif
 endif
 
-ifeq ($(OPENJDK_TARGET_OS_ENV)-$(OPENJDK_TARGET_CPU), bsd.openbsd-aarch64)
-  JVM_EXCLUDE_FILES += threadLS_bsd_aarch64.s
-endif
-
 ifeq ($(call isTargetOs, linux macosx windows bsd), true)
   JVM_PRECOMPILED_HEADER := $(TOPDIR)/src/hotspot/share/precompiled/precompiled.hpp
 endif
