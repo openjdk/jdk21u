@@ -11,9 +11,9 @@ extern "C" {
 
 #include <stdint.h>
 
-#if !defined(__FreeBSD__) && !defined(__MidnightBSD__) && !defined(AIX)
+#if !defined(_BSDONLY_SOURCE) && !defined(AIX)
 #include <endian.h>
-#elif defined(__FreeBSD__) || defined(__MidnightBSD__)
+#elif defined(_BSDONLY_SOURCE)
 #include <sys/endian.h>
 #define __BIG_ENDIAN	_BIG_ENDIAN
 #define __LITTLE_ENDIAN _LITTLE_ENDIAN
