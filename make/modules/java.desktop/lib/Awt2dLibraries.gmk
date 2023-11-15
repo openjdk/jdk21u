@@ -695,6 +695,8 @@ ifeq ($(ENABLE_HEADLESS_ONLY), false)
 
   ifeq ($(USE_EXTERNAL_LIBPNG), false)
     LIBSPLASHSCREEN_HEADER_DIRS += libsplashscreen/libpng
+    LIBSPLASHSCREEN_CFLAGS += -DPNG_NO_MMX_CODE -DPNG_ARM_NEON_OPT=0 \
+                              -DPNG_ARM_NEON_IMPLEMENTATION=0
   else
     LIBSPLASHSCREEN_EXCLUDES += libpng
   endif
@@ -708,8 +710,7 @@ ifeq ($(ENABLE_HEADLESS_ONLY), false)
     LIBSPLASHSCREEN_EXCLUDE_SRC_PATTERNS := /unix/
   endif
 
-  LIBSPLASHSCREEN_CFLAGS += -DSPLASHSCREEN -DPNG_NO_MMX_CODE \
-                            -DPNG_ARM_NEON_OPT=0 -DPNG_ARM_NEON_IMPLEMENTATION=0
+  LIBSPLASHSCREEN_CFLAGS += -DSPLASHSCREEN
 
   ifeq ($(call isTargetOs, linux), true)
     ifeq ($(call isTargetCpuArch, ppc), true)
