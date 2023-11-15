@@ -166,7 +166,7 @@ class UnixConstants {
     static final int PREFIX_FSOPT_NOFOLLOW = 00;
 #endif
 
-#if defined(__linux__) || defined(_BSDONLY_SOURCE)
+#if defined(__linux__) || (defined(_BSDONLY_SOURCE) && !defined(__OpenBSD__))
     // advice flags used with posix_fadvise(2)
     static final int PREFIX_POSIX_FADV_SEQUENTIAL = POSIX_FADV_SEQUENTIAL;
     static final int PREFIX_POSIX_FADV_NOREUSE    = POSIX_FADV_NOREUSE;
