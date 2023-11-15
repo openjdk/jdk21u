@@ -30,7 +30,9 @@
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
+#ifndef __OpenBSD__
 #include <sys/ucontext.h>
+#endif
 #include <string.h>
 
 extern "C" {
