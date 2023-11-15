@@ -34,17 +34,17 @@ import java.util.regex.Pattern;
  * This class keeps track of all {@link WriterThread} instances.
  */
 class WriterThreads {
-    private final Map<Integer, WriterThread> mapIdToThread = new HashMap<>();
+    private final Map<Long, WriterThread> mapIdToThread = new HashMap<>();
 
     WriterThread parse(String line) {
-        int writerThreadId = parseWriterThreadId(line);
+        long writerThreadId = parseWriterThreadId(line);
         return mapIdToThread.computeIfAbsent(writerThreadId, c -> new WriterThread());
     }
 
-    private static int parseWriterThreadId(String line) {
+    private static long parseWriterThreadId(String line) {
         Pattern pattern = Pattern.compile("='(\\d+)'");
         Matcher matcher = pattern.matcher(line);
         TestFramework.check(matcher.find(), "should find writer thread id");
-        return Integer.parseInt(matcher.group(1));
+        return Long.parseLong(matcher.group(1));
     }
 }
