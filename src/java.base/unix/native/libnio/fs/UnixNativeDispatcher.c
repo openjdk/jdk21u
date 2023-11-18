@@ -212,7 +212,7 @@ static jfieldID attrs_st_mtime_nsec;
 static jfieldID attrs_st_ctime_sec;
 static jfieldID attrs_st_ctime_nsec;
 
-#if defined(_DARWIN_FEATURE_64_BIT_INODE) || defined(__linux__)
+#if defined(_DARWIN_FEATURE_64_BIT_INODE) || defined(__linux__) || defined(__FreeBSD__)
 static jfieldID attrs_st_birthtime_sec;
 #endif
 #if defined(__linux__) // Linux has nsec granularity if supported
@@ -341,7 +341,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_init(JNIEnv* env, jclass this)
     attrs_st_ctime_nsec = (*env)->GetFieldID(env, clazz, "st_ctime_nsec", "J");
     CHECK_NULL_RETURN(attrs_st_ctime_nsec, 0);
 
-#if defined(_DARWIN_FEATURE_64_BIT_INODE) || defined(__linux__)
+#if defined(_DARWIN_FEATURE_64_BIT_INODE) || defined(__linux__) || defined(__FreeBSD__)
     attrs_st_birthtime_sec = (*env)->GetFieldID(env, clazz, "st_birthtime_sec", "J");
     CHECK_NULL_RETURN(attrs_st_birthtime_sec, 0);
 #endif
@@ -426,7 +426,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_init(JNIEnv* env, jclass this)
 
     /* supports file birthtime */
 
-#ifdef _DARWIN_FEATURE_64_BIT_INODE
+#if defined(_DARWIN_FEATURE_64_BIT_INODE) || defined(__FreeBSD__)
     capabilities |= sun_nio_fs_UnixNativeDispatcher_SUPPORTS_BIRTHTIME;
 #endif
 #if defined(__linux__)
@@ -654,7 +654,7 @@ static void copy_stat64_attributes(JNIEnv* env, struct stat64* buf, jobject attr
     (*env)->SetLongField(env, attrs, attrs_st_mtime_sec, (jlong)buf->st_mtime);
     (*env)->SetLongField(env, attrs, attrs_st_ctime_sec, (jlong)buf->st_ctime);
 
-#ifdef _DARWIN_FEATURE_64_BIT_INODE
+#if defined(_DARWIN_FEATURE_64_BIT_INODE) || defined(__FreeBSD__)
     (*env)->SetLongField(env, attrs, attrs_st_birthtime_sec, (jlong)buf->st_birthtime);
     // rely on default value of 0 for st_birthtime_nsec field on Darwin
 #endif
