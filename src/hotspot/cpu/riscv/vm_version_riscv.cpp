@@ -180,6 +180,10 @@ void VM_Version::initialize() {
     FLAG_SET_DEFAULT(UseMD5Intrinsics, true);
   }
 
+  if (FLAG_IS_DEFAULT(UsePoly1305Intrinsics)) {
+    FLAG_SET_DEFAULT(UsePoly1305Intrinsics, true);
+  }
+
   if (UseRVV) {
     if (!ext_V.enabled()) {
       warning("RVV is not supported on this CPU");
