@@ -1098,8 +1098,6 @@ bool os::dll_address_to_library_name(address addr, char* buf,
   return true;
 }
 
-// Loads .dll/.so and in case of error it checks if .dll/.so was built
-// for the same architecture as Hotspot is running on.
 void *os::dll_load(const char *filename, char *ebuf, int ebuflen) {
 
   log_info(os)("attempting shared library load of %s", filename);
