@@ -1646,16 +1646,18 @@ public:
   };
 };
 
-static size_t delete_monitors(JavaThread* current, GrowableArray<ObjectMonitor*>* delete_list,
+static size_t delete_monitors(Thread* current, GrowableArray<ObjectMonitor*>* delete_list,
                               LogStream* ls, elapsedTimer* timer_p) {
   NativeHeapTrimmer::SuspendMark sm("monitor deletion");
   size_t deleted_count = 0;
   for (ObjectMonitor* monitor: *delete_list) {
     delete monitor;
     deleted_count++;
-    // A JavaThread must check for a safepoint/handshake and honor it.
-    ObjectSynchronizer::chk_for_block_req(current, "deletion", "deleted_count",
-                                          deleted_count, ls, timer_p);
+    if (current->is_Java_thread()) {
+      // A JavaThread must check for a safepoint/handshake and honor it.
+      ObjectSynchronizer::chk_for_block_req(JavaThread::cast(current), "deletion", "deleted_count",
+                                            deleted_count, ls, timer_p);
+    }
   }
   return deleted_count;
 }
@@ -1735,7 +1737,7 @@ size_t ObjectSynchronizer::deflate_idle_monitors(ObjectMonitorsHashtable* table)
 
     // After the handshake, safely free the ObjectMonitors that were
     // deflated and unlinked in this cycle.
-    deleted_count = delete_monitors(JavaThread::cast(current), &delete_list, ls, &timer);
+    deleted_count = delete_monitors(current, &delete_list, ls, &timer);
     assert(unlinked_count == deleted_count, "must be");
   }
 
