@@ -29,9 +29,10 @@ class BsdUserDefinedFileAttributeView
     extends UnixUserDefinedFileAttributeView
 {
     BsdUserDefinedFileAttributeView(UnixPath file, boolean followLinks) {
-        super(file, followLinks);
+        super(file, followLinks, UnixUserDefinedFileAttributeView.FileAttributeType.BSD);
     }
 
+    // Should be equal to EXTATTR_MAXNAMELEN
     @Override
     protected int maxNameLength() {
         return 255;
