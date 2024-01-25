@@ -707,9 +707,9 @@ bool PosixSignals::pd_hotspot_signal_handler(int sig, siginfo_t* info,
 
 /*
   NOTE: does not seem to work on bsd.
-  if (info == NULL || info->si_code <= 0 || info->si_code == SI_NOINFO) {
+  if (info == nullptr || info->si_code <= 0 || info->si_code == SI_NOINFO) {
     // can't decode this kind of signal
-    info = NULL;
+    info = nullptr;
   } else {
     assert(sig == info->si_signo, "bad siginfo");
   }
@@ -729,6 +729,7 @@ bool PosixSignals::pd_hotspot_signal_handler(int sig, siginfo_t* info,
     if ((uintptr_t(addr) & (uintptr_t(1) << 55)) != 0) {
       addr = address(uintptr_t(addr) | (uintptr_t(0xFF) << 56));
     }
+
     // Handle ALL stack overflow variations here
     if (sig == SIGSEGV) {
 #ifdef __FreeBSD__
@@ -807,8 +808,12 @@ bool PosixSignals::pd_hotspot_signal_handler(int sig, siginfo_t* info,
         // Do not crash the VM in such a case.
         CodeBlob* cb = CodeCache::find_blob(pc);
         CompiledMethod* nm = (cb != nullptr) ? cb->as_compiled_method_or_null() : nullptr;
-        if (nm != nullptr && nm->has_unsafe_access()) {
+        bool is_unsafe_arraycopy = (thread->doing_unsafe_access() && UnsafeCopyMemory::contains_pc(pc));
+        if ((nm != nullptr && nm->has_unsafe_access()) || is_unsafe_arraycopy) {
           address next_pc = pc + NativeCall::instruction_size;
+          if (is_unsafe_arraycopy) {
+            next_pc = UnsafeCopyMemory::page_error_continue_pc(pc);
+          }
           stub = SharedRuntime::handle_unsafe_access(thread, next_pc);
         }
       } else if (sig == SIGILL && nativeInstruction_at(pc)->is_stop()) {
@@ -846,10 +851,14 @@ bool PosixSignals::pd_hotspot_signal_handler(int sig, siginfo_t* info,
           // Determination of interpreter/vtable stub/compiled code null exception
           stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime::IMPLICIT_NULL);
       }
-    } else if (thread->thread_state() == _thread_in_vm &&
+    } else if ((thread->thread_state() == _thread_in_vm ||
+                 thread->thread_state() == _thread_in_native) &&
                sig == SIGBUS && /* info->si_code == BUS_OBJERR && */
                thread->doing_unsafe_access()) {
       address next_pc = pc + NativeCall::instruction_size;
+      if (UnsafeCopyMemory::contains_pc(pc)) {
+        next_pc = UnsafeCopyMemory::page_error_continue_pc(pc);
+      }
       stub = SharedRuntime::handle_unsafe_access(thread, next_pc);
     }
 
@@ -975,7 +984,20 @@ static inline void atomic_copy64(const volatile void *src, volatile void *dst) {
 
 extern "C" {
   int SpinPause() {
-    return 0;
+    using spin_wait_func_ptr_t = void (*)();
+    spin_wait_func_ptr_t func = CAST_TO_FN_PTR(spin_wait_func_ptr_t, StubRoutines::aarch64::spin_wait());
+    assert(func != nullptr, "StubRoutines::aarch64::spin_wait must not be null.");
+    (*func)();
+    // If StubRoutines::aarch64::spin_wait consists of only a RET,
+    // SpinPause can be considered as implemented. There will be a sequence
+    // of instructions for:
+    // - call of SpinPause
+    // - load of StubRoutines::aarch64::spin_wait stub pointer
+    // - indirect call of the stub
+    // - return from the stub
+    // - return from SpinPause
+    // So '1' always is returned.
+    return 1;
   }
 
   void _Copy_conjoint_jshorts_atomic(const jshort* from, jshort* to, size_t count) {
