@@ -134,7 +134,7 @@ else ifeq ($(call isTargetOs, bsd), true)
           if ($$3 ~ /$(FILTER_SYMBOLS_PATTERN)/) print $$3; \
         }'
   else
-    DUMP_SYMBOLS_CMD := $(NM) $(NMFLAGS) --defined-only *$(OBJ_SUFFIX)
+    DUMP_SYMBOLS_CMD := $(NM) $(NMFLAGS) --extern-only --defined-only *$(OBJ_SUFFIX)
     FILTER_SYMBOLS_AWK_SCRIPT := \
         '{ \
           if ($$3 ~ /$(FILTER_SYMBOLS_PATTERN)/) print $$3; \
