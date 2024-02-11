@@ -2352,6 +2352,11 @@ encode %{
         ciEnv::current()->record_failure("CodeCache is full");
         return;
       }
+    } else if (_method->intrinsic_id() == vmIntrinsicID::_ensureMaterializedForStackWalk) {
+      // The NOP here is purely to ensure that eliding a call to
+      // JVM_EnsureMaterializedForStackWalk doesn't change the code size.
+      __ nop();
+      __ block_comment("call JVM_EnsureMaterializedForStackWalk (elided)");
     } else {
       int method_index = resolved_method_index(cbuf);
       RelocationHolder rspec = _optimized_virtual ? opt_virtual_call_Relocation::spec(method_index)
@@ -8219,6 +8224,34 @@ instruct convN2I(iRegINoSp dst, iRegN src)
   %}
 
   ins_pipe(ialu_reg);
+%}
+
+instruct round_double_reg(iRegLNoSp dst, fRegD src, fRegD ftmp) %{
+  match(Set dst (RoundD src));
+
+  ins_cost(XFER_COST + BRANCH_COST);
+  effect(TEMP ftmp);
+  format %{ "java_round_double $dst, $src\t#@round_double_reg" %}
+
+  ins_encode %{
+    __ java_round_double($dst$$Register, as_FloatRegister($src$$reg), as_FloatRegister($ftmp$$reg));
+  %}
+
+  ins_pipe(pipe_slow);
+%}
+
+instruct round_float_reg(iRegINoSp dst, fRegF src, fRegF ftmp) %{
+  match(Set dst (RoundF src));
+
+  ins_cost(XFER_COST + BRANCH_COST);
+  effect(TEMP ftmp);
+  format %{ "java_round_float $dst, $src\t#@round_float_reg" %}
+
+  ins_encode %{
+    __ java_round_float($dst$$Register, as_FloatRegister($src$$reg), as_FloatRegister($ftmp$$reg));
+  %}
+
+  ins_pipe(pipe_slow);
 %}
 
 // Convert oop pointer into compressed form
