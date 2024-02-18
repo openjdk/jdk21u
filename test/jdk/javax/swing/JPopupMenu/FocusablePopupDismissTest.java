@@ -25,7 +25,7 @@
   * @test
   * @key headful
   * @bug 8319103
-  * @requires (os.family == "linux")
+  * @requires (os.family == "linux") | (os.family == "freebsd") | (os.family == "netbsd") | (os.family == "openbsd")
   * @library /java/awt/regtesthelpers
   * @build PassFailJFrame
   * @summary Tests if the focusable popup can be dismissed when the parent

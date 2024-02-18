@@ -24,7 +24,7 @@
 /*
  * @test
  * @bug 5009724
- * @requires (os.family == "linux")
+ * @requires (os.family == "linux") | (os.family == "freebsd") | (os.family == "netbsd") | (os.family == "openbsd")
  * @summary JInternalFrame not serializable in GTK L&F
  * @key headful
  * @run main bug5009724
