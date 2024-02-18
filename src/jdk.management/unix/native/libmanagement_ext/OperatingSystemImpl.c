@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -128,12 +128,18 @@ static jlong get_total_or_available_swap_space_size(JNIEnv* env, jboolean availa
            npages -= xsw.xsw_used;
     }
     return (npages * page_size);
+#elif defined(_AIX)
+    perfstat_memory_total_t memory_info;
+    if (perfstat_memory_total(NULL, &memory_info, sizeof(perfstat_memory_total_t), 1) == -1) {
+        throw_internal_error(env, "perfstat_memory_total failed");
+    }
+    return available ? (jlong)(memory_info.pgsp_free * 4L * 1024L) : (jlong)(memory_info.pgsp_total * 4L * 1024L);
 #else /* _ALLBSD_SOURCE */
     /*
      * XXXBSD: there's no way available to get swap info in
-     *         FreeBSD.  Usage of libkvm is not an option here
+     *         other BSD.  Usage of libkvm is not an option here
      */
-    // throw_internal_error(env, "Unimplemented in FreeBSD");
+    // throw_internal_error(env, "Unimplemented on BSD");
     return (0);
 #endif
 }
