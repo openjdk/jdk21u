@@ -3885,7 +3885,7 @@ void TemplateTable::invokeinterface(int byte_no) {
 
   __ profile_arguments_type(rdx, rbx, rbcp, true);
 
-  
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::monitor_invoke), rbx);
 
   // do the call
   // rcx: receiver
