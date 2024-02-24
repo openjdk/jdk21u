@@ -3736,9 +3736,6 @@ void TemplateTable::invokevirtual_helper(Register index,
   __ lookup_virtual_method(rax, index, method);
 
   __ profile_arguments_type(rdx, method, rbcp, true);
-
-  __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::monitor_invoke), rax);
-
   __ jump_from_interpreted(method, rdx);
 }
 
@@ -3887,6 +3884,8 @@ void TemplateTable::invokeinterface(int byte_no) {
   __ jcc(Assembler::zero, no_such_method);
 
   __ profile_arguments_type(rdx, rbx, rbcp, true);
+
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::monitor_invoke), rbx);
 
   // do the call
   // rcx: receiver
