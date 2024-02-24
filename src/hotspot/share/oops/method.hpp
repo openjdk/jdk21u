@@ -180,7 +180,7 @@ class Method : public Metadata {
   static char* name_and_sig_as_C_string(Klass* klass, Symbol* method_name, Symbol* signature, char* buf, int size);
 
   const char* external_name_as_fully_qualified() const;//perpap
-  static const char external_name(                  Klass klass, Symbol* method_name);//perpap
+  static const char* external_name(Klass* klass, Symbol* method_name);//perpap
 
   // Get return type + klass name + "." + method name + ( parameters types )
   // as a C string or print it to an outputStream.
