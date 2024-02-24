@@ -3885,6 +3885,8 @@ void TemplateTable::invokeinterface(int byte_no) {
 
   __ profile_arguments_type(rdx, rbx, rbcp, true);
 
+  
+
   // do the call
   // rcx: receiver
   // rbx,: Method*

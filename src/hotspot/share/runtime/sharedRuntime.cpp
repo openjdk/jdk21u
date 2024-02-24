@@ -181,6 +181,29 @@ int     SharedRuntime::_ICmiss_count[SharedRuntime::maxICmiss_count];
 address SharedRuntime::_ICmiss_at[SharedRuntime::maxICmiss_count];
 
 
+void lock_or_unlock(Method *m) {
+  JavaThread* thread = JavaThread::current();
+  int tid = -1;
+
+  if (thread) {
+    oop threadObj = thread->threadObj();
+    if (threadObj) {
+      tid = java_lang_Thread::thread_id(threadObj);
+    }
+  }
+
+  fprintf(stderr, "Thread %d: %s\n", tid, m->name_and_sig_as_C_string());
+}
+
+JRT_LEAF(void, SharedRuntime::monitor_invoke(Method *m))
+  const char *name = m->name_and_sig_as_C_string();
+
+  if (strstr(name "java.util.concurrent.locks.ReentrantLock")) {
+    lock_or_unlock(m);
+  }
+  return;
+JRT_END
+
 void SharedRuntime::trace_ic_miss(address at) {
   for (int i = 0; i < _ICmiss_index; i++) {
     if (_ICmiss_at[i] == at) {
