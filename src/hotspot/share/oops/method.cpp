@@ -203,6 +203,16 @@ char* Method::name_and_sig_as_C_string(Klass* klass, Symbol* method_name, Symbol
   return buf;
 }
 
+const char* Method::external_name_as_fully_qualified() const {
+  return external_name(constants()->pool_holder(), name());
+}
+
+const char Method::external_name(Klass klass, Symbol* method_name) {
+  stringStream ss;
+  print_external_name(&ss, klass, method_name);
+  return ss.as_string();
+}
+
 const char* Method::external_name() const {
   return external_name(constants()->pool_holder(), name(), signature());
 }
