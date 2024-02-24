@@ -3736,6 +3736,9 @@ void TemplateTable::invokevirtual_helper(Register index,
   __ lookup_virtual_method(rax, index, method);
 
   __ profile_arguments_type(rdx, method, rbcp, true);
+
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::monitor_invoke), rax);
+
   __ jump_from_interpreted(method, rdx);
 }
 
@@ -3746,8 +3749,6 @@ void TemplateTable::invokevirtual(int byte_no) {
                  rbx,    // method or vtable index
                  noreg,  // unused itable index
                  rcx, rdx); // recv, flags
-
-  __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::monitor_invoke), rbx);
 
   // rbx: index
   // rcx: receiver
