@@ -181,6 +181,7 @@ class Method : public Metadata {
 
   const char* external_name_as_fully_qualified() const;//perpap
   static const char* external_name(Klass* klass, Symbol* method_name);//perpap
+  static void  print_external_name(outputStream *os, Klass *klass, Symbol* method_name);//perpap
 
   // Get return type + klass name + "." + method name + ( parameters types )
   // as a C string or print it to an outputStream.

@@ -217,6 +217,10 @@ const char* Method::external_name() const {
   return external_name(constants()->pool_holder(), name(), signature());
 }
 
+void Method::print_external_name(outputStream* os, Klass* klass, Symbol* method_name) {
+  os->print("%s.%s", klass->external_name(), method_name->as_C_string());
+}
+
 void Method::print_external_name(outputStream *os) const {
   print_external_name(os, constants()->pool_holder(), name(), signature());
 }
