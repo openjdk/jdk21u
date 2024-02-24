@@ -201,6 +201,9 @@ JRT_LEAF(void, SharedRuntime::monitor_invoke(Method *m))
 
   if (strstr(name, "java.util.concurrent.locks.ReentrantLock")) {
     lock_or_unlock(m);
+  } else {
+    fprintf(stderr, "%s\n", name);
+    fprintf(stderr, "%s\n", method->name()->as_C_string());
   }
   return;
 JRT_END
