@@ -196,6 +196,7 @@ void lock_or_unlock(Method *m) {
 }
 
 JRT_LEAF(void, SharedRuntime::monitor_invoke(Method *m))
+  ResourceMark rm;
   const char *name = m->name_and_sig_as_C_string();
 
   if (strstr(name, "java.util.concurrent.locks.ReentrantLock")) {
