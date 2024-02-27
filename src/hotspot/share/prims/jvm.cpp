@@ -4036,10 +4036,11 @@ JVM_END
 
 
 JVM_LEAF(void, JVM_jtsanLock(void))
-    JavaThread *thread = JavaThread::current();
+    Thread *thread = Thread::current();
 
-    if (thread) {
-        oop threadObj = thread->threadObj();
+    if (thread && thread->is_Java_thread()) {
+        JavaThread *jt = (JavaThread *) thread;
+        oop threadObj = jt->threadObj();
         int tid = -1;
         if (threadObj) {
             tid = java_lang_Thread::thread_id(threadObj);
@@ -4050,10 +4051,11 @@ JVM_LEAF(void, JVM_jtsanLock(void))
 JVM_END
 
 JVM_LEAF(void, JVM_jtsanUnlock(void))
-    JavaThread *thread = JavaThread::current();
+    Thread *thread = Thread::current();
 
-    if (thread) {
-        oop threadObj = thread->threadObj();
+    if (thread && thread->is_Java_thread()) {
+        JavaThread *jt = (JavaThread *) thread;
+        oop threadObj = jt->threadObj();
         int tid = -1;
         if (threadObj) {
             tid = java_lang_Thread::thread_id(threadObj);
