@@ -4035,6 +4035,7 @@ JVM_LEAF(jboolean, JVM_PrintWarningAtDynamicAgentLoad(void))
 JVM_END
 
 
+// aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env))
     if (thread && thread->is_Java_thread()) {
         JavaThread *jt = (JavaThread *) thread;
@@ -4043,10 +4044,12 @@ JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env))
         if (threadObj) {
             tid = java_lang_Thread::thread_id(threadObj);
         }
-        fprintf(stderr, "Java_java_lang_Runtime_jtsanLock: %d\n", tid);
+        //fprintf(stderr, "Java_java_lang_Runtime_jtsanLock: %d\n", tid);
+        // TODO: sendover epoch
     }
 JVM_END
 
+// aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env))
     if (thread && thread->is_Java_thread()) {
         JavaThread *jt = (JavaThread *) thread;
@@ -4055,6 +4058,8 @@ JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env))
         if (threadObj) {
             tid = java_lang_Thread::thread_id(threadObj);
         }
-        fprintf(stderr, "Java_java_lang_Runtime_jtsanUnlock: %d\n", tid);
+        //fprintf(stderr, "Java_java_lang_Runtime_jtsanUnlock: %d\n", tid);
+        // TODO: sendover epoch
+
     }
 JVM_END
