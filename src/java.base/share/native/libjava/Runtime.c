@@ -41,9 +41,9 @@
 
 #include "java_lang_Runtime.h"
 
-#include "../../../../share/runtime/thread.hpp"
-#include "../../../../share/runtime/javaThread.hpp"
-#include "../../../../share/oops/oopsHierarchy.hpp"
+#include "../../../../hotspot/share/runtime/thread.hpp"
+#include "../../../../hotspot/share/runtime/javaThread.hpp"
+#include "../../../../hotspot/share/oops/oopsHierarchy.hpp"
 
 JNIEXPORT jlong JNICALL
 Java_java_lang_Runtime_freeMemory(JNIEnv *env, jobject this)
