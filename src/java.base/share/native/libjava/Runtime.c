@@ -76,7 +76,7 @@ Java_java_lang_Runtime_availableProcessors(JNIEnv *env, jobject this)
 JNIEXPORT void JNICALL
 Java_java_lang_Runtime_jtsanLock(JNIEnv *env, jobject this)
 {
-    JVM_jtsanLock();
+    JVM_jtsanLock(env);
     //fprintf(stderr, "Java_java_lang_Runtime_jtsanLock\n");
 }
 
@@ -84,6 +84,6 @@ Java_java_lang_Runtime_jtsanLock(JNIEnv *env, jobject this)
 JNIEXPORT void JNICALL
 Java_java_lang_Runtime_jtsanUnlock(JNIEnv *env, jobject this)
 {
-    JVM_jtsanUnlock();
+    JVM_jtsanUnlock(env);
     //fprintf(stderr, "Java_java_lang_Runtime_jtsanUnlock\n");
 }

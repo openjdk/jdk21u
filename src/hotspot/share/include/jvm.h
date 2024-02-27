@@ -120,10 +120,10 @@ JVM_GC(void);
 
 // aantonak - jtsan
 JNIEXPORT void JNICALL
-JVM_jtsanLock(void);
+JVM_jtsanLock(JNIEnv *env);
 
 JNIEXPORT void JNICALL
-JVM_jtsanUnlock(void);
+JVM_jtsanUnlock(JNIEnv *env);
 
 
 /* Returns the number of real-time milliseconds that have elapsed since the

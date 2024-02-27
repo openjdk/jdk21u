@@ -4035,7 +4035,7 @@ JVM_LEAF(jboolean, JVM_PrintWarningAtDynamicAgentLoad(void))
 JVM_END
 
 
-JVM_ENTRY(void, JVM_jtsanLock(void))
+JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env))
     if (thread && thread->is_Java_thread()) {
         JavaThread *jt = (JavaThread *) thread;
         oop threadObj = jt->threadObj();
@@ -4047,7 +4047,7 @@ JVM_ENTRY(void, JVM_jtsanLock(void))
     }
 JVM_END
 
-JVM_ENTRY(void, JVM_jtsanUnlock(void))
+JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env))
     if (thread && thread->is_Java_thread()) {
         JavaThread *jt = (JavaThread *) thread;
         oop threadObj = jt->threadObj();
