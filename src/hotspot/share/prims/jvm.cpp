@@ -4051,7 +4051,7 @@ JVM_LEAF(void, JVM_jtsanLock(void))
 JVM_END
 
 JVM_LEAF(void, JVM_jtsanUnlock(void))
-    Thread *thread = Thread::current();
+    Thread *thread = Thread::current_or_null();
 
     if (thread && thread->is_Java_thread()) {
         JavaThread *jt = (JavaThread *) thread;
