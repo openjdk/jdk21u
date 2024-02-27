@@ -4033,3 +4033,32 @@ JVM_END
 JVM_LEAF(jboolean, JVM_PrintWarningAtDynamicAgentLoad(void))
   return (EnableDynamicAgentLoading && !FLAG_IS_CMDLINE(EnableDynamicAgentLoading)) ? JNI_TRUE : JNI_FALSE;
 JVM_END
+
+
+JVM_LEAF(void, JVM_jtsanLock(void))
+    JavaThread *thread = JavaThread::current();
+
+    if (thread) {
+        oop threadObj = thread->threadObj();
+        int tid = -1;
+        if (threadObj) {
+            tid = java_lang_Thread::thread_id(threadObj);
+        }
+        fprintf(stderr, "Java_java_lang_Runtime_jtsanLock: %d\n", tid);
+    }
+
+JVM_END
+
+JVM_LEAF(void, JVM_jtsanUnlock(void))
+    JavaThread *thread = JavaThread::current();
+
+    if (thread) {
+        oop threadObj = thread->threadObj();
+        int tid = -1;
+        if (threadObj) {
+            tid = java_lang_Thread::thread_id(threadObj);
+        }
+        fprintf(stderr, "Java_java_lang_Runtime_jtsanUnlock: %d\n", tid);
+    }
+
+JVM_END

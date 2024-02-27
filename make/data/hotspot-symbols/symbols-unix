@@ -230,3 +230,7 @@ JVM_FindScopedValueBindings
 JVM_ScopedValueCache
 JVM_SetScopedValueCache
 #
+
+# aantonak - jtsan
+JVM_jtsanLock
+JVM_jtsanUnlock
