@@ -4035,9 +4035,7 @@ JVM_LEAF(jboolean, JVM_PrintWarningAtDynamicAgentLoad(void))
 JVM_END
 
 
-JRT_LEAF(void, JVM_jtsanLock(void))
-    Thread *thread = Thread::current_or_null();
-
+JVM_ENTRY(void, JVM_jtsanLock(void))
     if (thread && thread->is_Java_thread()) {
         JavaThread *jt = (JavaThread *) thread;
         oop threadObj = jt->threadObj();
@@ -4047,11 +4045,9 @@ JRT_LEAF(void, JVM_jtsanLock(void))
         }
         fprintf(stderr, "Java_java_lang_Runtime_jtsanLock: %d\n", tid);
     }
-JRT_END
+JVM_END
 
-JRT_LEAF(void, JVM_jtsanUnlock(void))
-    Thread *thread = Thread::current_or_null();
-
+JVM_ENTRY(void, JVM_jtsanUnlock(void))
     if (thread && thread->is_Java_thread()) {
         JavaThread *jt = (JavaThread *) thread;
         oop threadObj = jt->threadObj();
@@ -4061,4 +4057,4 @@ JRT_LEAF(void, JVM_jtsanUnlock(void))
         }
         fprintf(stderr, "Java_java_lang_Runtime_jtsanUnlock: %d\n", tid);
     }
-JRT_END
+JVM_END
