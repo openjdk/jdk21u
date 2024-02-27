@@ -195,6 +195,15 @@ void lock_or_unlock(Method *m) {
   fprintf(stderr, "Thread %d: %s\n", tid, m->name_and_sig_as_C_string());
 }
 
+JRT_LEAF(void, SharedRuntime::field_load(void *obj, Method *method, address bcp))
+  ResourceMark rm;
+
+  // we have to trace the field's type
+  oop o = (oop)obj;
+
+  o->print();
+JRT_END
+
 JRT_LEAF(void, SharedRuntime::monitor_invoke(Method *m))
   ResourceMark rm;
   const char *name = m->external_name_as_fully_qualified();

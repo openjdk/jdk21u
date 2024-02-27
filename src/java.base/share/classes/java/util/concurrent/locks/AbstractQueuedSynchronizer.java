@@ -566,7 +566,7 @@ public abstract class AbstractQueuedSynchronizer
      *         value was not equal to the expected value.
      */
     protected final boolean compareAndSetState(int expect, int update) {
-        return U.compareAndSetInt(this, STATE, expect, update);
+        return U.(this, STATE, expect, update);
     }
 
     // Queuing utilities

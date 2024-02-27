@@ -320,6 +320,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public void lock() {
         sync.lock();
+        Runtime.getRuntime().jtsanLock();
     }
 
     /**
@@ -492,6 +493,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public void unlock() {
         sync.release(1);
+        Runtime.getRuntime().jtsanUnlock();
     }
 
     /**

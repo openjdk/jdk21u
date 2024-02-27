@@ -1737,6 +1737,9 @@ JVM_END
 
 // New (JDK 1.4) reflection implementation /////////////////////////////////////
 
+
+// aantonak
+// this is how to get the name of the fields of a class
 JVM_ENTRY(jobjectArray, JVM_GetClassDeclaredFields(JNIEnv *env, jclass ofClass, jboolean publicOnly))
 {
   JvmtiVMObjectAllocEventCollector oam;
