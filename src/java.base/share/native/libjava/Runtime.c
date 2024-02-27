@@ -41,6 +41,10 @@
 
 #include "java_lang_Runtime.h"
 
+#include "runtime/thread.hpp"
+#include "runtime/javaThread.hpp"
+#include "oops/oopsHierarchy.hpp"
+
 JNIEXPORT jlong JNICALL
 Java_java_lang_Runtime_freeMemory(JNIEnv *env, jobject this)
 {
@@ -71,14 +75,36 @@ Java_java_lang_Runtime_availableProcessors(JNIEnv *env, jobject this)
     return JVM_ActiveProcessorCount();
 }
 
+
+//aantonak - jtsan
 JNIEXPORT void JNICALL
 Java_java_lang_Runtime_jtsanLock(JNIEnv *env, jobject this)
 {
-    fprintf(stderr, "Java_java_lang_Runtime_jtsanLock\n");
+    JavaThread *thread = JavaThread::current();
+
+    if (thread) {
+        oop threadObj = thread->threadObj();
+        if (threadObj) {
+            tid = java_lang_Thread::thread_id(threadObj);
+        }
+        fprintf(stderr, "Java_java_lang_Runtime_jtsanLock: %d\n", tid);
+    }
+
+    //fprintf(stderr, "Java_java_lang_Runtime_jtsanLock\n");
 }
 
+//aantonak - jtsan
 JNIEXPORT void JNICALL
 Java_java_lang_Runtime_jtsanUnlock(JNIEnv *env, jobject this)
 {
-    fprintf(stderr, "Java_java_lang_Runtime_jtsanUnlock\n");
+    JavaThread *thread = JavaThread::current();
+
+    if (thread) {
+        oop threadObj = thread->threadObj();
+        if (threadObj) {
+            tid = java_lang_Thread::thread_id(threadObj);
+        }
+        fprintf(stderr, "Java_java_lang_Runtime_jtsanLock: %d\n", tid);
+    }
+    //fprintf(stderr, "Java_java_lang_Runtime_jtsanUnlock\n");
 }
