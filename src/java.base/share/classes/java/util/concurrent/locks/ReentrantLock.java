@@ -371,6 +371,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public void lockInterruptibly() throws InterruptedException {
         sync.lockInterruptibly();
+        Runtime.getRuntime().jtsanLock();
     }
 
     /**
@@ -400,7 +401,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *         thread; and {@code false} otherwise
      */
     public boolean tryLock() {
-        return sync.tryLock();
+        if (sync.tryLock()) {
+            Runtime.getRuntime().jtsanLock();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -477,7 +482,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public boolean tryLock(long timeout, TimeUnit unit)
             throws InterruptedException {
-        return sync.tryLockNanos(unit.toNanos(timeout));
+        if (sync.tryLockNanos(unit.toNanos(timeout))) {
+            Runtime.getRuntime().jtsanLock();
+            return true;
+        }
+        return false;
     }
 
     /**

@@ -34,9 +34,6 @@
 #include "utilities/debug.hpp"
 
 GCName GCConfiguration::young_collector() const {
-
-  oop p;
-
   if (UseG1GC) {
     return G1New;
   }
