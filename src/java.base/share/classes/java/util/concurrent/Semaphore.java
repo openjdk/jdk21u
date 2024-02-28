@@ -316,6 +316,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public void acquire() throws InterruptedException {
         sync.acquireSharedInterruptibly(1);
+        Runtime.getRuntime().jtsanLock();
     }
 
     /**
@@ -339,6 +340,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public void acquireUninterruptibly() {
         sync.acquireShared(1);
+        Runtime.getRuntime().jtsanLock();
     }
 
     /**
@@ -366,7 +368,11 @@ public class Semaphore implements java.io.Serializable {
      *         otherwise
      */
     public boolean tryAcquire() {
-        return sync.nonfairTryAcquireShared(1) >= 0;
+        if (sync.nonfairTryAcquireShared(1) >= 0) {
+            Runtime.getRuntime().jtsanLock();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -412,7 +418,11 @@ public class Semaphore implements java.io.Serializable {
      */
     public boolean tryAcquire(long timeout, TimeUnit unit)
         throws InterruptedException {
-        return sync.tryAcquireSharedNanos(1, unit.toNanos(timeout));
+        if (sync.tryAcquireSharedNanos(1, unit.toNanos(timeout))) {
+            Runtime.getRuntime().jtsanLock();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -430,6 +440,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public void release() {
         sync.releaseShared(1);
+        Runtime.getRuntime().jtsanUnlock();
     }
 
     /**
@@ -473,6 +484,7 @@ public class Semaphore implements java.io.Serializable {
     public void acquire(int permits) throws InterruptedException {
         if (permits < 0) throw new IllegalArgumentException();
         sync.acquireSharedInterruptibly(permits);
+        Runtime.getRuntime().jtsanLock();
     }
 
     /**
@@ -533,7 +545,11 @@ public class Semaphore implements java.io.Serializable {
      */
     public boolean tryAcquire(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        return sync.nonfairTryAcquireShared(permits) >= 0;
+        if (sync.nonfairTryAcquireShared(permits) >= 0) {
+            Runtime.getRuntime().jtsanLock();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -589,7 +605,11 @@ public class Semaphore implements java.io.Serializable {
     public boolean tryAcquire(int permits, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (permits < 0) throw new IllegalArgumentException();
-        return sync.tryAcquireSharedNanos(permits, unit.toNanos(timeout));
+        if (sync.tryAcquireSharedNanos(permits, unit.toNanos(timeout))) {
+            Runtime.getRuntime().jtsanLock();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -617,6 +637,7 @@ public class Semaphore implements java.io.Serializable {
     public void release(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
         sync.releaseShared(permits);
+        Runtime.getRuntime().jtsanUnlock();
     }
 
     /**

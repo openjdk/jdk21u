@@ -70,3 +70,20 @@ Java_java_lang_Runtime_availableProcessors(JNIEnv *env, jobject this)
 {
     return JVM_ActiveProcessorCount();
 }
+
+
+//aantonak - jtsan
+JNIEXPORT void JNICALL
+Java_java_lang_Runtime_jtsanLock(JNIEnv *env, jobject this)
+{
+    JVM_jtsanLock(env);
+    //fprintf(stderr, "Java_java_lang_Runtime_jtsanLock\n");
+}
+
+//aantonak - jtsan
+JNIEXPORT void JNICALL
+Java_java_lang_Runtime_jtsanUnlock(JNIEnv *env, jobject this)
+{
+    JVM_jtsanUnlock(env);
+    //fprintf(stderr, "Java_java_lang_Runtime_jtsanUnlock\n");
+}

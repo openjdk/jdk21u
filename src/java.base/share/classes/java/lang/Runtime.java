@@ -706,6 +706,22 @@ public class Runtime {
      */
     public native long freeMemory();
 
+
+    /**
+     * aantonak
+     * Gets called on ReEntrantLock.lock()
+     */
+
+    public native void jtsanLock();
+
+    /**
+     * aantonak
+     * Gets called on ReEntrantLock.unlock()
+     */
+
+    public native void jtsanUnlock();
+
+
     /**
      * Returns the total amount of memory in the Java virtual machine.
      * The value returned by this method may vary over time, depending on

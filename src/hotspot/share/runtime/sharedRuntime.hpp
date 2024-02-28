@@ -354,6 +354,8 @@ class SharedRuntime: AllStatic {
 
   static void monitor_invoke(Method *m);
 
+  static void field_load(void *obj, Method *method, address bcp);
+
  private:
   static Handle find_callee_info(Bytecodes::Code& bc, CallInfo& callinfo, TRAPS);
   static Handle find_callee_info_helper(vframeStream& vfst, Bytecodes::Code& bc, CallInfo& callinfo, TRAPS);

@@ -9,8 +9,9 @@ class Foo {
 	mutex.lock();
         this.a += "\n";
         String test = this.a;
+        int threadId = (int) Thread.currentThread().getId();
 
-        System.out.println("test-.-");
+        System.out.println("test-.-" + " : tid =  " + threadId);
 	mutex.unlock();
      }
 }

@@ -1737,6 +1737,9 @@ JVM_END
 
 // New (JDK 1.4) reflection implementation /////////////////////////////////////
 
+
+// aantonak
+// this is how to get the name of the fields of a class
 JVM_ENTRY(jobjectArray, JVM_GetClassDeclaredFields(JNIEnv *env, jclass ofClass, jboolean publicOnly))
 {
   JvmtiVMObjectAllocEventCollector oam;
@@ -4029,4 +4032,34 @@ JVM_END
  */
 JVM_LEAF(jboolean, JVM_PrintWarningAtDynamicAgentLoad(void))
   return (EnableDynamicAgentLoading && !FLAG_IS_CMDLINE(EnableDynamicAgentLoading)) ? JNI_TRUE : JNI_FALSE;
+JVM_END
+
+
+// aantonak - jtsan
+JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env))
+    if (thread && thread->is_Java_thread()) {
+        JavaThread *jt = (JavaThread *) thread;
+        oop threadObj = jt->threadObj();
+        int tid = -1;
+        if (threadObj) {
+            tid = java_lang_Thread::thread_id(threadObj);
+        }
+        //fprintf(stderr, "Java_java_lang_Runtime_jtsanLock: %d\n", tid);
+        // TODO: sendover epoch
+    }
+JVM_END
+
+// aantonak - jtsan
+JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env))
+    if (thread && thread->is_Java_thread()) {
+        JavaThread *jt = (JavaThread *) thread;
+        oop threadObj = jt->threadObj();
+        int tid = -1;
+        if (threadObj) {
+            tid = java_lang_Thread::thread_id(threadObj);
+        }
+        //fprintf(stderr, "Java_java_lang_Runtime_jtsanUnlock: %d\n", tid);
+        // TODO: sendover epoch
+
+    }
 JVM_END
