@@ -2870,7 +2870,11 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
         }
       }
     // Unknown option
-    } else if (is_bad_option(option, args->ignoreUnrecognized)) {
+    } else if (match_option(option, "-XX:+jTSAN", &tail)) { // aantonak - jtsan
+        if (FLAG_SET_CMDLINE(jTSAN, true) != JVMFlag::SUCCESS) {
+          return JNI_EINVAL;
+        }
+      } else if (is_bad_option(option, args->ignoreUnrecognized)) {
       return JNI_ERR;
     }
   }
