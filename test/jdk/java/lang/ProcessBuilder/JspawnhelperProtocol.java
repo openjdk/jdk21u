@@ -25,8 +25,9 @@
 /*
  * @test
  * @bug 8307990
- * @requires (os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd" | (os.family == "aix")
+ * @requires (os.family == "linux") | (os.family == "aix") | (os.family == "mac") | (os.family == "freebsd") | (os.family == "netbsd") | (os.family == "openbsd")
  * @requires vm.debug
+ * @requires vm.flagless
  * @library /test/lib
  * @run main/othervm/timeout=300 JspawnhelperProtocol
  */
