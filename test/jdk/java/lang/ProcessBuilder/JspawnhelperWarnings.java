@@ -26,7 +26,7 @@
 /*
  * @test
  * @bug 8325567
- * @requires (os.family == "linux") | (os.family == "aix") | (os.family == "mac")
+ * @requires (os.family == "linux") | (os.family == "aix") | (os.family == "mac") | (os.family == "freebsd") | (os.family == "netbsd") | (os.family == "openbsd")
  * @library /test/lib
  * @run driver JspawnhelperWarnings
  */
