@@ -591,6 +591,10 @@ AC_DEFUN([FLAGS_SETUP_CFLAGS_HELPER],
       if test "x$OPENJDK_TARGET_CPU" = xs390x; then
         TOOLCHAIN_CFLAGS_JVM="$TOOLCHAIN_CFLAGS_JVM -ffunction-sections -fdata-sections"
       fi
+    elif test "x$OPENJDK_TARGET_OS_ENV" = xbsd.freebsd; then
+        if test "x$FLAGS_CPU" = xppc64; then
+            $1_CFLAGS_CPU_JVM="${$1_CFLAGS_CPU_JVM} -DABI_ELFv2 -mcpu=powerpc64 -mtune=power5"
+        fi
     fi
     # technically NOT for CXX (but since this gives *worse* performance, use
     # no-strict-aliasing everywhere!)
