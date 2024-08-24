@@ -23,7 +23,7 @@
 
 /* @test
  * @bug 8073061
- * @requires (os.family == "linux") | (os.family == "mac")
+ * @requires (os.family == "linux") | (os.family == "mac") | (os.family == "freebsd") | (os.family == "netbsd") | (os.family == "openbsd")
  * @summary Test Files.copy and Files.move with numerous parameters
  * @run junit CopyMoveVariations
  */
