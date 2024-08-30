@@ -36,6 +36,7 @@
 #include "utilities/defaultStream.hpp"
 #include "logging/log.hpp"
 #include "logging/logConfiguration.hpp"
+#include "logging/logFileStreamOutput.hpp"
 
 #ifdef DTRACE_ENABLED
 
@@ -134,7 +135,7 @@ bool ClassLoadingService::get_verbose() {
     // so look for all tag sets that match class+load*
     if (ts->contains(LogTag::_class) &&
         ts->contains(LogTag::_load)) {
-      LogLevelType l = ts->level_for(LogConfiguration::StdoutLog);
+      LogLevelType l = ts->level_for(StdoutLog);
       if (l != LogLevel::Info && l != LogLevel::Debug && l != LogLevel::Trace) {
         return false;
       }

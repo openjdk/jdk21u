@@ -26,6 +26,7 @@
 #include "classfile/vmSymbols.hpp"
 #include "gc/shared/collectedHeap.hpp"
 #include "logging/logConfiguration.hpp"
+#include "logging/logFileStreamOutput.hpp"
 #include "memory/heap.hpp"
 #include "memory/memRegion.hpp"
 #include "memory/resourceArea.hpp"
@@ -207,7 +208,7 @@ bool MemoryService::get_verbose() {
     // set_verbose only sets gc and not gc*, so check for an exact match
     const bool is_gc_exact_match = ts->contains(LogTag::_gc) && ts->ntags() == 1;
     if (is_gc_exact_match) {
-      LogLevelType l = ts->level_for(LogConfiguration::StdoutLog);
+      LogLevelType l = ts->level_for(StdoutLog);
       if (l == LogLevel::Info || l == LogLevel::Debug || l == LogLevel::Trace) {
         return true;
       }

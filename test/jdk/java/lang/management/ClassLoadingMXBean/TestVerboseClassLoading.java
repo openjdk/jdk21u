@@ -45,12 +45,12 @@
  * @run main/othervm -Xlog:class+load*=error TestVerboseClassLoading false
  * @run main/othervm -Xlog:class+load*=off TestVerboseClassLoading false
  *
- * @run main/othervm -Xlog:class+load*=info,class+load+cause=trace TestVerboseClassLoading true
- * @run main/othervm -Xlog:class+load*=info,class+load+cause=debug TestVerboseClassLoading true
- * @run main/othervm -Xlog:class+load*=info,class+load+cause=info TestVerboseClassLoading true
- * @run main/othervm -Xlog:class+load*=info,class+load+cause=warning TestVerboseClassLoading false
- * @run main/othervm -Xlog:class+load*=info,class+load+cause=error TestVerboseClassLoading false
- * @run main/othervm -Xlog:class+load*=info,class+load+cause=off TestVerboseClassLoading false
+ * @run main/othervm -Xlog:class+load*=info,class+load=trace TestVerboseClassLoading true
+ * @run main/othervm -Xlog:class+load*=info,class+load=debug TestVerboseClassLoading true
+ * @run main/othervm -Xlog:class+load*=info,class+load=info TestVerboseClassLoading true
+ * @run main/othervm -Xlog:class+load*=info,class+load=warning TestVerboseClassLoading false
+ * @run main/othervm -Xlog:class+load*=info,class+load=error TestVerboseClassLoading false
+ * @run main/othervm -Xlog:class+load*=info,class+load=off TestVerboseClassLoading false
  *
  * @run main/othervm -Xlog:all=trace:file=vm.log TestVerboseClassLoading false
  */
