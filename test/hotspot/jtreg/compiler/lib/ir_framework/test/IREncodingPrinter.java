@@ -64,6 +64,7 @@ public class IREncodingPrinter {
         "linux",
         "mac",
         "windows",
+        "bsd",
         // vm.simpleArch
         "aarch64",
         "arm",
@@ -335,6 +336,8 @@ public class IREncodingPrinter {
             os = "mac";
         } else if (Platform.isWindows()) {
             os = "windows";
+        } else if (Platform.isBSD()) {
+            os = "bsd";
         }
 
         String arch = "";
