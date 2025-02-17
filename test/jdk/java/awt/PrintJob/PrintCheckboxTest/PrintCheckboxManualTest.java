@@ -27,7 +27,7 @@
  * @summary Tests that there is no ClassCastException thrown in printing
  *          checkbox and scrollbar with XAWT
  * @key printer
- * @requires (os.family == "linux")
+ * @requires (os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd")
  * @library /java/awt/regtesthelpers
  * @build PassFailJFrame
  * @run main/manual PrintCheckboxManualTest
