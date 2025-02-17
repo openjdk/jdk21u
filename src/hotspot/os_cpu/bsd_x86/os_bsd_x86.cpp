@@ -74,6 +74,7 @@
 # include <ucontext.h>
 #endif
 #ifdef __FreeBSD__
+# include <machine/fpu.h>
 # include <sys/sysctl.h>
 # include <sys/procctl.h>
 #ifndef PROC_STACKGAP_STATUS
@@ -780,6 +781,17 @@ void os::print_context(outputStream *st, const void *context) {
   st->print(", ERR=" INTPTR_FORMAT, (intptr_t)uc->context_err);
   st->cr();
   st->print("  TRAPNO=" INTPTR_FORMAT, (intptr_t)uc->context_trapno);
+#  ifdef __FreeBSD__
+  // Add XMM registers + MXCSR. Note that C2 uses XMM to spill GPR values including pointers.
+  st->cr();
+  st->cr();
+  struct savefpu *savefpu = (struct savefpu *)uc->uc_mcontext.mc_fpstate;
+  for (int i = 0; i < 16; ++i) {
+    const int64_t* xmm_val_addr = (int64_t*)&(savefpu->sv_xmm[i]);
+    st->print_cr("XMM[%d]=" INTPTR_FORMAT " " INTPTR_FORMAT, i, xmm_val_addr[1], xmm_val_addr[0]);
+  }
+  st->print("  MXCSR=" UINT32_FORMAT_X_0, savefpu->sv_env.en_mxcsr);
+#  endif
 #else
   st->print(  "EAX=" INTPTR_FORMAT, (intptr_t)uc->context_eax);
   st->print(", EBX=" INTPTR_FORMAT, (intptr_t)uc->context_ebx);
