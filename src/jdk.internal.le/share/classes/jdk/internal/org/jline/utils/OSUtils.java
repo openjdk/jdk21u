@@ -24,6 +24,9 @@ public class OSUtils {
     public static final boolean IS_AIX =
             System.getProperty("os.name").toLowerCase().contains("aix");
 
+    public static final boolean IS_BSD =
+            System.getProperty("os.name").toLowerCase().contains("bsd");
+
     public static final boolean IS_CYGWIN =
             IS_WINDOWS && System.getenv("PWD") != null && System.getenv("PWD").startsWith("/");
 
