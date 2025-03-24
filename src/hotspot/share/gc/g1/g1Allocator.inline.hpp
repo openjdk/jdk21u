@@ -69,8 +69,7 @@ inline HeapWord* G1Allocator::attempt_allocation_locked(uint node_index, size_t 
   return result;
 }
 
-inline HeapWord* G1Allocator::attempt_allocation_force(size_t word_size) {
-  uint node_index = current_node_index();
+inline HeapWord* G1Allocator::attempt_allocation_force(uint node_index, size_t word_size) {
   return mutator_alloc_region(node_index)->attempt_allocation_force(word_size);
 }
 

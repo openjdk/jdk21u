@@ -438,7 +438,7 @@ HeapWord* G1CollectedHeap::attempt_allocation_slow(uint node_index, size_t word_
       if (GCLocker::is_active_and_needs_gc() && policy()->can_expand_young_list()) {
         // No need for an ergo message here, can_expand_young_list() does this when
         // it returns true.
-        result = _allocator->attempt_allocation_force(word_size);
+        result = _allocator->attempt_allocation_force(node_index, word_size);
         if (result != nullptr) {
           return result;
         }
