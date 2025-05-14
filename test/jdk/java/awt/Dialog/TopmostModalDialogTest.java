@@ -36,7 +36,7 @@ import java.awt.event.WindowEvent;
  * @bug 4940645
  * @summary Test to verify setAlwaysOnTop(true) does
  *          work in modal dialog in Windows
- * @requires (os.family == "windows" | os.family == "linux" )
+ * @requires (os.family == "windows" | os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd")
  * @library /java/awt/regtesthelpers
  * @build PassFailJFrame
  * @run main/manual TopmostModalDialogTest

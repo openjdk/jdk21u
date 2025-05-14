@@ -25,7 +25,7 @@
  * @test
  * @bug 6502052
  * @summary Menu cells must resize if font changes (XToolkit)
- * @requires os.family == "linux"
+ * @requires os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd"
  * @library /java/awt/regtesthelpers
  * @build PassFailJFrame
  * @run main/manual CellsResize

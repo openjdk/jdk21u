@@ -27,7 +27,7 @@
  * @summary List scrolling w/ down arrow keys obscures horizontal scrollbar
  * @library /java/awt/regtesthelpers
  * @build PassFailJFrame
- * @requires (os.family == "linux")
+ * @requires (os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd")
  * @run main/manual HorizScrollbarEraseTest
  */
 

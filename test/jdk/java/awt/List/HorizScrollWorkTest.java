@@ -27,7 +27,7 @@
  * @summary Horizontal scroll bar thumb of a List does not stay at the end
  * @library /java/awt/regtesthelpers
  * @build PassFailJFrame
- * @requires (os.family == "linux")
+ * @requires (os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd")
  * @run main/manual HorizScrollWorkTest
 */
 

@@ -32,7 +32,7 @@ import java.awt.event.ActionListener;
  * @test
  * @bug 6259434
  * @summary PIT: Choice in FileDialog is not responding to keyboard interactions, XToolkit
- * @requires (os.family == "linux")
+ * @requires (os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd")
  * @library /java/awt/regtesthelpers
  * @build PassFailJFrame
  * @run main/manual KeyboardInteractionTest

@@ -32,7 +32,7 @@ import java.awt.event.ActionListener;
  * @test
  * @bug 6240074
  * @summary Test that file drop-down field in FileDialog is working properly on XToolkit
- * @requires (os.family == "linux")
+ * @requires (os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd")
  * @library /java/awt/regtesthelpers
  * @build PassFailJFrame
  * @run main/manual PathChoiceWorkArrowsTest

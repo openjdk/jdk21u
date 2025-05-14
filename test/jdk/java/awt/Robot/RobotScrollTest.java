@@ -25,7 +25,7 @@
  * @test
  * @bug 4374578
  * @summary Test robot wheel scrolling of Text
- * @requires (os.family == "Windows") | (os.family == "linux")
+ * @requires (os.family == "windows" | os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd")
  * @library /java/awt/regtesthelpers
  * @build PassFailJFrame
  * @run main/manual RobotScrollTest

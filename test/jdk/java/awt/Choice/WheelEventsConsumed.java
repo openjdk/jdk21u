@@ -37,7 +37,7 @@ import java.awt.event.MouseWheelListener;
  * @test
  * @bug 6253211
  * @summary PIT: MouseWheel events not triggered for Choice drop down in XAWT
- * @requires (os.family == "linux")
+ * @requires (os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd")
  * @key headful
  * @run main WheelEventsConsumed
  */

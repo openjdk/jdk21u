@@ -33,7 +33,7 @@ import java.awt.MenuBar;
  * @test
  * @bug 4180577
  * @summary offset problems with menus in frames: (2 * 1)  should be (2 * menuBarBorderSize)
- * @requires (os.family == "linux" | os.family == "windows")
+ * @requires (os.family == "linux" | os.family == "windows" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd")
  * @library /java/awt/regtesthelpers
  * @build PassFailJFrame
  * @run main/manual MenuBarOffsetTest

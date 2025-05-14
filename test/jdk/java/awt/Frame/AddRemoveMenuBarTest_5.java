@@ -36,7 +36,7 @@ import java.awt.event.WindowEvent;
  * @key headful
  * @bug 4159883
  * @summary Adding/Removing a menu causes frame to unexpected small size
- * @requires (os.family == "linux" | os.family == "windows")
+ * @requires (os.family == "linux" | os.family == "windows" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd")
  */
 
 public class AddRemoveMenuBarTest_5 {

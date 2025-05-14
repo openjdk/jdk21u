@@ -52,7 +52,7 @@ import javax.swing.JLabel;
 /*
  * @test
  * @bug 5092883 6513478 7154025
- * @requires (os.family == "linux")
+ * @requires (os.family == "linux" | os.family == "freebsd" | os.family == "netbsd" | os.family == "openbsd")
  * @summary REGRESSION: SystemColor class gives back wrong values under Linux
  * @library /java/awt/regtesthelpers
  * @build PassFailJFrame
