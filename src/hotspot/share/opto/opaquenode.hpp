@@ -107,6 +107,7 @@ class Opaque3Node : public Node {
   virtual const Type* bottom_type() const { return TypeInt::INT; }
   virtual Node* Identity(PhaseGVN* phase);
   bool rtm_opt() const { return (_opt == RTM_OPT); }
+  virtual uint size_of() const { return sizeof(Opaque3Node); }
 };
 
 // Input 1 is a check that we know implicitly is always true or false
@@ -154,6 +155,7 @@ class ProfileBooleanNode : public Node {
   virtual Node *Ideal(PhaseGVN *phase, bool can_reshape);
   virtual Node* Identity(PhaseGVN* phase);
   virtual const Type *bottom_type() const { return TypeInt::BOOL; }
+  virtual uint size_of() const { return sizeof(ProfileBooleanNode); }
 };
 
 #endif // SHARE_OPTO_OPAQUENODE_HPP
