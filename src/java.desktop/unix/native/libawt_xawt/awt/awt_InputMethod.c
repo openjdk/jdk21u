@@ -1621,7 +1621,7 @@ JNIEXPORT jboolean JNICALL Java_sun_awt_X11InputMethodBase_setCompositionEnabled
         Window w = 0;
         XGetInputFocus(awt_display, &focus, &revert_to);
         XGetICValues(pX11IMData->current_ic, XNFocusWindow, &w, NULL);
-#if defined(_LP64) && !defined(_LITTLE_ENDIAN)
+#if defined(_LP64) && ((defined(__linux__) && !defined(_LITTLE_ENDIAN)) || (defined(_ALLBSD_SOURCE) && _BYTE_ORDER == _BIG_ENDIAN))
         // On 64bit BigEndian,
         // Window value may be stored on high 32bit by XGetICValues via XIM
         if (w > 0xffffffffUL) w = w >> 32;
@@ -1690,7 +1690,7 @@ JNIEXPORT jboolean JNICALL Java_sun_awt_X11InputMethodBase_isCompositionEnabledN
     ret = XGetICValues(pX11IMData->current_ic, XNPreeditAttributes, pr_atrb, NULL);
     XFree((void *)pr_atrb);
     AWT_UNLOCK();
-#if defined(__linux__) && defined(_LP64) && !defined(_LITTLE_ENDIAN)
+#if defined(_LP64) && ((defined(__linux__) && !defined(_LITTLE_ENDIAN)) || (defined(_ALLBSD_SOURCE) && _BYTE_ORDER == _BIG_ENDIAN))
     // On 64bit BigEndian,
     // XIMPreeditState value may be stored on high 32bit by XGetICValues via XIM
     if (state > 0xffffffffUL) state = state >> 32;
