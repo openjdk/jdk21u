@@ -280,7 +280,7 @@ Java_sun_nio_ch_Net_socket0(JNIEnv *env, jclass cl, jboolean preferIPv6,
         return handleSocketError(env, errno);
     }
 
-#ifndef _BSDONLY_SOURCE
+#ifndef __OpenBSD__
     /*
      * If IPv4 is available, disable IPV6_V6ONLY to ensure dual-socket support.
      */

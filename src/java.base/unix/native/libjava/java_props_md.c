@@ -384,7 +384,7 @@ GetJavaProperties(JNIEnv *env)
     /* patches/service packs installed */
     sprops.patch_level = NULL;      // leave it undefined
 
-#ifdef _BSDONLY_SOURCE
+#ifdef __OpenBSD__
     sprops.java_net_preferIPv4Stack = "true";
 #endif
 
