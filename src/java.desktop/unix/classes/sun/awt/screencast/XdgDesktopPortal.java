@@ -64,6 +64,7 @@ public class XdgDesktopPortal {
                     : METHOD_SCREENCAST;
         }
 
+        @SuppressWarnings("removal")
         String m = AccessController.doPrivileged(
                 new GetPropertyAction(
                         "awt.robot.screenshotMethod", defaultMethod
