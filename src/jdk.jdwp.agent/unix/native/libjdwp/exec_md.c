@@ -70,6 +70,9 @@ static char *skipNonWhitespace(char *p) {
 int
 closeDescriptors(void)
 {
+#if defined(__FreeBSD__)
+    closefrom(STDERR_FILENO + 1);
+#else
     DIR *dp;
     struct dirent *dirp;
     /* leave out standard input/output/error descriptors */
@@ -114,6 +117,7 @@ closeDescriptors(void)
 
     (void)closedir(dp);
 
+#endif
     return 1; // success
 }
 
