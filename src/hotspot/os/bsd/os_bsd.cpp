@@ -283,7 +283,11 @@ void os::Bsd::initialize_system_info() {
 
   // get processors count via hw.ncpus sysctl
   mib[0] = CTL_HW;
+#if defined(HW_NCPUONLINE)
+  mib[1] = HW_NCPUONLINE;
+#else
   mib[1] = HW_NCPU;
+#endif
   len = sizeof(cpu_val);
   if (sysctl(mib, 2, &cpu_val, &len, nullptr, 0) != -1 && cpu_val >= 1) {
     assert(len == sizeof(cpu_val), "unexpected data size");
