@@ -555,6 +555,8 @@
 
 #define MACOS_AARCH64_ONLY(x) MACOS_ONLY(AARCH64_ONLY(x))
 
+#define BSD_AARCH64_ONLY(x) BSD_ONLY(AARCH64_ONLY(x))
+
 #if defined(RISCV32) || defined(RISCV64)
 #define RISCV
 #define RISCV_ONLY(code) code

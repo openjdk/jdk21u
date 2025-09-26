@@ -694,6 +694,11 @@ bool PosixSignals::pd_hotspot_signal_handler(int sig, siginfo_t* info,
     assert(sig == info->si_signo, "bad siginfo");
   }
 */
+
+  // Enable WXWrite: this function is called by the signal handler at arbitrary
+  // point of execution.
+  ThreadWXEnable wx(WXWrite, thread);
+
   // decide if this trap can be handled by a stub
   address stub = nullptr;
 

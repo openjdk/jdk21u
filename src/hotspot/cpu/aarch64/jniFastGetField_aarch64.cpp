@@ -59,8 +59,6 @@ static const Register result        = r7;
 // (8262896).  So each FastGetXXXField is wrapped into a C++ statically
 // compiled template function that optionally switches to WXExec if necessary.
 
-#ifdef __APPLE__
-
 static address generated_fast_get_field[T_LONG + 1 - T_BOOLEAN];
 
 template<int BType> struct BasicTypeToJni {};
@@ -86,15 +84,6 @@ address JNI_FastGetField::generate_fast_get_int_field1() {
   generated_fast_get_field[BType - T_BOOLEAN] = generate_fast_get_int_field0((BasicType)BType);
   return (address)static_fast_get_field_wrapper<BType>;
 }
-
-#else // __APPLE__
-
-template<int BType>
-address JNI_FastGetField::generate_fast_get_int_field1() {
-  return generate_fast_get_int_field0((BasicType)BType);
-}
-
-#endif // __APPLE__
 
 address JNI_FastGetField::generate_fast_get_int_field0(BasicType type) {
   const char *name;

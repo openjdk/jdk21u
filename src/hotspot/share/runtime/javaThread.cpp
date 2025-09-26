@@ -1201,7 +1201,7 @@ void JavaThread::check_special_condition_for_native_trans(JavaThread *thread) {
   thread->set_thread_state(_thread_in_vm);
 
   // Enable WXWrite: called directly from interpreter native wrapper.
-  MACOS_AARCH64_ONLY(ThreadWXEnable wx(WXWrite, thread));
+  BSD_AARCH64_ONLY(ThreadWXEnable wx(WXWrite, thread));
 
   SafepointMechanism::process_if_requested_with_exit_check(thread, true /* check asyncs */);
 
@@ -1389,7 +1389,7 @@ void JavaThread::verify_states_for_handshake() {
 
 void JavaThread::nmethods_do(CodeBlobClosure* cf) {
   DEBUG_ONLY(verify_frame_info();)
-  MACOS_AARCH64_ONLY(ThreadWXEnable wx(WXWrite, Thread::current());)
+  BSD_AARCH64_ONLY(ThreadWXEnable wx(WXWrite, Thread::current());)
 
   if (has_last_Java_frame()) {
     // Traverse the execution stack

@@ -46,6 +46,29 @@ public:
     }
   }
 };
+#elif defined(AARCH64)
+class ThreadWXEnable  {
+  WXMode _new_mode;
+public:
+  ThreadWXEnable(WXMode new_mode, Thread*) :
+    _new_mode(new_mode)
+  {
+    if (_new_mode == WXExec) {
+      // We are going to execute some code that has been potentially
+      // modified.
+      __asm__ __volatile__ ("dsb\tsy\n"
+                            "isb\tsy" : : : "memory");
+    }
+  }
+  ~ThreadWXEnable() {
+    if (_new_mode == WXWrite) {
+      // We may have modified some code that is going to be executed
+      // outside of this block.
+      __asm__ __volatile__ ("dsb\tsy\n"
+                            "isb\tsy" : : : "memory");
+    }
+  }
+};
 #endif // __APPLE__ && AARCH64
 
 #endif // SHARE_RUNTIME_THREADWXSETTERS_INLINE_HPP
