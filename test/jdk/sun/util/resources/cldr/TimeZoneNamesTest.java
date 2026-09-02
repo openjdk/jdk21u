@@ -24,7 +24,7 @@
  /*
  * @test
  * @bug 8181157 8202537 8234347 8236548 8261279
- *      8381379
+ *      8381379 8390388
  * @modules jdk.localedata
  * @summary Checks CLDR time zone names are generated correctly at runtime
  * @run junit/othervm -Djava.locale.providers=CLDR TimeZoneNamesTest
