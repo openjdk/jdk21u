@@ -27,7 +27,7 @@
  *      7039469 7090843 7103108 7103405 7158483 8008577 8059206 8064560 8072042
  *      8077685 8151876 8166875 8169191 8170316 8176044 8347841
  *      8388214
- * @summary Make sure that timezone short display names are identical to Olson's data.
+ * @summary Make sure that timezone short display names are idenical to Olson's data.
  * @run junit/othervm -Djava.locale.providers=COMPAT,SPI Bug6329116
  */
 
