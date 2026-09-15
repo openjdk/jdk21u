@@ -161,7 +161,7 @@ final class VirtualThread extends BaseVirtualThread {
      * @param characteristics characteristics
      * @param task the task to execute
      */
-    VirtualThread(Executor scheduler, String name, int characteristics, Runnable task) {
+    public VirtualThread(Executor scheduler, String name, int characteristics, Runnable task) {
         super(name, characteristics, /*bound*/ false);
         Objects.requireNonNull(task);
 
