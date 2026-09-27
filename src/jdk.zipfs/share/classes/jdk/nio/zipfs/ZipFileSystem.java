@@ -1647,7 +1647,7 @@ class ZipFileSystem extends FileSystem {
         }
         // CEN Offset where this Extra field ends
         int extraEndOffset = startingOffset + extraFieldLen;
-        if (extraEndOffset > cen.length - ENDHDR) {
+        if (extraEndOffset > cen.length) {
             zerror("Invalid CEN header (extra data field size too long)");
         }
         int currentOffset = startingOffset;
