@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2023, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,10 +23,12 @@
 
 /* @test
  * @bug 8272746
+ * @modules java.base/jdk.internal.util
  * @summary Verify that ZipFile rejects files with CEN sizes exceeding the implementation limit
  * @run junit/othervm EndOfCenValidation
  */
 
+import jdk.internal.util.ArraysSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -71,7 +73,7 @@ public class EndOfCenValidation {
     private static final int ENDSIZ = ZipFile.ENDSIZ; // Offset of CEN size field within ENDHDR
     private static final int ENDOFF = ZipFile.ENDOFF; // Offset of CEN offset field within ENDHDR
     // Maximum allowed CEN size allowed by ZipFile
-    private static final int MAX_CEN_SIZE = Integer.MAX_VALUE - ENDHDR - 1;
+    private static final int MAX_CEN_SIZE = ArraysSupport.SOFT_MAX_ARRAY_LENGTH;
 
     // Expected message when CEN size does not match file size
     private static final String INVALID_CEN_BAD_SIZE = "invalid END header (bad central directory size)";
